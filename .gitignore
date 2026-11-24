@@ -1,0 +1,11 @@
+*.bak
+*.cookie_bak
+node_modules/
+.DS_Store
+*.tmp
+.cache/
+.antigravity*
+scratch/
+.env
+.env.*
+Thumbs.db
