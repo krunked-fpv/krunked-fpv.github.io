@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+.vite
+*.local
+.env
+.env.*
+*.log
+
+# Local backup artifacts (never commit)
+*.bak
+*.cookie_bak
+
+# Generated at build time by scripts/build-snapshot.mjs
+public/snapshot.json

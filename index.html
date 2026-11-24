@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07080A" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="KRUNKED // FORGE DECK — Personal App Launcher & Live Project Telemetry Dashboard." />
+    <meta property="og:title" content="KRUNKED // FORGE DECK" />
+    <meta property="og:description" content="Live playable web apps, kinetic telemetry, and ship logs from krunked-fpv." />
+    <meta property="og:type" content="website" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>KRUNKED // FORGE DECK</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+    <style>
+      html,
+      body {
+        background: #07080a;
+        color: #e8eaed;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div style="padding: 2rem; font-family: monospace; color: #9aa3ae">
+        KRUNKED // FORGE DECK requires JavaScript to hydrate live GitHub telemetry and launch applications.
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

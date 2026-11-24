@@ -1,0 +1,39 @@
+{
+  "name": "krunked-forge-deck",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "KRUNKED // FORGE DECK — live app launcher & GitHub telemetry dashboard",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "icons": "node scripts/generate-icons.mjs",
+    "snapshot": "node scripts/build-snapshot.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "dompurify": "^3.5.0",
+    "framer-motion": "^14.14.0",
+    "lucide-react": "^1.78.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.3.5",
+    "typescript": "5.9",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
