@@ -40,7 +40,7 @@ export function isSelfHostedPeekTarget(repo, candidateUrl) {
     const parsed = new URL(safeUrl);
     const normPath = normalizePathname(parsed.pathname);
 
-    if (parsed.origin.toLowerCase() === 'https://krunked-fpv.github.io' && normPath === '/') {
+    if (parsed.hostname.toLowerCase() === 'krunked-fpv.github.io' && normPath === '/') {
       return {
         blocked: true,
         reason: 'CANONICAL_SELF_ROOT',
