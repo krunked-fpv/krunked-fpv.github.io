@@ -8,6 +8,8 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
+  max-width: 100%;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   background-color: var(--bg-inset);
@@ -47,6 +49,12 @@
   flex-shrink: 0;
   background-color: var(--led-online);
   box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
+}
+
+.sync-pill__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sync-pill[data-tier="hot"] .sync-pill__led,
@@ -746,6 +754,11 @@
 }
 
 @media (max-width: 640px) {
+  .sync-pill {
+    padding: 4px 8px;
+    font-size: 0.625rem;
+  }
+
   .metric-readout {
     padding-left: 8px;
   }

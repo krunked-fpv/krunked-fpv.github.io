@@ -259,7 +259,14 @@ svg text,
 
   .top-bar__brand {
     flex: 1 1 100%;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px 8px;
+  }
+
+  .brand-title {
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
   }
 
   .top-bar__telemetry {
