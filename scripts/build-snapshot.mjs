@@ -15,7 +15,7 @@ const MS_PER_DAY = 86_400_000;
 const USER_AGENT = 'krunked-forge-deck-snapshot-v2';
 
 const EMOJI_REGEX =
-  /(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u200D|\u20E3|[\u{1F1E6}-\u{1F1FF}]|\u2605)/gu;
+  /(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u200D|\u20E3|[\u{1F1E6}-\u{1F1FF}]|\u2605|\u2606)/gu;
 
 const CONTROL_CHAR_REGEX = /[\u0000-\u001F\u007F-\u009F]/g;
 
@@ -60,6 +60,8 @@ const BOT_LOGINS = new Set([
   'dependabot[bot]',
   'renovate[bot]',
   'github-actions',
+  'dependabot',
+  'renovate',
 ]);
 
 const SKIP_CI_RE = /\[(?:skip ci|ci skip)\]/i;

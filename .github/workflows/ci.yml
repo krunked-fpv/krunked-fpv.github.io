@@ -19,16 +19,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Bake ephemeral GitHub telemetry SnapshotV2
+        run: npm run snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Typecheck, test and build
         run: npm run verify
@@ -71,6 +76,11 @@ jobs:
           assert(sw.includes("forge-deck-v2-"), "sw.js missing v2 cache key");
           assert(sw.includes("krunked-sw-cache-"), "sw.js missing legacy V0 cache cleanup");
           assert(sw.includes("SKIP_WAITING"), "sw.js missing SKIP_WAITING handler");
+          assert(!sw.includes("api.github.com"), "sw.js must not hardcode api.github.com interception");
+
+          const snap = JSON.parse(fs.readFileSync("dist/snapshot.json", "utf8"));
+          assert(snap.schemaVersion === "SnapshotV2", "snapshot.json must be SnapshotV2");
+          assert(Array.isArray(snap.chronoPulse90d) && snap.chronoPulse90d.length === 90, "chronoPulse90d must have 90 UTC days");
 
           const pngChecks = [
             ["dist/icons/favicon-32.png", 32],
@@ -86,5 +96,5 @@ jobs:
             assert(b.subarray(0, 8).toString("hex") === sig, `invalid PNG signature: ${f}`);
             assert(b.readUInt32BE(16) === sz && b.readUInt32BE(20) === sz, `wrong IHDR size in ${f}`);
           }
-          console.log("CI dist/ PWA, relative URL & PNG invariants verified.");
+          console.log("CI dist/ PWA, relative URL, SnapshotV2 & PNG invariants verified.");
           '

@@ -31,7 +31,12 @@ function walkFiles(dir: string, exts: Set<string>, skipDirs = new Set(['node_mod
 
 describe('SnapshotV2 integrity & Tier-1 baker audit', () => {
   it('verifies public/snapshot.json conforms strictly to SnapshotV2 with bot exclusion, zero emojis, and valid probes', () => {
-    const rawText = fs.readFileSync(rel('public', 'snapshot.json'), 'utf8');
+    const snapshotPath = rel('public', 'snapshot.json');
+    expect(
+      fs.existsSync(snapshotPath),
+      'public/snapshot.json is missing — run "npm run snapshot" before running tests',
+    ).toBe(true);
+    const rawText = fs.readFileSync(snapshotPath, 'utf8');
     expect(rawText.match(EMOJI_RE)).toBeNull();
     expect(rawText.toLowerCase()).not.toContain('<script');
 
@@ -79,7 +84,11 @@ describe('SnapshotV2 integrity & Tier-1 baker audit', () => {
     }
 
     expect(snap.totals).toBeDefined();
-    expect(snap.totals!.liveApps).toBeGreaterThan(0);
+    if (snap.sourceMode === 'offline-fallback') {
+      expect(snap.totals!.liveApps).toBeGreaterThanOrEqual(0);
+    } else {
+      expect(snap.totals!.liveApps).toBeGreaterThan(0);
+    }
     expect(snap.totals!.deadPages).toBeGreaterThanOrEqual(0);
   });
 
@@ -229,8 +238,17 @@ describe('Repo-wide V2 static security & craft hygiene audit', () => {
 
     const deployYml = fs.readFileSync(rel('.github', 'workflows', 'deploy.yml'), 'utf8');
     expect(deployYml).toContain('group: pages');
-    expect(deployYml).toContain('deploy-pages@v4');
+    expect(deployYml).toContain('deploy-pages@v5');
     expect(deployYml).toContain('npm run snapshot');
     expect(deployYml).not.toContain('git push');
+    expect(deployYml.indexOf('npm run snapshot')).toBeGreaterThan(-1);
+    expect(deployYml.indexOf('npm test')).toBeGreaterThan(-1);
+    expect(deployYml.indexOf('npm run snapshot')).toBeLessThan(deployYml.indexOf('npm test'));
+
+    const ciYml = fs.readFileSync(rel('.github', 'workflows', 'ci.yml'), 'utf8');
+    expect(ciYml).toContain('npm run snapshot');
+    expect(ciYml.indexOf('npm run snapshot')).toBeGreaterThan(-1);
+    expect(ciYml.indexOf('npm run verify')).toBeGreaterThan(-1);
+    expect(ciYml.indexOf('npm run snapshot')).toBeLessThan(ciYml.indexOf('npm run verify'));
   });
 });

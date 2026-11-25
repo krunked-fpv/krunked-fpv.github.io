@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -37,13 +37,13 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Run unit test suite
-        run: npm test
-
       - name: Bake ephemeral GitHub telemetry SnapshotV2
         run: npm run snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run unit test suite
+        run: npm test
 
       - name: Build production bundle
         run: npm run build
@@ -52,7 +52,6 @@ jobs:
         run: |
           node -e '
           const fs = require("node:fs");
-          const path = require("node:path");
           const assert = (cond, msg) => { if (!cond) { console.error("FAIL:", msg); process.exit(1); } };
 
           const required = [
@@ -111,10 +110,10 @@ jobs:
           '
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -127,4 +126,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
