@@ -184,7 +184,7 @@ Baked by zero-dependency `scripts/build-snapshot.mjs` (`MAX_CONCURRENCY=6`, `API
   - Strict scope isolation (normalized trailing `/`): ignores non-GET, cross-origin (`api.github.com`), and all sibling `/<repo>/*` paths.
   - Strategies: navigation (`scope` / `index.html`) -> `network-first` (fallback cached shell -> `503 Offline`); `snapshot.json` & `manifest.webmanifest` -> `network-first` (offline cold-boot resilience); `assets/*` -> `cache-first` (precache JS/CSS + `latin` `.woff2` only); `favicon.svg` & `icons/*` -> `stale-while-revalidate`.
 - **GitHub Actions CI (`.github/workflows/deploy.yml` & `ci.yml`)**:
-  - Two-job `build -> deploy` (`concurrency: { group: pages, cancel-in-progress: false }`), `actions/configure-pages@v5`, `upload-pages-artifact@v3`, `deploy-pages@v4`.
+  - Two-job `build -> deploy` (`concurrency: { group: pages, cancel-in-progress: false }`), `actions/configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`.
   - Ephemeral build-time `npm run snapshot` on push + `workflow_dispatch` + schedule (`17 */3 * * *`) — zero cron git commits polluting history or inflating telemetry!
   - Mandatory gates in both `ci.yml` and `deploy.yml`: `npm run typecheck`, `npm test`, `npm run build`, and automated `dist/` integrity check (`./` relative URLs, manifest, `sw.js`, `.nojekyll`, `snapshot.json`, valid PNG headers).
 

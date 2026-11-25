@@ -34,4 +34,4 @@ Append `?sync=off` in the browser to preview deterministically from cached/snaps
 
 ## GitHub Pages Deployment
 
-In repository **Settings -> Pages**, set **Source** to **GitHub Actions**. [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs a two-job `build -> deploy` pipeline (`typecheck`, `test`, ephemeral `npm run snapshot`, `build`, and `dist/` integrity verification) on push to `main`, manual dispatch, and every 3 hours without polluting git history. [`.github/workflows/ci.yml`](.github/workflows/ci.yml) gates pull requests with the same checks.
+In repository **Settings -> Pages**, set **Source** to **GitHub Actions**. [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs a two-job `build -> deploy` pipeline (`typecheck`, ephemeral `npm run snapshot`, `test`, `build`, and `dist/` integrity verification) on push to `main`, manual dispatch, and every 3 hours without polluting git history. [`.github/workflows/ci.yml`](.github/workflows/ci.yml) gates pull requests with the same checks.
