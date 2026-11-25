@@ -298,9 +298,9 @@ export function SettingsModal() {
               {/* Dual Monolith / Vellum Theme */}
               <section className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="eyebrow text-dim!">Exhibition Surface Finish</h3>
+                  <h3 className="eyebrow text-dim!">Cosmic Telemetry Mode</h3>
                   <span className="mono text-[10.5px] uppercase tracking-wider text-mute">
-                    {vault.prefs.theme === 'daylight' ? 'VELLUM' : 'MONOLITH'}
+                    {vault.prefs.theme === 'daylight' ? 'SOLAR ECLIPSE' : 'EVENT HORIZON'}
                   </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Hardware theme">
@@ -308,17 +308,17 @@ export function SettingsModal() {
                     [
                       {
                         id: 'obsidian' as const,
-                        name: 'Monolith Cinema',
-                        desc: 'Pure OLED pitch ground (#030304) with Kinetic Acid-Lime (#D2FF28) instrumentation.',
+                        name: 'Event Horizon',
+                        desc: 'Deep-space singularity with gravitational lensing and kinetic acid-lime HUD.',
                         Icon: Moon,
-                        swatchBg: '#030304',
+                        swatchBg: '#020203',
                         swatchCard: '#0C0D10',
                         swatchDot: '#D2FF28',
                       },
                       {
                         id: 'daylight' as const,
-                        name: 'Kunsthalle Vellum',
-                        desc: 'Archival Swiss vellum ground (#F5F3EC) with deep pitch gallery ink (#0A0A0B).',
+                        name: 'Solar Eclipse',
+                        desc: 'Total solar eclipse on archival Swiss vellum with pitch-ink corona.',
                         Icon: Sun,
                         swatchBg: '#F5F3EC',
                         swatchCard: '#FFFFFF',

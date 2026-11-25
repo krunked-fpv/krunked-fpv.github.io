@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight, SlidersHorizontal } from 'lucide-react';
+import { useCallback, useRef } from 'react';
 import { SPRING } from '../../config/site';
 import { hueOf } from '../../domain/buildProjects';
 import { formatDelta } from '../../domain/freshness';
 import { useNow } from '../../hooks/useNow';
+import { useSpecular } from '../../hooks/useSpecular';
 import type { Project } from '../../types/project';
 import { CoverArt } from '../art/CoverArt';
 import { Glyph } from '../art/Glyph';
@@ -49,8 +51,9 @@ function CornerPlate({
 }
 
 /**
- * Frameless architectural exhibition plate inside the 12-column hairline monolith grid.
- * Preserves data-deck-card + LaunchLink[data-card-primary] for 2D spatial keyboard nav.
+ * Magnetic architectural exhibition plate inside the 12-column hairline monolith wall.
+ * Features pointer-tracked specular lighting, subtle 3D artwork tilt, and snapping Flash-era
+ * 4-corner targeting reticle brackets while preserving data-deck-card + LaunchLink[data-card-primary].
  */
 export function AppCard({
   project,
@@ -65,11 +68,31 @@ export function AppCard({
 }) {
   const hue = hueOf(project);
   const now = useNow(30_000);
+  const specRef = useSpecular<HTMLElement>();
+  const artRef = useRef<HTMLDivElement | null>(null);
   const langs = topLanguages(project.languages, 4);
   const ageLabel = formatDelta(now - Date.parse(project.lastActivityAt));
   const tok = TIER_TOKENS[project.freshness.tier];
   const plateNo = String(index + 1).padStart(2, '0');
   const isPanoramic = span >= 6;
+
+  // Lightweight zero-re-render subtle 3D depth tilt on the inner artwork frame (hover-capable, non-reduced-motion only)
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    const art = artRef.current;
+    if (!art || typeof window === 'undefined') return;
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const nx = (e.clientX - rect.left) / rect.width - 0.5;
+    const ny = (e.clientY - rect.top) / rect.height - 0.5;
+    art.style.transform = `perspective(720px) rotateX(${(-ny * 3.2).toFixed(2)}deg) rotateY(${(nx * 3.6).toFixed(2)}deg) scale(1.045)`;
+  }, []);
+
+  const onPointerLeave = useCallback(() => {
+    const art = artRef.current;
+    if (art) art.style.transform = '';
+  }, []);
 
   // Anamorphic widescreen ratio on 8-col plates keeps sibling 4-col heights balanced in the hairline wall
   const artRatio =
@@ -81,6 +104,7 @@ export function AppCard({
 
   return (
     <motion.article
+      ref={specRef}
       layout
       layoutId={`card-${project.id}`}
       data-deck-card={project.name}
@@ -88,25 +112,27 @@ export function AppCard({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ ...SPRING, delay: Math.min(index, 8) * 0.015 }}
-      className={`monolith-cell group relative flex h-full min-w-0 flex-col justify-between overflow-hidden ${className}`}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+      className={`monolith-cell card-magnetic group relative flex h-full min-w-0 flex-col justify-between overflow-hidden ${className}`}
     >
-      {/* Subtle kinetic top bar on hover */}
+      {/* Subtle kinetic top ignition bar on hover */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[2px] bg-hot opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-x-0 top-0 z-[6] h-[2px] bg-hot opacity-0 transition-opacity duration-200 group-hover:opacity-100"
       />
 
-      {/* Top Bespoke World Artwork Stage */}
+      {/* Top Bespoke World Artwork Stage with subtle 3D magnetic depth tilt */}
       <motion.div
         layoutId={`cover-card-${project.id}`}
         className={`relative ${artRatio} w-full shrink-0 overflow-hidden border-b border-hairline bg-inset`}
       >
-        <CoverArt
-          project={project}
-          fill
-          scrim="subtle"
-          className="transition-transform duration-700 [transition-timing-function:var(--ease-snap)] group-hover:scale-[1.035]"
-        />
+        <div
+          ref={artRef}
+          className="absolute inset-0 transition-[transform,filter] duration-500 [transition-timing-function:var(--ease-snap)] will-change-transform group-hover:scale-[1.045] group-hover:brightness-[1.08]"
+        >
+          <CoverArt project={project} fill scrim="subtle" />
+        </div>
 
         {/* Corner architectural metadata: index + freshness dot top-left, single crisp status plate top-right */}
         <div className="absolute inset-x-0 top-0 z-[2] flex items-start justify-between gap-2 p-3">
@@ -147,7 +173,7 @@ export function AppCard({
       </motion.div>
 
       {/* Crisp Editorial Body */}
-      <div className={`relative flex flex-1 flex-col justify-between ${isPanoramic ? 'p-5 sm:p-6' : 'p-4 sm:p-5'}`}>
+      <div className={`relative z-[1] flex flex-1 flex-col justify-between ${isPanoramic ? 'p-5 sm:p-6' : 'p-4 sm:p-5'}`}>
         <div className="min-w-0">
           <div className="mb-1.5 flex items-center justify-between gap-3">
             <span className="mono truncate text-[10px] font-medium uppercase tracking-[0.16em] text-mute">

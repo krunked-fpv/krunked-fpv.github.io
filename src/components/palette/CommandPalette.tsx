@@ -133,15 +133,15 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
     const actions: ActionDef[] = [
       {
         id: 'toggle-theme',
-        label: isDaylight ? 'Switch Theme: Monolith Cinema (Dark)' : 'Switch Theme: Kunsthalle Vellum (Light)',
+        label: isDaylight ? 'Switch Theme: Event Horizon (Dark)' : 'Switch Theme: Solar Eclipse (Light)',
         hint: 'Theme [T]',
-        keywords: ['theme', 'dark', 'light', 'obsidian', 'daylight', 'monolith', 'vellum', 'appearance'],
+        keywords: ['theme', 'dark', 'light', 'obsidian', 'daylight', 'horizon', 'eclipse', 'singularity', 'black hole', 'appearance'],
         Icon: isDaylight ? Moon : Sun,
         run: () => {
           const next: ThemeMode = isDaylight ? 'obsidian' : 'daylight';
           foley.click();
           switchThemeWithTransition(next, st.setTheme);
-          st.toast(next === 'daylight' ? 'Switched to Kunsthalle Vellum' : 'Switched to Monolith Cinema', 'info');
+          st.toast(next === 'daylight' ? 'Switched to Solar Eclipse' : 'Switched to Event Horizon', 'info');
         },
       },
       {

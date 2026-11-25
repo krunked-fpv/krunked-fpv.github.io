@@ -15,10 +15,11 @@ import { ForceSyncButton } from './ForceSyncButton';
 import { LiveClock } from './LiveClock';
 import { phaseColor, phaseInk } from './TopBar';
 
-/** Monumental grounded Monolith Studio archive footer. */
+/** Monumental grounded Event Horizon / Solar Eclipse studio archive footer. */
 export function StatusBar({ projects }: { projects: Project[] }) {
   const sync = useDeck((s) => s.sync);
   const user = useDeck((s) => s.user);
+  const theme = useDeck((s) => s.vault.prefs.theme);
   const chronoWindow = useDeck((s) => s.chronoWindow);
   const setChronoWindow = useDeck((s) => s.setChronoWindow);
   const setSettings = useDeck((s) => s.setSettings);
@@ -77,14 +78,14 @@ export function StatusBar({ projects }: { projects: Project[] }) {
           <div className="flex min-w-0 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2.5">
               <BrandEmblem size={22} />
-              <span className="masthead-display text-[20px] font-bold tracking-[0.12em] text-ink sm:text-[24px]">
+              <span className="masthead-display text-[20px] font-bold tracking-[0.14em] text-ink sm:text-[24px]">
                 {BRAND.primary}
               </span>
               <span className="mono text-[11px] font-semibold text-hot-ink" aria-hidden="true">
                 {BRAND.separator}
               </span>
               <span className="mono text-[11px] font-medium tracking-[0.2em] text-mute">
-                STUDIO ARCHIVE
+                {theme === 'daylight' ? 'SOLAR ECLIPSE' : 'EVENT HORIZON'}
               </span>
             </div>
 

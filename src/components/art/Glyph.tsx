@@ -60,14 +60,14 @@ export interface GlyphProps {
 }
 
 /**
- * Sharp architectural square-chamfer hardware badge (4px radius, crisp 1px structural border,
- * zero soft bubbly glow) with strictly non-purple OKLCH pigment accent >= 5:1 in both themes.
+ * Precision 4px chamfered spacecraft instrument badge (zero soft bubbly glow),
+ * dual-calibrated for Event Horizon (#020203) and Solar Eclipse (#F5F3EC) at >= 5:1 contrast.
  */
 export function Glyph({ name, hue, size = 36, slug, variant = 'icon', className = '' }: GlyphProps) {
   const theme: ArtTheme = useDeck((s) => s.vault.prefs.theme) ?? 'obsidian';
   const pal = makePalette(hue, theme);
   const Icon = ICONS[name as GlyphName] ?? Code2;
-  const iconSize = Math.max(14, Math.round(size * 0.48));
+  const iconSize = Math.max(13, Math.round(size * 0.48));
 
   return (
     <span
@@ -77,16 +77,18 @@ export function Glyph({ name, hue, size = 36, slug, variant = 'icon', className 
         height: size,
         borderRadius: 4,
         color: pal.key,
-        background: pal.isLight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(8, 9, 12, 0.92)',
+        background: pal.isLight
+          ? 'rgba(255, 255, 255, 0.96)'
+          : `radial-gradient(circle at 50% 18%, ${pal.keyAlpha(0.14)}, rgba(4, 5, 7, 0.94) 76%)`,
         boxShadow: pal.isLight
-          ? `inset 0 0 0 1px rgba(10, 10, 11, 0.16), inset 0 2px 0 ${pal.keyAlpha(0.45)}`
-          : `inset 0 0 0 1px ${pal.keyAlpha(0.42)}, inset 0 1px 0 rgba(245, 243, 236, 0.12)`,
+          ? `inset 0 0 0 1px rgba(10, 10, 11, 0.18), inset 0 2px 0 ${pal.key}`
+          : `inset 0 0 0 1px ${pal.keyAlpha(0.48)}, inset 0 1px 0 rgba(245, 243, 236, 0.14)`,
       }}
     >
       {variant === 'emblem' && slug ? (
         <SwissEmblem slug={slug} size={Math.round(size * 0.74)} hue={pal.hue} framed={false} />
       ) : (
-        <Icon size={iconSize} strokeWidth={1.8} />
+        <Icon size={iconSize} strokeWidth={1.85} />
       )}
     </span>
   );

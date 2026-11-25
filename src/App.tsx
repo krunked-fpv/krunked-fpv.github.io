@@ -13,7 +13,6 @@ import { TopBar } from './components/layout/TopBar';
 import { CommandPalette } from './components/palette/CommandPalette';
 import { PeekDrawer } from './components/peek/PeekDrawer';
 import { SettingsModal } from './components/settings/SettingsModal';
-import { SpotlightDeck } from './components/spotlight/SpotlightDeck';
 import { ForgeStream } from './components/stream/ForgeStream';
 import { IconButton } from './components/ui/IconButton';
 import { Modal } from './components/ui/Modal';
@@ -68,11 +67,11 @@ export function App() {
 
   const resolvedSpotlight = useMemo(() => {
     if (activeSpotlight) {
-      const fresh = spotlight.find((p) => p.name === activeSpotlight.name);
+      const fresh = projects.find((p) => p.name === activeSpotlight.name);
       if (fresh) return fresh;
     }
     return spotlight[0] ?? null;
-  }, [activeSpotlight, spotlight]);
+  }, [activeSpotlight, projects, spotlight]);
 
   const filtered = useMemo(() => {
     const base = filterProjects(projects, prefs.filter, chronoWindow);
@@ -175,27 +174,16 @@ export function App() {
         <TopBar />
 
         <main className="w-full flex-1 overflow-x-clip">
-          {/* Full-Bleed Cinema Hero + Live WebGL2 Canvas + 5-Blade Accordion + Telemetry Ribbon */}
-          <HeroBand projects={projects} activeSpotlight={resolvedSpotlight}>
-            {loading ? (
-              <div className="grid h-[410px] grid-cols-1 gap-px overflow-hidden rounded-[8px] border border-hairline bg-hairline lg:grid-cols-12">
-                <div className="skeleton rounded-none! lg:col-span-6" />
-                <div className="skeleton hidden rounded-none! lg:col-span-2 lg:block" />
-                <div className="skeleton hidden rounded-none! lg:col-span-2 lg:block" />
-                <div className="skeleton hidden rounded-none! lg:col-span-2 lg:block" />
-              </div>
-            ) : (
-              <SpotlightDeck
-                projects={spotlight}
-                allProjects={projects}
-                onActiveChange={setActiveSpotlight}
-              />
-            )}
-          </HeroBand>
+          {/* Self-Contained Event Horizon Black Hole Singularity Arena + 17-World Orbital Constellation + Telemetry Ribbon */}
+          <HeroBand
+            projects={projects}
+            activeSpotlight={resolvedSpotlight}
+            onActiveChange={setActiveSpotlight}
+          />
 
           <FlagshipDock projects={projects} />
 
-          {/* Studio Exhibition Wall, Catalog Index & Dispatch Timeline */}
+          {/* Orbital Hangar Archive: Exhibition Wall, Swiss Catalog Index & Ship Dispatch */}
           <div id="worlds" className="scroll-mt-[var(--topbar-h)]">
             <FilterBar projects={projects} hiddenCount={hiddenCount} />
 

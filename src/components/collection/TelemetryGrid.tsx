@@ -180,32 +180,53 @@ export function TelemetryGrid({ projects }: { projects: Project[] }) {
     onMove: () => foley.tick(),
   });
 
+  const liveCount = projects.filter((p) => p.kind === 'live').length;
+
   return (
-    <div
-      ref={containerRef}
-      onKeyDown={onKeyDown}
-      className="overflow-hidden rounded-[8px] border border-hairline bg-surface"
-    >
-      {/* Swiss Catalog Column Header */}
-      <div
-        aria-hidden="true"
-        className="mono hidden grid-cols-[44px_minmax(0,2.3fr)_124px_132px_148px_92px_206px] items-center gap-4 border-b border-hairline bg-inset/85 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-mute lg:grid"
-      >
-        <span>NO.</span>
-        <span>WORLD</span>
-        <span>CATEGORY</span>
-        <span>STACK</span>
-        <span>VELOCITY (30D)</span>
-        <span>SHIPPED</span>
-        <span className="text-right">ACTIONS</span>
+    <div className="flex flex-col gap-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline pb-2.5">
+        <div className="flex items-center gap-2.5">
+          <span
+            className="beacon scale-[0.85]"
+            style={{ ['--c' as string]: 'var(--led-hot)' }}
+            aria-hidden="true"
+          />
+          <h2 className="eyebrow text-ink!">
+            CATALOG INDEX // {String(projects.length).padStart(2, '0')}{' '}
+            {liveCount === projects.length ? 'PLAYABLE WORLDS' : 'INDEXED BUILDS'}
+          </h2>
+        </div>
+        <span className="mono hidden text-[10px] tracking-[0.16em] text-mute sm:inline">
+          SEC 02 · SWISS SPECIFICATION INDEX
+        </span>
       </div>
 
-      <div className="divide-y divide-hairline">
-        <AnimatePresence mode="popLayout" initial={false}>
-          {projects.map((p, i) => (
-            <CatalogIndexRow key={p.id} project={p} index={i} />
-          ))}
-        </AnimatePresence>
+      <div
+        ref={containerRef}
+        onKeyDown={onKeyDown}
+        className="overflow-hidden rounded-[8px] border border-hairline bg-surface"
+      >
+        {/* Swiss Catalog Column Header */}
+        <div
+          aria-hidden="true"
+          className="mono hidden grid-cols-[44px_minmax(0,2.3fr)_124px_132px_148px_92px_206px] items-center gap-4 border-b border-hairline bg-inset/85 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-mute lg:grid"
+        >
+          <span>NO.</span>
+          <span>WORLD</span>
+          <span>CATEGORY</span>
+          <span>STACK</span>
+          <span>VELOCITY (30D)</span>
+          <span>SHIPPED</span>
+          <span className="text-right">ACTIONS</span>
+        </div>
+
+        <div className="divide-y divide-hairline">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {projects.map((p, i) => (
+              <CatalogIndexRow key={p.id} project={p} index={i} />
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

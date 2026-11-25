@@ -39,7 +39,7 @@ function Pill({
       onClick={onClick}
       aria-pressed={on}
       data-filter={id}
-      className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[4px] px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors max-md:h-9 ${
+      className={`relative flex h-8 shrink-0 items-center gap-1 rounded-[4px] px-2 text-[12px] font-medium whitespace-nowrap transition-colors max-md:h-9 max-md:gap-1.5 max-md:px-2.5 ${
         on ? 'text-chassis' : 'text-dim hover:bg-hover hover:text-ink'
       }`}
     >
@@ -315,7 +315,7 @@ export function FilterBar({
           <div
             ref={railRef}
             onScroll={checkOverflow}
-            className="hide-scroll flex items-center gap-1 overflow-x-auto pr-2"
+            className="hide-scroll flex items-center gap-0.5 overflow-x-auto pr-1 max-md:gap-1"
             role="toolbar"
             aria-label="Filter repositories"
             style={
@@ -340,7 +340,7 @@ export function FilterBar({
             ))}
 
             {categoryChips.length > 0 && (
-              <span className="mx-1.5 h-4 w-px shrink-0 bg-hairline-strong" aria-hidden="true" />
+              <span className="mx-1 h-4 w-px shrink-0 bg-hairline-strong" aria-hidden="true" />
             )}
             {categoryChips.map((c) => (
               <Pill
@@ -355,7 +355,7 @@ export function FilterBar({
 
             {activeTopicChip && (
               <>
-                <span className="mx-1.5 h-4 w-px shrink-0 bg-hairline" aria-hidden="true" />
+                <span className="mx-1 h-4 w-px shrink-0 bg-hairline" aria-hidden="true" />
                 <Pill
                   key={activeTopicChip.key}
                   id={activeTopicChip.key}
@@ -377,7 +377,7 @@ export function FilterBar({
         </div>
 
         {/* Clean architectural divider + right-hand Stack / Hidden / Sort / View controls */}
-        <div className="ml-2 flex shrink-0 items-center gap-1.5 border-l border-hairline pl-2.5">
+        <div className="ml-1.5 flex shrink-0 items-center gap-1.5 border-l border-hairline pl-2">
           <div className="hidden sm:block">
             <StackMenu
               languages={languageChips}

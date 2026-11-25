@@ -14,7 +14,7 @@ import { BrandEmblem } from '../ui/BrandEmblem';
 import { IconButton } from '../ui/IconButton';
 import { Kbd, modKey } from '../ui/Kbd';
 
-/** Semantic LED color CSS variable for sync phases (safe across Monolith Obsidian & Vellum Daylight). */
+/** Semantic LED color CSS variable for sync phases (safe across Event Horizon & Solar Eclipse). */
 export const phaseColor = (phase: string): string =>
   phase === 'LIVE'
     ? 'var(--led-online)'
@@ -24,7 +24,7 @@ export const phaseColor = (phase: string): string =>
         ? 'var(--led-alarm)'
         : 'var(--ink-muted)';
 
-/** WCAG-AA readable ink CSS variable for sync phases (safe across Monolith Obsidian & Vellum Daylight). */
+/** WCAG-AA readable ink CSS variable for sync phases (safe across Event Horizon & Solar Eclipse). */
 export const phaseInk = (phase: string): string =>
   phase === 'LIVE'
     ? 'var(--led-online-ink)'
@@ -68,12 +68,12 @@ function blurOnPointerClick(e: MouseEvent<HTMLButtonElement>) {
 }
 
 const NAV_ANCHORS = [
-  { num: '01', label: 'STAGE', href: '#stage' },
-  { num: '02', label: 'WORLDS', href: '#worlds' },
+  { num: '01', label: 'SINGULARITY', href: '#stage' },
+  { num: '02', label: 'ARCHIVE', href: '#worlds' },
   { num: '03', label: 'PULSE', href: '#pulse' },
 ] as const;
 
-/** Ultra-minimal 52px Floating Cinema Nav — sharp Monolith architecture with zero clutter. */
+/** Minimal 52px floating space-cockpit navigation bar over the Event Horizon arena. */
 export function TopBar() {
   const sync = useDeck((s) => s.sync);
   const theme = useDeck((s) => s.vault.prefs.theme);
@@ -112,16 +112,16 @@ export function TopBar() {
 
   return (
     <header
-      className="sticky top-0 z-40 w-full max-w-full overflow-hidden border-b border-hairline bg-bar backdrop-blur-xl"
+      className="sticky top-0 z-40 w-full max-w-full overflow-hidden border-b border-hairline bg-bar/75 backdrop-blur-md"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="mx-auto grid h-[52px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
-        {/* Left: Crisp Monolith Wordmark + Live Worlds Beacon */}
-        <div className="flex shrink-0 items-center gap-2.5 whitespace-nowrap">
+        {/* Left: Brand Emblem + Spaced KRUNKED + Orbital Count Beacon */}
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap sm:gap-2.5">
           <a
             href="./"
             className="flex items-center gap-2 rounded-[var(--radius-sm)] py-1 transition hover:opacity-90"
-            aria-label={`${BRAND.primary} Monolith Studio`}
+            aria-label={`${BRAND.primary} Event Horizon Studio`}
           >
             <BrandEmblem size={22} />
             <span className="text-[13px] font-bold tracking-[0.2em] text-ink sm:text-[13.5px]">
@@ -135,20 +135,21 @@ export function TopBar() {
               <a
                 href="#worlds"
                 onClick={() => foley.tick()}
-                className="mono inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] text-hot-ink transition hover:opacity-85"
+                className="mono inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.13em] text-hot-ink transition hover:opacity-85"
               >
                 <span
                   className="beacon scale-[0.8]"
                   style={{ ['--c' as string]: 'var(--led-hot)' }}
                   aria-hidden="true"
                 />
-                <span>{liveCount} LIVE</span>
+                <span className="hidden min-[390px]:inline">{liveCount} IN ORBIT</span>
+                <span className="min-[390px]:hidden">{liveCount} LIVE</span>
               </a>
             </>
           )}
         </div>
 
-        {/* Center (md+): Editorial Jump Anchors + Live Telemetry Status Dot */}
+        {/* Center (md+): Cockpit Section Jump Anchors + Live Telemetry Status Pill */}
         <nav
           aria-label="Primary sections"
           className="hidden items-center justify-center gap-1 md:flex"
@@ -190,7 +191,7 @@ export function TopBar() {
           </button>
         </nav>
 
-        {/* Right: Sleek Command Keycap + Hardware Switches */}
+        {/* Right: Sleek Command Keycap + Cockpit Hardware Switches */}
         <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-1.5">
           {canInstall && (
             <button
@@ -209,7 +210,6 @@ export function TopBar() {
             </button>
           )}
 
-          {/* Compact Command Palette Trigger */}
           <button
             type="button"
             onClick={(e) => {
@@ -229,7 +229,7 @@ export function TopBar() {
           </button>
 
           <IconButton
-            label={isDaylight ? 'Switch to Monolith Cinema dark theme' : 'Switch to Kunsthalle Vellum light theme'}
+            label={isDaylight ? 'Switch to Event Horizon dark theme' : 'Switch to Solar Eclipse light theme'}
             aria-pressed={isDaylight}
             tone="active"
             size="sm"
