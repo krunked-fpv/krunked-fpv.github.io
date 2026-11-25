@@ -1,15 +1,16 @@
 {
   "name": "krunked-forge-deck",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "KRUNKED // FORGE DECK — live app launcher & GitHub telemetry dashboard",
+  "description": "KRUNKED // FORGE DECK V2 — live app launcher & GitHub telemetry dashboard",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
+    "verify": "npm run typecheck && npm test && npm run build",
     "icons": "node scripts/generate-icons.mjs",
     "snapshot": "node scripts/build-snapshot.mjs"
   },

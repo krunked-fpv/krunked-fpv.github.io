@@ -1,0 +1,90 @@
+name: CI Verification
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck, test and build
+        run: npm run verify
+
+      - name: Verify dist PWA, relative URL & PNG invariants
+        run: |
+          node -e '
+          const fs = require("node:fs");
+          const assert = (cond, msg) => { if (!cond) { console.error("FAIL:", msg); process.exit(1); } };
+
+          const required = [
+            "dist/index.html",
+            "dist/manifest.webmanifest",
+            "dist/sw.js",
+            "dist/.nojekyll",
+            "dist/snapshot.json",
+            "dist/favicon.svg",
+            "dist/icons/favicon-32.png",
+            "dist/icons/apple-touch-icon.png",
+            "dist/icons/icon-192.png",
+            "dist/icons/icon-512.png",
+            "dist/icons/icon-maskable-192.png",
+            "dist/icons/icon-maskable-512.png"
+          ];
+          for (const f of required) assert(fs.existsSync(f), `missing ${f}`);
+
+          const html = fs.readFileSync("dist/index.html", "utf8");
+          assert(!/(?:src|href)="\/(?!\/)/.test(html), "dist/index.html contains non-relative root URL");
+          assert(html.includes("id=\"meta-theme-color\""), "missing #meta-theme-color");
+          assert(html.includes("data-theme=\"obsidian\""), "missing data-theme attribute");
+
+          const manifest = JSON.parse(fs.readFileSync("dist/manifest.webmanifest", "utf8"));
+          assert(manifest.start_url === "./" && manifest.scope === "./", "manifest scope/start_url must be relative ./");
+          assert(manifest.display === "standalone", "manifest display must be standalone");
+          assert(manifest.icons.some((i) => i.purpose === "any" && i.sizes === "192x192"), "missing 192 any icon");
+          assert(manifest.icons.some((i) => i.purpose === "any" && i.sizes === "512x512"), "missing 512 any icon");
+          assert(manifest.icons.some((i) => i.purpose === "maskable" && i.sizes === "512x512"), "missing 512 maskable icon");
+
+          const sw = fs.readFileSync("dist/sw.js", "utf8");
+          assert(sw.includes("forge-deck-v2-"), "sw.js missing v2 cache key");
+          assert(sw.includes("krunked-sw-cache-"), "sw.js missing legacy V0 cache cleanup");
+          assert(sw.includes("SKIP_WAITING"), "sw.js missing SKIP_WAITING handler");
+
+          const pngChecks = [
+            ["dist/icons/favicon-32.png", 32],
+            ["dist/icons/apple-touch-icon.png", 180],
+            ["dist/icons/icon-192.png", 192],
+            ["dist/icons/icon-512.png", 512],
+            ["dist/icons/icon-maskable-192.png", 192],
+            ["dist/icons/icon-maskable-512.png", 512]
+          ];
+          const sig = "89504e470d0a1a0a";
+          for (const [f, sz] of pngChecks) {
+            const b = fs.readFileSync(f);
+            assert(b.subarray(0, 8).toString("hex") === sig, `invalid PNG signature: ${f}`);
+            assert(b.readUInt32BE(16) === sz && b.readUInt32BE(20) === sz, `wrong IHDR size in ${f}`);
+          }
+          console.log("CI dist/ PWA, relative URL & PNG invariants verified.");
+          '

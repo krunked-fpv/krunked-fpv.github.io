@@ -1,33 +1,89 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="obsidian">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#07080A" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="description" content="KRUNKED // FORGE DECK — Personal App Launcher & Live Project Telemetry Dashboard." />
+    <meta id="meta-theme-color" name="theme-color" content="#08090B" />
+    <meta id="meta-color-scheme" name="color-scheme" content="dark light" />
+    <meta
+      name="description"
+      content="KRUNKED // FORGE DECK — Personal App Launcher, Sub-App Portal & Live GitHub Telemetry Surface."
+    />
     <meta property="og:title" content="KRUNKED // FORGE DECK" />
     <meta property="og:description" content="Live playable web apps, kinetic telemetry, and ship logs from krunked-fpv." />
     <meta property="og:type" content="website" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FORGE DECK" />
     <title>KRUNKED // FORGE DECK</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+    <script>
+      (function () {
+        var KEY = 'krunked-cookie-vault-v1';
+        var theme = 'obsidian';
+        function pick(obj) {
+          var t = obj && obj.prefs && obj.prefs.theme;
+          return t === 'daylight' || t === 'obsidian' ? t : null;
+        }
+        try {
+          var ls = localStorage.getItem(KEY);
+          if (ls) {
+            var fromLs = pick(JSON.parse(ls));
+            if (fromLs) theme = fromLs;
+          } else if (document.cookie) {
+            var parts = document.cookie.split(';');
+            for (var i = 0; i < parts.length; i++) {
+              var entry = parts[i].trim();
+              if (entry.indexOf(KEY + '=') === 0) {
+                var raw = entry.slice(KEY.length + 1);
+                var json = null;
+                if (raw.indexOf('v2.') === 0) {
+                  var seg = raw.split('.')[1] || '';
+                  var b64 = seg.replace(/-/g, '+').replace(/_/g, '/');
+                  while (b64.length % 4) b64 += '=';
+                  var bin = atob(b64);
+                  var bytes = new Uint8Array(bin.length);
+                  for (var j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+                  json = new TextDecoder().decode(bytes);
+                } else {
+                  json = decodeURIComponent(raw);
+                }
+                var fromCk = json ? pick(JSON.parse(json)) : null;
+                if (fromCk) theme = fromCk;
+                break;
+              }
+            }
+          }
+        } catch (e) {}
+        var root = document.documentElement;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme === 'daylight' ? 'light' : 'dark';
+        var tc = document.getElementById('meta-theme-color');
+        if (tc) tc.setAttribute('content', theme === 'daylight' ? '#ECEAE4' : '#08090B');
+        var cs = document.getElementById('meta-color-scheme');
+        if (cs) cs.setAttribute('content', theme === 'daylight' ? 'light' : 'dark');
+      })();
+    </script>
     <style>
       html,
       body {
-        background: #07080a;
-        color: #e8eaed;
+        background: #08090b;
+        color: #f3f5f8;
+      }
+      html[data-theme='daylight'],
+      html[data-theme='daylight'] body {
+        background: #eceae4;
+        color: #14161a;
       }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <noscript>
-      <div style="padding: 2rem; font-family: monospace; color: #9aa3ae">
+      <div style="padding: 2rem; font-family: ui-monospace, monospace; color: #848f9e">
         KRUNKED // FORGE DECK requires JavaScript to hydrate live GitHub telemetry and launch applications.
       </div>
     </noscript>

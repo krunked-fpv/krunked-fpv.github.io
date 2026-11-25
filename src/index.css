@@ -1,31 +1,201 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-ob-950: #07080a;
-  --color-ob-900: #0d1015;
-  --color-ob-800: #131820;
-  --color-ob-700: #1a202b;
-  --color-ink: #e8eaed;
-  --color-dim: #9aa3ae;
-  --color-mute: #5c6570;
-  --color-phosphor: #10b981;
-  --color-solar: #f59e0b;
-  --color-volt: #06b6d4;
-  --color-alarm: #f43f5e;
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+/* ==========================================================================
+   KRUNKED // FORGE DECK V2 — Dual Hardware Theme & Tactile Design System
+   Themes: Anodized Obsidian (default dark) + Braun Daylight (warm ceramic)
+   ========================================================================== */
+
+@theme inline {
+  /* Semantic Surface Ladder */
+  --color-chassis: var(--bg-chassis);
+  --color-inset: var(--bg-inset);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-bar: var(--bg-bar);
+  --color-bezel: var(--bezel-frame);
+  --color-tint: var(--surface-tint);
+  --color-hover: var(--hover-tint);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+
+  /* Legacy V1 Surface Aliases (auto-adapt across Obsidian & Daylight) */
+  --color-ob-950: var(--bg-chassis);
+  --color-ob-900: var(--bg-surface);
+  --color-ob-800: var(--bg-elevated);
+  --color-ob-700: var(--bg-inset);
+
+  /* WCAG AA Ink Hierarchy (>= 4.5:1 in both themes) */
+  --color-ink: var(--ink-primary);
+  --color-dim: var(--ink-secondary);
+  --color-mute: var(--ink-muted);
+
+  /* Strict 3-LED Hardware Palette + Signal Crimson (zero purple/violet) */
+  --color-hot: var(--led-hot);
+  --color-hot-ink: var(--led-hot-ink);
+  --color-hot-soft: var(--led-hot-soft);
+  --color-phosphor: var(--led-online);
+  --color-phosphor-ink: var(--led-online-ink);
+  --color-phosphor-soft: var(--led-online-soft);
+  --color-solar: var(--led-active);
+  --color-solar-ink: var(--led-active-ink);
+  --color-solar-soft: var(--led-active-soft);
+  --color-alarm: var(--led-alarm);
+  --color-alarm-ink: var(--led-alarm-ink);
+  --color-alarm-soft: var(--led-alarm-soft);
+  --color-volt: var(--led-online);
+
+  /* Typography */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
-  --ease-snap: cubic-bezier(0.2, 0.9, 0.25, 1);
+
+  /* Tactile Motion */
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-:root {
-  --hairline: rgba(255, 255, 255, 0.07);
-  --hairline-strong: rgba(255, 255, 255, 0.13);
-  --topbar-h: 56px;
-  --statusbar-h: 36px;
+/* ---------- Theme 1: Anodized Obsidian (Default Dark) ---------- */
+:root,
+[data-theme='obsidian'] {
   color-scheme: dark;
+
+  /* 4-Tier Surface Elevation Ladder */
+  --bg-chassis: #08090b;
+  --bg-inset: #0c0e12;
+  --bg-surface: #111419;
+  --bg-elevated: #181c24;
+  --bg-bar: rgba(8, 9, 11, 0.84);
+  --bezel-frame: #06070a;
+
+  /* Precision Ink Hierarchy (5.4:1+ AA across all levels) */
+  --ink-primary: #f3f5f8;
+  --ink-secondary: #b4bcc9;
+  --ink-muted: #848f9e;
+
+  /* Machined Hairlines & Pointer-Tracked Specular Sheen */
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.16);
+  --inset-highlight: rgba(255, 255, 255, 0.12);
+  --sheen-border: rgba(255, 255, 255, 0.42);
+  --sheen-fill: rgba(255, 255, 255, 0.045);
+  --surface-tint: rgba(255, 255, 255, 0.035);
+  --hover-tint: rgba(255, 255, 255, 0.055);
+  --scrim: rgba(5, 6, 8, 0.78);
+  --grid-line: rgba(255, 255, 255, 0.035);
+  --keycap-shadow: rgba(0, 0, 0, 0.55);
+  --grain-opacity: 0.028;
+
+  /* Hardware Status LEDs & WCAG-AA Badge Inks */
+  --led-hot: #ff4f00;
+  --led-hot-ink: #ff6e2e;
+  --led-hot-soft: rgba(255, 79, 0, 0.13);
+
+  --led-online: #10b981;
+  --led-online-ink: #34d399;
+  --led-online-soft: rgba(16, 185, 129, 0.13);
+
+  --led-active: #f59e0b;
+  --led-active-ink: #fbbf24;
+  --led-active-soft: rgba(245, 158, 11, 0.13);
+
+  --led-alarm: #ef4444;
+  --led-alarm-ink: #f87171;
+  --led-alarm-soft: rgba(239, 68, 68, 0.13);
+
+  /* 90d Chrono-Pulse Thermal Bars */
+  --heat-0: rgba(255, 255, 255, 0.09);
+  --heat-1: #10b981;
+  --heat-2: #f59e0b;
+  --heat-3: #ff4f00;
+
+  /* Cover Art & Overlay Tokens */
+  --cover-scrim-end: rgba(8, 9, 11, 0.92);
+  --badge-bg: rgba(8, 9, 11, 0.74);
+  --badge-border: rgba(255, 255, 255, 0.14);
+
+  /* Elevation & Physical Shadows */
+  --shadow-surface: inset 0 1px 0 var(--inset-highlight), 0 14px 32px -18px rgba(0, 0, 0, 0.85);
+  --shadow-elevated: inset 0 1px 0 var(--inset-highlight), 0 20px 44px -16px rgba(0, 0, 0, 0.9);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.48), inset 0 0 0 1px var(--hairline);
+  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 28px 72px -16px rgba(0, 0, 0, 0.92);
+  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(255, 79, 0, 0.24);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
+  /* Layout & Geometry Rhythm */
+  --topbar-h: 56px;
+  --filterbar-h: 52px;
+  --statusbar-h: 36px;
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-snap: 140ms;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
 }
 
+/* ---------- Theme 2: Braun Daylight (Warm Matte Ceramic / Aluminum) ---------- */
+[data-theme='daylight'] {
+  color-scheme: light;
+
+  --bg-chassis: #eceae4;
+  --bg-inset: #e1ded6;
+  --bg-surface: #f7f6f2;
+  --bg-elevated: #ffffff;
+  --bg-bar: rgba(236, 234, 228, 0.86);
+  --bezel-frame: #111419;
+
+  --ink-primary: #14161a;
+  --ink-secondary: #3b414d;
+  --ink-muted: #596170;
+
+  --hairline: rgba(20, 22, 26, 0.11);
+  --hairline-strong: rgba(20, 22, 26, 0.22);
+  --inset-highlight: rgba(255, 255, 255, 0.85);
+  --sheen-border: rgba(20, 22, 26, 0.34);
+  --sheen-fill: rgba(20, 22, 26, 0.035);
+  --surface-tint: rgba(20, 22, 26, 0.035);
+  --hover-tint: rgba(20, 22, 26, 0.05);
+  --scrim: rgba(20, 22, 26, 0.42);
+  --grid-line: rgba(20, 22, 26, 0.055);
+  --keycap-shadow: rgba(20, 22, 26, 0.18);
+  --grain-opacity: 0.02;
+
+  --led-hot: #ff4f00;
+  --led-hot-ink: #a83000;
+  --led-hot-soft: rgba(255, 79, 0, 0.11);
+
+  --led-online: #10b981;
+  --led-online-ink: #04684b;
+  --led-online-soft: rgba(16, 185, 129, 0.12);
+
+  --led-active: #f59e0b;
+  --led-active-ink: #874e00;
+  --led-active-soft: rgba(245, 158, 11, 0.14);
+
+  --led-alarm: #ef4444;
+  --led-alarm-ink: #a81818;
+  --led-alarm-soft: rgba(239, 68, 68, 0.11);
+
+  --heat-0: rgba(20, 22, 26, 0.13);
+  --heat-1: #047857;
+  --heat-2: #b45309;
+  --heat-3: #d94100;
+
+  --cover-scrim-end: rgba(247, 246, 242, 0.94);
+  --badge-bg: rgba(247, 246, 242, 0.86);
+  --badge-border: rgba(20, 22, 26, 0.16);
+
+  --shadow-surface: inset 0 1px 0 var(--inset-highlight), 0 8px 22px -14px rgba(20, 22, 26, 0.14);
+  --shadow-elevated: inset 0 1px 0 var(--inset-highlight), 0 14px 30px -14px rgba(20, 22, 26, 0.18);
+  --shadow-inset: inset 0 1px 2px rgba(20, 22, 26, 0.08), inset 0 0 0 1px var(--hairline);
+  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 24px 56px -16px rgba(20, 22, 26, 0.24);
+  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(255, 79, 0, 0.2);
+  --scrollbar-thumb: rgba(20, 22, 26, 0.2);
+  --scrollbar-thumb-hover: rgba(20, 22, 26, 0.36);
+}
+
+/* ---------- Document Base ---------- */
 html,
 body,
 #root {
@@ -33,73 +203,130 @@ body,
   max-width: 100%;
   overflow-x: clip;
 }
+
 html {
-  background: #07080a;
+  background-color: var(--bg-chassis);
+  color: var(--ink-primary);
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
 }
+
 body {
   margin: 0;
-  background:
-    radial-gradient(1200px 520px at 50% -120px, rgba(6, 182, 212, 0.05), transparent 70%),
-    radial-gradient(900px 480px at 90% 10%, rgba(16, 185, 129, 0.035), transparent 70%), #07080a;
-  background-attachment: fixed;
-  color: var(--color-ink);
+  background-color: var(--bg-chassis);
+  color: var(--ink-primary);
   font-family: var(--font-sans);
   font-feature-settings: 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
   padding-bottom: calc(var(--statusbar-h) + env(safe-area-inset-bottom));
 }
-/* film grain */
+
+/* Subtle Monochrome Film Grain Overlay */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.035;
-  mix-blend-mode: screen;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-::selection {
-  background: rgba(16, 185, 129, 0.3);
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
+[data-theme='daylight'] body::before {
+  mix-blend-mode: multiply;
+}
+
+::selection {
+  background-color: rgba(255, 79, 0, 0.26);
+  color: var(--ink-primary);
+}
+
+/* 140ms View Transitions Hardware Theme Morph */
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--t-snap);
+  animation-timing-function: var(--ease-snap);
+}
+
+/* Tabular Numerals on Telemetry Primitives */
+time,
+code,
+pre,
+kbd,
+[data-tabular] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--led-hot);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Precision Component Primitives ---------- */
 @layer components {
   .mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    font-feature-settings: 'zero';
+    font-feature-settings: 'zero', 'tnum';
   }
+
   .serif {
     font-family: var(--font-serif);
     font-style: italic;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
+
   .display {
-    letter-spacing: -0.045em;
-    line-height: 0.95;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
     font-weight: 600;
   }
+
   .eyebrow {
     font-family: var(--font-mono);
     font-size: 10.5px;
-    letter-spacing: 0.18em;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--color-mute);
+    color: var(--ink-muted);
   }
 
-  /* ---------- surfaces & specular border ---------- */
+  /* Architectural Hero Micro-Grid (masked, zero colored blobs) */
+  .hero-grid {
+    position: relative;
+  }
+  .hero-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+  }
+
+  /* ---------- Hardware Surfaces & Specular Border ---------- */
   .surface {
     position: relative;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 38%), var(--color-ob-900);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.045),
-      0 14px 34px -18px rgba(0, 0, 0, 0.85);
+    border-radius: var(--radius-lg);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-surface);
     isolation: isolate;
+    transition:
+      background-color var(--t-snap) var(--ease-snap),
+      box-shadow var(--t-snap) var(--ease-snap);
   }
   .surface::before,
   .surface::after {
@@ -120,191 +347,368 @@ body::before {
     background: var(--hairline);
   }
   .surface::after {
-    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 65%);
+    background: radial-gradient(
+      220px circle at var(--mx, 50%) var(--my, 0%),
+      var(--sheen-border),
+      transparent 65%
+    );
     opacity: 0;
-    transition: opacity 0.25s var(--ease-snap);
+    transition: opacity 220ms var(--ease-snap);
   }
   @media (hover: hover) {
     .surface:hover::after {
       opacity: 1;
     }
+    .surface-interactive:hover {
+      background:
+        radial-gradient(280px circle at var(--mx, 50%) var(--my, 0%), var(--sheen-fill), transparent 70%),
+        var(--bg-surface);
+    }
   }
+  .surface-static::after {
+    display: none;
+  }
+
+  .surface-elevated {
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-elevated);
+  }
+  .surface-elevated::before {
+    background: var(--hairline-strong);
+  }
+
+  .surface-inset {
+    position: relative;
+    border-radius: var(--radius-md);
+    background: var(--bg-inset);
+    box-shadow: var(--shadow-inset);
+  }
+
   .glow-under {
     position: absolute;
-    inset: auto 8% -14px 8%;
-    height: 40px;
+    inset: auto 10% -14px 10%;
+    height: 36px;
     border-radius: 50%;
-    filter: blur(26px);
-    opacity: 0.28;
+    filter: blur(24px);
+    opacity: 0.2;
     z-index: -1;
     pointer-events: none;
   }
+  [data-theme='daylight'] .glow-under {
+    opacity: 0.08;
+  }
 
+  /* ---------- Hardware Telemetry Chips ---------- */
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     height: 22px;
-    padding: 0 8px;
-    border-radius: 6px;
+    padding: 0 7px;
+    border-radius: var(--radius-sm);
     font-family: var(--font-mono);
     font-size: 10.5px;
+    font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-dim);
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--ink-secondary);
+    background: var(--surface-tint);
     box-shadow: inset 0 0 0 1px var(--hairline);
     white-space: nowrap;
   }
+  .chip-hot {
+    color: var(--led-hot-ink);
+    background: var(--led-hot-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-hot) 32%, transparent);
+  }
+  .chip-online {
+    color: var(--led-online-ink);
+    background: var(--led-online-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-online) 32%, transparent);
+  }
+  .chip-active {
+    color: var(--led-active-ink);
+    background: var(--led-active-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-active) 34%, transparent);
+  }
+  .chip-alarm {
+    color: var(--led-alarm-ink);
+    background: var(--led-alarm-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-alarm) 34%, transparent);
+  }
 
+  /* ---------- Recessed Sync Telemetry Pill ---------- */
+  .sync-pill {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    background: var(--bg-inset);
+    box-shadow: var(--shadow-inset);
+    color: var(--ink-secondary);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--t-snap) var(--ease-snap),
+      box-shadow var(--t-snap) var(--ease-snap),
+      color var(--t-snap) var(--ease-snap),
+      transform var(--t-snap) var(--ease-snap);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sync-pill:hover:not(:disabled) {
+    background: var(--bg-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+    color: var(--ink-primary);
+  }
+  .sync-pill:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+  }
+  .sync-pill:disabled {
+    cursor: default;
+  }
+
+  /* ---------- Tactile Mechanical Buttons ---------- */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 7px;
     min-height: 36px;
     padding: 0 12px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     font-weight: 500;
-    color: var(--color-ink);
-    background: rgba(255, 255, 255, 0.045);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    color: var(--ink-primary);
+    background: var(--surface-tint);
+    box-shadow:
+      inset 0 1px 0 var(--inset-highlight),
+      inset 0 0 0 1px var(--hairline);
     transition:
-      background 0.15s,
-      box-shadow 0.15s,
-      transform 0.15s var(--ease-snap);
+      background-color var(--t-snap) var(--ease-snap),
+      box-shadow var(--t-snap) var(--ease-snap),
+      color var(--t-snap) var(--ease-snap),
+      transform var(--t-snap) var(--ease-snap);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 0 0 1px var(--hairline-strong);
-  }
-  .btn:active {
-    transform: scale(0.97);
-  }
-  .btn-primary {
-    color: #04120c;
-    background: linear-gradient(180deg, #34d399, #10b981);
+  .btn:hover:not(:disabled) {
+    background: var(--hover-tint);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      0 6px 20px -8px rgba(16, 185, 129, 0.7);
+      inset 0 1px 0 var(--inset-highlight),
+      inset 0 0 0 1px var(--hairline-strong);
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* Primary International Orange Hardware Switch (#08090B on #FF5500 = 6.2:1 AA) */
+  .btn-primary,
+  .btn-hot {
+    color: #08090b;
+    background: #ff5500;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 0 0 1px rgba(8, 9, 11, 0.14),
+      0 6px 18px -8px rgba(255, 79, 0, 0.55);
     font-weight: 600;
   }
-  .btn-primary:hover {
-    background: linear-gradient(180deg, #4ade9f, #14c58c);
+  .btn-primary:hover:not(:disabled),
+  .btn-hot:hover:not(:disabled) {
+    background: #ff6418;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.42),
+      inset 0 0 0 1px rgba(8, 9, 11, 0.18),
+      0 8px 20px -8px rgba(255, 79, 0, 0.65);
   }
+
+  /* Phosphor Emerald Action (#04150E on #10B981 = 8.1:1 AA) */
+  .btn-online,
   .btn-volt {
-    color: #021318;
-    background: linear-gradient(180deg, #22d3ee, #06b6d4);
+    color: #04150e;
+    background: #10b981;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      0 6px 20px -8px rgba(6, 182, 212, 0.7);
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 0 0 1px rgba(4, 21, 14, 0.12),
+      0 6px 18px -8px rgba(16, 185, 129, 0.5);
     font-weight: 600;
   }
+  .btn-online:hover:not(:disabled),
+  .btn-volt:hover:not(:disabled) {
+    background: #22c78e;
+  }
+
+  /* Tactile Icon Switch */
   .icon-btn {
     display: inline-grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    color: var(--color-dim);
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    color: var(--ink-secondary);
     background: transparent;
     cursor: pointer;
     transition:
-      background 0.15s,
-      color 0.15s,
-      transform 0.15s var(--ease-snap);
+      background-color var(--t-snap) var(--ease-snap),
+      box-shadow var(--t-snap) var(--ease-snap),
+      color var(--t-snap) var(--ease-snap),
+      transform var(--t-snap) var(--ease-snap);
     -webkit-tap-highlight-color: transparent;
   }
-  .icon-btn:hover {
-    color: var(--color-ink);
-    background: rgba(255, 255, 255, 0.07);
+  .icon-btn-sm {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
   }
-  .icon-btn:active {
-    transform: scale(0.92);
+  .icon-btn:hover:not(:disabled) {
+    color: var(--ink-primary);
+    background: var(--hover-tint);
+    box-shadow: inset 0 0 0 1px var(--hairline);
   }
-  .icon-btn[aria-pressed='true'] {
-    color: var(--color-solar);
+  .icon-btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.94);
   }
+  .icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .icon-btn[aria-pressed='true'],
+  .icon-btn[data-active='true'] {
+    color: var(--led-hot-ink);
+    background: var(--led-hot-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-hot) 32%, transparent);
+  }
+  .icon-btn[data-tone='online'][aria-pressed='true'],
+  .icon-btn[data-tone='online'][data-active='true'] {
+    color: var(--led-online-ink);
+    background: var(--led-online-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-online) 32%, transparent);
+  }
+  .icon-btn[data-tone='active'][aria-pressed='true'],
+  .icon-btn[data-tone='active'][data-active='true'] {
+    color: var(--led-active-ink);
+    background: var(--led-active-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-active) 34%, transparent);
+  }
+
   @media (pointer: coarse) {
     .icon-btn {
       width: 44px;
       height: 44px;
+    }
+    .icon-btn-sm {
+      width: 36px;
+      height: 36px;
     }
     .btn {
       min-height: 44px;
     }
   }
 
+  /* Machined Mechanical Keycap */
   .kbd {
     display: inline-grid;
     place-items: center;
     min-width: 20px;
     height: 20px;
     padding: 0 5px;
-    border-radius: 5px;
+    border-radius: var(--radius-xs);
     font-family: var(--font-mono);
     font-size: 10.5px;
-    color: var(--color-dim);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px var(--hairline);
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink-secondary);
+    background: var(--bg-elevated);
+    box-shadow:
+      inset 0 1px 0 var(--inset-highlight),
+      inset 0 0 0 1px var(--hairline-strong),
+      0 1.5px 0 var(--keycap-shadow);
+  }
+
+  /* Scroll-fade helper for mobile horizontal pill rails */
+  .pill-rail-fade {
+    mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
   }
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-volt);
-  outline-offset: 2px;
-  border-radius: 8px;
+/* ---------- Hardware LEDs & Kinetic Keyframes ---------- */
+.led-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--c, var(--led-online));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--c, var(--led-online)) 55%, transparent);
+}
+[data-theme='daylight'] .led-dot {
+  box-shadow: 0 0 0 1px rgba(20, 22, 26, 0.08);
 }
 
-/* ---------- beacon / pulse ---------- */
 .beacon {
   position: relative;
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: var(--c, var(--color-phosphor));
+  background: var(--c, var(--led-online));
 }
 .beacon::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1.5px solid var(--c, var(--color-phosphor));
-  animation: beacon 2s cubic-bezier(0, 0.4, 0.4, 1) infinite;
+  border: 1.5px solid var(--c, var(--led-online));
+  animation: beacon 2.1s cubic-bezier(0, 0.4, 0.4, 1) infinite;
 }
+
 @keyframes beacon {
   0% {
     transform: scale(1);
-    opacity: 0.9;
+    opacity: 0.85;
   }
   100% {
-    transform: scale(3.4);
+    transform: scale(3.2);
     opacity: 0;
   }
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 .spin {
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.78s linear infinite;
 }
+
 @keyframes ring-pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
   }
   100% {
-    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 11px rgba(16, 185, 129, 0);
   }
 }
 .ring-pulse {
-  animation: ring-pulse 0.9s ease-out 1;
+  animation: ring-pulse 0.85s ease-out 1;
 }
+
 @keyframes draw {
   from {
     stroke-dashoffset: var(--len, 400);
@@ -315,8 +719,9 @@ body::before {
 }
 .spark-line {
   stroke-dasharray: var(--len, 400);
-  animation: draw 1.4s var(--ease-snap) both;
+  animation: draw 1.2s var(--ease-snap) both;
 }
+
 @keyframes sheen {
   from {
     transform: translateX(-120%);
@@ -328,16 +733,18 @@ body::before {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 8px;
+  background: var(--surface-tint);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  border-radius: var(--radius-lg);
 }
 .skeleton::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  background: linear-gradient(90deg, transparent, var(--hover-tint), transparent);
   animation: sheen 1.4s infinite;
 }
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -347,18 +754,34 @@ body::before {
   }
 }
 
+/* ---------- Precision Scrollbars ---------- */
 .hide-scroll {
   scrollbar-width: none;
 }
 .hide-scroll::-webkit-scrollbar {
   display: none;
 }
+
 .thin-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* stretched link: whole card launches the app */
+/* Stretched Card Link Utilities */
 .stretch::after {
   content: '';
   position: absolute;
@@ -371,32 +794,32 @@ body::before {
   z-index: 4;
 }
 
-/* ---------- README prose ---------- */
+/* ---------- Theme-Aware README Prose ---------- */
 .readme {
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.65;
-  color: var(--color-dim);
+  color: var(--ink-secondary);
   overflow-wrap: anywhere;
 }
 .readme h1,
 .readme h2,
 .readme h3 {
-  color: var(--color-ink);
+  color: var(--ink-primary);
   letter-spacing: -0.02em;
   font-weight: 600;
-  margin: 1.4em 0 0.5em;
-  line-height: 1.2;
+  margin: 1.35em 0 0.5em;
+  line-height: 1.22;
 }
 .readme h1 {
-  font-size: 22px;
+  font-size: 20px;
 }
 .readme h2 {
-  font-size: 18px;
+  font-size: 16.5px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--hairline);
 }
 .readme h3 {
-  font-size: 15px;
+  font-size: 14.5px;
 }
 .readme p,
 .readme ul,
@@ -404,7 +827,7 @@ body::before {
 .readme pre,
 .readme table,
 .readme blockquote {
-  margin: 0.8em 0;
+  margin: 0.75em 0;
 }
 .readme ul {
   list-style: disc;
@@ -415,37 +838,43 @@ body::before {
   padding-left: 1.3em;
 }
 .readme a {
-  color: var(--color-volt);
+  color: var(--led-hot-ink);
   text-decoration: underline;
-  text-decoration-color: rgba(6, 182, 212, 0.35);
+  text-decoration-color: color-mix(in srgb, var(--led-hot) 40%, transparent);
   text-underline-offset: 3px;
+}
+.readme a:hover {
+  text-decoration-color: var(--led-hot-ink);
 }
 .readme code {
   font-family: var(--font-mono);
-  font-size: 12.5px;
-  padding: 1px 5px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--color-ink);
+  font-size: 12px;
+  padding: 1.5px 5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-tint);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: var(--ink-primary);
 }
 .readme pre {
   padding: 12px 14px;
-  border-radius: 10px;
-  background: var(--color-ob-950);
-  box-shadow: inset 0 0 0 1px var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--bg-inset);
+  box-shadow: var(--shadow-inset);
   overflow-x: auto;
 }
 .readme pre code {
   padding: 0;
   background: none;
+  box-shadow: none;
 }
 .readme img {
   max-width: 100%;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 .readme blockquote {
   padding-left: 12px;
   border-left: 2px solid var(--hairline-strong);
+  color: var(--ink-muted);
 }
 .readme table {
   display: block;
@@ -462,6 +891,7 @@ body::before {
   display: none;
 }
 
+/* ---------- Reduced Motion Clamp ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -470,6 +900,11 @@ body::before {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.001ms !important;
   }
   .beacon::after {
     display: none;

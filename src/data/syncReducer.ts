@@ -7,6 +7,8 @@ export interface SyncState {
   /** last revalidation: every core call was a 304 */
   allNotModified: boolean;
   lastSyncAt: number | null;
+  /** epoch ms of most recent live 200 fresh data arrival (used for foley sync cue) */
+  lastLive200At: number | null;
   /** epoch ms when the rate limit resets (RATE_LIMITED) */
   resetAt: number | null;
   error: string | null;
@@ -28,7 +30,15 @@ export function syncReducer(s: SyncState, e: SyncEvent): SyncState {
     case 'START':
       return { ...s, phase: 'REVALIDATING', error: null };
     case 'CORE_RESULT':
-      return { ...s, phase: 'LIVE', allNotModified: e.allNotModified, lastSyncAt: e.at, resetAt: null, error: null };
+      return {
+        ...s,
+        phase: 'LIVE',
+        allNotModified: e.allNotModified,
+        lastSyncAt: e.at,
+        lastLive200At: e.allNotModified ? s.lastLive200At : e.at,
+        resetAt: null,
+        error: null,
+      };
     case 'CORE_FAIL':
       if (e.kind === 'rate') return { ...s, phase: 'RATE_LIMITED', resetAt: e.resetAt ?? null, error: null };
       if (e.kind === 'offline') return { ...s, phase: 'OFFLINE', error: null };
@@ -47,7 +57,7 @@ export function statusLabel(s: SyncState, now: number): string {
     case 'HYDRATED':
       return s.hydrateSource === 'snapshot' ? 'SNAPSHOT' : s.hydrateSource === 'cache' ? 'CACHED' : 'STANDBY';
     case 'REVALIDATING':
-      return 'SYNCING…';
+      return 'SYNCING...';
     case 'LIVE':
       return s.allNotModified ? 'LIVE // 304 ETAG' : 'SYNCED';
     case 'OFFLINE':

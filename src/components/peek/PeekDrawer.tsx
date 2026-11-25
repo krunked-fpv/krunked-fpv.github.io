@@ -1,68 +1,123 @@
-import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
-import { ExternalLink, Star, X } from 'lucide-react';
+import { AnimatePresence, motion, useDragControls, type PanInfo } from 'framer-motion';
+import { ExternalLink, FileText, MonitorPlay, QrCode, SlidersHorizontal, Star, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useFoley } from '../../audio/useFoley';
 import { SPRING } from '../../config/site';
 import { hueOf } from '../../domain/buildProjects';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useDeck } from '../../store/deckStore';
-import type { Project } from '../../types/project';
+import type { PeekTab, Project } from '../../types/project';
 import { CoverArt } from '../art/CoverArt';
 import { Glyph } from '../art/Glyph';
 import { FreshnessBadge } from '../spotlight/FreshnessBadge';
 import { Chip } from '../ui/Chip';
 import { GithubMark } from '../ui/GithubMark';
 import { IconButton } from '../ui/IconButton';
+import { CuratePanel } from './CuratePanel';
+import { QrHandoffPanel } from './QrHandoffPanel';
 import { SandboxFrame } from './SandboxFrame';
 import { TelemetryBrief } from './TelemetryBrief';
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled]):not([type="hidden"])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+const TABS: { key: PeekTab; label: string; shortLabel: string; Icon: typeof MonitorPlay }[] = [
+  { key: 'sandbox', label: 'Sandbox', shortLabel: 'Sandbox', Icon: MonitorPlay },
+  { key: 'brief', label: 'Brief & README', shortLabel: 'Brief', Icon: FileText },
+  { key: 'qr', label: 'QR Handoff', shortLabel: 'QR', Icon: QrCode },
+  { key: 'curate', label: 'Curate', shortLabel: 'Curate', Icon: SlidersHorizontal },
+];
 
 export function PeekDrawer({ projects }: { projects: Project[] }) {
   const peek = useDeck((s) => s.peek);
   const peekOrigin = useDeck((s) => s.peekOrigin);
+  const peekTab = useDeck((s) => s.peekTab);
   const repos = useDeck((s) => s.repos);
   const setPeek = useDeck((s) => s.setPeek);
+  const setPeekTab = useDeck((s) => s.setPeekTab);
   const togglePin = useDeck((s) => s.togglePin);
   const toast = useDeck((s) => s.toast);
+  const foley = useFoley();
   const isMobile = useMediaQuery('(max-width: 767px)');
+  const dragControls = useDragControls();
 
   const project = useMemo(() => projects.find((p) => p.name === peek) ?? null, [projects, peek]);
   const repo = useMemo(() => repos.find((r) => r.name === peek), [repos, peek]);
+  const activeTab: PeekTab = peekTab ?? (project?.launchUrl ? 'sandbox' : 'brief');
 
+  const drawerRef = useRef<HTMLElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
   const prevFocus = useRef<HTMLElement | null>(null);
 
   const close = useCallback(() => {
+    foley.tick();
     setPeek(null);
-    if (window.location.hash.startsWith('#peek/')) {
+    if (window.location.hash.startsWith('#peek/') || window.location.hash.startsWith('#qr/')) {
       history.replaceState(null, '', window.location.pathname + window.location.search);
     }
-  }, [setPeek]);
+  }, [setPeek, foley]);
 
   useEffect(() => {
     if (!project) return;
     prevFocus.current = document.activeElement as HTMLElement | null;
-    const targetHash = `#peek/${encodeURIComponent(project.name)}`;
+
+    const targetHash =
+      activeTab === 'qr'
+        ? `#qr/${encodeURIComponent(project.name)}`
+        : `#peek/${encodeURIComponent(project.name)}`;
     if (window.location.hash !== targetHash) {
       history.replaceState(null, '', `${window.location.pathname}${window.location.search}${targetHash}`);
     }
-    const t = setTimeout(() => closeBtn.current?.focus(), 40);
+
+    const t = window.setTimeout(() => closeBtn.current?.focus(), 36);
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
         close();
+        return;
+      }
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusables = [...drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
+          (el) => el.offsetParent !== null && !el.hasAttribute('inert'),
+        );
+        if (!focusables.length) return;
+        const first = focusables[0]!;
+        const last = focusables[focusables.length - 1]!;
+        const active = document.activeElement as HTMLElement | null;
+        if (!active || !drawerRef.current.contains(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
+
     document.addEventListener('keydown', onKey, true);
+    const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
+
     return () => {
-      clearTimeout(t);
+      window.clearTimeout(t);
       document.removeEventListener('keydown', onKey, true);
-      document.documentElement.style.overflow = '';
+      document.documentElement.style.overflow = prevOverflow;
       prevFocus.current?.focus?.();
     };
-  }, [project, close]);
+  }, [project, activeTab, close]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y > 120 || info.velocity.y > 600) close();
+    if (info.offset.y > 120 || info.velocity.y > 550) close();
   };
 
   return (
@@ -73,10 +128,17 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.16 }}
         >
-          <div className="absolute inset-0 bg-ob-950/75 backdrop-blur-md" onClick={close} aria-hidden="true" />
+          <div
+            className="absolute inset-0 backdrop-blur-md"
+            style={{ background: 'var(--scrim)' }}
+            onClick={close}
+            aria-hidden="true"
+          />
+
           <motion.aside
+            ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label={`${project.displayName} inspector`}
@@ -85,51 +147,72 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
             exit={isMobile ? { y: '100%' } : { x: '100%' }}
             transition={SPRING}
             drag={isMobile ? 'y' : false}
+            dragListener={false}
+            dragControls={dragControls}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.45 }}
             onDragEnd={isMobile ? handleDragEnd : undefined}
-            className="surface relative flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[24px]! rounded-b-none! md:h-full md:w-[min(1100px,92vw)] md:rounded-l-[24px]! md:rounded-r-none!"
-            style={{ background: 'var(--color-ob-900)' }}
+            className="surface relative flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[20px]! rounded-b-none! bg-surface md:h-full md:w-[min(1080px,92vw)] md:rounded-l-[20px]! md:rounded-r-none!"
           >
-            {/* Mobile grabber */}
-            <div className="flex justify-center pt-2.5 pb-1 md:hidden">
-              <span className="h-1 w-10 rounded-full bg-white/20" />
+            {/* Mobile Drag Grabber ONLY (scroll & iframe touches never trigger drag) */}
+            <div
+              onPointerDown={isMobile ? (e) => dragControls.start(e) : undefined}
+              className="flex touch-none justify-center pb-1.5 pt-2.5 md:hidden"
+              aria-hidden="true"
+            >
+              <span className="h-1 w-10 rounded-full bg-hairline-strong" />
             </div>
 
             {/* Cover Header */}
             <motion.div
               layoutId={peekOrigin ? `cover-${peekOrigin}-${project.id}` : undefined}
-              className="relative shrink-0 overflow-hidden border-b border-white/[0.07]"
+              className="relative shrink-0 overflow-hidden border-b border-hairline"
             >
               <CoverArt project={project} fill />
-              <div className="relative z-10 flex flex-col gap-4 p-4 sm:p-6">
+              <div className="relative z-10 flex flex-col gap-3 p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <FreshnessBadge project={project} />
-                    {project.isPwa && <Chip color="#06B6D4">PWA</Chip>}
-                    {project.kind === 'live' ? <Chip color="#06B6D4">LIVE</Chip> : <Chip>CODE</Chip>}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <FreshnessBadge project={project} overlay />
+                    {project.isPwa && (
+                      <Chip tone="online" led>
+                        PWA
+                      </Chip>
+                    )}
+                    {project.kind === 'live' ? (
+                      <Chip tone="online" led>
+                        LIVE
+                      </Chip>
+                    ) : (
+                      <Chip>CODE</Chip>
+                    )}
                     <Chip>{project.category}</Chip>
                   </div>
+
                   <div className="flex items-center gap-1">
                     <IconButton
                       label={project.pinned ? `Unpin ${project.displayName}` : `Pin ${project.displayName}`}
                       aria-pressed={project.pinned}
                       onClick={() => {
+                        foley.latch();
                         togglePin(project.name);
-                        toast(project.pinned ? `Unpinned ${project.displayName}` : `Pinned ${project.displayName} to dock`, 'ok');
+                        toast(
+                          project.pinned ? `Unpinned ${project.displayName}` : `Pinned ${project.displayName} to dock`,
+                          'ok',
+                        );
                       }}
                     >
-                      <Star size={17} fill={project.pinned ? 'currentColor' : 'none'} />
+                      <Star size={16} fill={project.pinned ? 'currentColor' : 'none'} />
                     </IconButton>
                     <a
                       href={project.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => foley.click()}
                       className="icon-btn"
                       aria-label={`Source of ${project.displayName} on GitHub`}
                       title="View on GitHub"
                     >
-                      <GithubMark size={17} />
+                      <GithubMark size={16} />
                     </a>
                     <button
                       ref={closeBtn}
@@ -143,29 +226,76 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
-                  <div className="flex min-w-0 items-center gap-3.5">
-                    <Glyph name={project.glyph} hue={hueOf(project)} size={48} />
+                <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Glyph name={project.glyph} hue={hueOf(project)} size={44} />
                     <div className="min-w-0">
-                      <h2 className="display truncate text-[28px] sm:text-[36px]">{project.displayName}</h2>
-                      <p className="mt-1 line-clamp-2 text-[13.5px] text-dim">{project.tagline}</p>
+                      <h2 className="display truncate text-[26px] text-ink sm:text-[34px]">{project.displayName}</h2>
+                      <p className="mt-1 line-clamp-2 text-[13px] text-dim">{project.tagline}</p>
                     </div>
                   </div>
                   {project.launchUrl && (
-                    <a href={project.launchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary shrink-0">
-                      Launch App <ExternalLink size={15} />
+                    <a
+                      href={project.launchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => foley.relay()}
+                      className="btn btn-primary shrink-0"
+                    >
+                      Launch App <ExternalLink size={14} />
                     </a>
                   )}
                 </div>
               </div>
             </motion.div>
 
-            {/* Scrollable Body */}
-            <div className="thin-scroll min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
-              <div className="flex flex-col gap-6">
-                <SandboxFrame project={project} />
-                <TelemetryBrief project={project} repo={repo} />
-              </div>
+            {/* 4-Tab Hardware Bar */}
+            <div
+              role="tablist"
+              aria-label="Inspector sections"
+              className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset px-3 py-2 sm:px-5"
+            >
+              {TABS.map(({ key, label, shortLabel, Icon }) => {
+                const active = activeTab === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => {
+                      if (activeTab !== key) {
+                        foley.tick();
+                        setPeekTab(key);
+                      }
+                    }}
+                    className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] px-2.5 text-[11.5px] font-medium whitespace-nowrap transition-colors sm:px-3 sm:text-[12.5px] ${
+                      active ? 'text-ink' : 'text-mute hover:bg-hover hover:text-dim'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="peek-tab-ind"
+                        transition={SPRING}
+                        className="absolute inset-0 rounded-[8px] border border-hairline-strong bg-elevated"
+                      />
+                    )}
+                    <Icon size={13} className="relative shrink-0" />
+                    <span className="relative sm:hidden">{shortLabel}</span>
+                    <span className="relative hidden sm:inline">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Scrollable Inspector Body */}
+            <div className="thin-scroll min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+              {activeTab === 'sandbox' && (
+                <SandboxFrame project={project} onOpenBrief={() => setPeekTab('brief')} />
+              )}
+              {activeTab === 'brief' && <TelemetryBrief project={project} repo={repo} />}
+              {activeTab === 'qr' && <QrHandoffPanel project={project} />}
+              {activeTab === 'curate' && <CuratePanel project={project} />}
             </div>
           </motion.aside>
         </motion.div>

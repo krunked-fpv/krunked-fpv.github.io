@@ -45,17 +45,46 @@ export function subscribeRate(fn: () => void) {
   return () => listeners.delete(fn);
 }
 
+/** Parse Retry-After header supporting both integer delta-seconds and HTTP-date formats. */
+export function parseRetryAfterMs(headerVal: string | null, now = Date.now()): number | null {
+  if (!headerVal) return null;
+  const trimmed = headerVal.trim();
+  if (!trimmed) return null;
+
+  if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    const sec = Number(trimmed);
+    return Number.isFinite(sec) && sec >= 0 ? Math.round(sec * 1000) : null;
+  }
+
+  const targetMs = Date.parse(trimmed);
+  if (Number.isFinite(targetMs)) {
+    return Math.max(0, targetMs - now);
+  }
+  return null;
+}
+
 export function readRateHeaders(h: Headers): RateState | null {
-  const remaining = h.get('x-ratelimit-remaining');
-  if (remaining === null) return null;
+  const remainingRaw = h.get('x-ratelimit-remaining');
+  if (remainingRaw === null) return null;
+  const remaining = Number(remainingRaw);
+  if (!Number.isFinite(remaining)) return null;
+
   const prev = getRate();
-  const poll = h.get('x-poll-interval');
+  const limitRaw = Number(h.get('x-ratelimit-limit') ?? prev?.limit ?? 60);
+  const resetRaw = Number(h.get('x-ratelimit-reset') ?? prev?.reset ?? 0);
+  const usedRaw = Number(h.get('x-ratelimit-used') ?? 0);
+  const pollRaw = h.get('x-poll-interval');
+  const poll = pollRaw !== null ? Number(pollRaw) : (prev?.pollInterval ?? null);
+
+  // Normalize reset to epoch seconds even if a proxy emits milliseconds.
+  const reset = Number.isFinite(resetRaw) ? (resetRaw > 1e12 ? Math.floor(resetRaw / 1000) : resetRaw) : 0;
+
   return {
-    limit: Number(h.get('x-ratelimit-limit') ?? prev?.limit ?? 60),
-    remaining: Number(remaining),
-    reset: Number(h.get('x-ratelimit-reset') ?? prev?.reset ?? 0),
-    used: Number(h.get('x-ratelimit-used') ?? 0),
-    pollInterval: poll ? Number(poll) : (prev?.pollInterval ?? null),
+    limit: Number.isFinite(limitRaw) ? limitRaw : 60,
+    remaining,
+    reset,
+    used: Number.isFinite(usedRaw) ? usedRaw : 0,
+    pollInterval: poll !== null && Number.isFinite(poll) ? poll : null,
     updatedAt: Date.now(),
   };
 }

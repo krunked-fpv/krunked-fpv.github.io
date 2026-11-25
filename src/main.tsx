@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')!).render(
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {
-      /* offline/sandboxed environments may disallow SW */
+      /* offline or sandboxed environments may disallow SW registration */
     });
   });
 }

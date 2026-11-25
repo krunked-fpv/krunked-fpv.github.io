@@ -1,9 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { enrichCommits } from '../data/enrich';
-import { ghFetch, OfflineError, RateLimitedError } from '../data/ghClient';
+import { enrichCommits, fetchReadme, sanitizeReadme } from '../data/enrich';
+import {
+  AuthError,
+  fetchRateLimit,
+  ghFetch,
+  OfflineError,
+  RateLimitedError,
+  syncDisabled,
+  SyncDisabledError,
+} from '../data/ghClient';
 import { _resetForTests, clearAll } from '../data/httpCache';
-import { _resetRateForTests, setRate } from '../data/rateLimit';
+import { _resetProbesForTests, canClientProbe } from '../data/probe';
+import { _resetRateForTests, parseRetryAfterMs, setRate } from '../data/rateLimit';
 import type { GhRepo } from '../types/github';
+import { clearPat, setPat } from '../vault/patStore';
 
 const mkRepo = (): GhRepo => ({
   id: 1,
@@ -26,16 +36,22 @@ const mkRepo = (): GhRepo => ({
   archived: false,
 });
 
-describe('ghClient ETag, rate-limit, offline & budget guard', () => {
+describe('ghClient V2: ETag, 304 recovery, PAT firewall, backoff & ?sync=off silence', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    clearPat();
     _resetForTests();
     _resetRateForTests();
+    _resetProbesForTests();
+    window.history.replaceState(null, '', '/');
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    clearPat();
     clearAll();
+    window.history.replaceState(null, '', '/');
   });
 
   it('stores ETag on 200, sends If-None-Match on next call, and returns cached data on 304', async () => {
@@ -76,8 +92,61 @@ describe('ghClient ETag, rate-limit, offline & budget guard', () => {
     expect(secondInit.cache).toBe('no-store');
   });
 
-  it('throws RateLimitedError on 403 when quota is 0', async () => {
-    const resetSec = Math.floor(Date.now() / 1000) + 1800;
+  it('recovers from an unexpected 304 cache miss with a single unconditional retry', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 304 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ id: 7, name: 'dojo' }]), {
+          status: 200,
+          headers: { ETag: 'W/"retry-ok"' },
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await ghFetch<{ id: number; name: string }[]>('/users/krunked-fpv/repos');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(res.source).toBe('network');
+    expect(res.data[0]?.name).toBe('dojo');
+  });
+
+  it('enforces assertGitHubApiOrigin PAT firewall and rejects non-api.github.com origins before fetch', async () => {
+    setPat('ghp_1234567890abcdef1234567890abcdef', 'session');
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const forbidden = [
+      'https://evil.example.com/users/krunked-fpv',
+      'http://api.github.com/users/krunked-fpv',
+      'https://api.github.com.evil.com/users/krunked-fpv',
+      'https://attacker:pass@api.github.com/users/krunked-fpv',
+      'https://api.github.com:8443/users/krunked-fpv',
+    ];
+    for (const bad of forbidden) {
+      await expect(ghFetch(bad)).rejects.toThrow(/Blocked credential leak/i);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // Legitimate api.github.com request attaches Bearer token
+    await ghFetch('/users/krunked-fpv');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const headers = (fetchMock.mock.calls[0]?.[1] as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer ghp_1234567890abcdef1234567890abcdef');
+  });
+
+  it('handles primary 403, secondary 403, numeric Retry-After, HTTP-date Retry-After, and 401 AuthError', async () => {
+    const now = Date.now();
+    expect(parseRetryAfterMs('90', now)).toBe(90_000);
+    const futureDate = new Date(now + 120_000).toUTCString();
+    const parsedDateMs = parseRetryAfterMs(futureDate, now);
+    expect(parsedDateMs).not.toBeNull();
+    expect(parsedDateMs!).toBeGreaterThan(100_000);
+    expect(parseRetryAfterMs('not-a-date', now)).toBeNull();
+
+    // Primary 403 quota=0
+    const resetSec = Math.floor(now / 1000) + 1800;
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValueOnce(
@@ -92,14 +161,52 @@ describe('ghClient ETag, rate-limit, offline & budget guard', () => {
       ),
     );
     await expect(ghFetch('/users/krunked-fpv/repos')).rejects.toBeInstanceOf(RateLimitedError);
+
+    // Secondary 403 (remaining > 0, abuse/secondary body)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'You have exceeded a secondary rate limit.' }), {
+          status: 403,
+          headers: {
+            'x-ratelimit-limit': '60',
+            'x-ratelimit-remaining': '42',
+            'x-ratelimit-reset': String(resetSec),
+          },
+        }),
+      ),
+    );
+    await expect(ghFetch('/users/krunked-fpv/events')).rejects.toBeInstanceOf(RateLimitedError);
+
+    // 429 with HTTP-date Retry-After -> finite resetAt (never NaN)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(
+        new Response('Slow down', {
+          status: 429,
+          headers: { 'retry-after': futureDate },
+        }),
+      ),
+    );
+    try {
+      await ghFetch('/users/krunked-fpv/events');
+      expect.fail('Expected RateLimitedError');
+    } catch (e) {
+      expect(e).toBeInstanceOf(RateLimitedError);
+      expect(Number.isFinite((e as RateLimitedError).resetAt)).toBe(true);
+      expect((e as RateLimitedError).resetAt).toBeGreaterThan(now);
+    }
+
+    // 401 with configured PAT throws AuthError
+    setPat('ghp_invalidtoken1234567890', 'session');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response('Bad credentials', { status: 401 })));
+    await expect(ghFetch('/users/krunked-fpv')).rejects.toBeInstanceOf(AuthError);
   });
 
-  it('throws OfflineError on fetch network rejection', async () => {
+  it('throws OfflineError on fetch rejection and skips enrichment when quota is exhausted', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch')));
     await expect(ghFetch('/users/krunked-fpv/repos')).rejects.toBeInstanceOf(OfflineError);
-  });
 
-  it('skips enrichment network calls when budget is exhausted', async () => {
     setRate({
       limit: 60,
       remaining: 3,
@@ -110,9 +217,38 @@ describe('ghClient ETag, rate-limit, offline & budget guard', () => {
     });
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-
-    const ran = await enrichCommits(mkRepo());
-    expect(ran).toBe(false);
+    expect(await enrichCommits(mkRepo())).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('enforces total network silence under ?sync=off and skips cross-origin localhost probes', async () => {
+    window.history.replaceState(null, '', '/?sync=off');
+    expect(syncDisabled()).toBe(true);
+
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(ghFetch('/users/krunked-fpv/repos')).rejects.toBeInstanceOf(SyncDisabledError);
+    expect(await fetchRateLimit()).toBeNull();
+    expect(await enrichCommits(mkRepo())).toBe(false);
+    expect(await fetchReadme(mkRepo())).toBeNull();
+    expect(canClientProbe('https://krunked-fpv.github.io/dojo/')).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // Even without ?sync=off, localhost/non-PAGES_ORIGIN skips cross-origin probes (zero CORS spam)
+    window.history.replaceState(null, '', '/');
+    expect(canClientProbe('https://krunked-fpv.github.io/dojo/')).toBe(false);
+
+    // README sanitization strips scripts, iframes, and javascript: links
+    const clean = sanitizeReadme(
+      '<script>alert(1)</script><iframe src="https://evil.com"></iframe><a href="javascript:alert(1)">bad</a><a href="./docs/guide.md">Guide</a><img src="javascript:x" /><img src="./shot.png" />',
+      'dojo',
+      'main',
+    );
+    expect(clean).not.toContain('<script');
+    expect(clean).not.toContain('<iframe');
+    expect(clean).not.toContain('javascript:');
+    expect(clean).toContain('https://github.com/krunked-fpv/dojo/blob/main/docs/guide.md');
+    expect(clean).toContain('https://raw.githubusercontent.com/krunked-fpv/dojo/main/shot.png');
   });
 });

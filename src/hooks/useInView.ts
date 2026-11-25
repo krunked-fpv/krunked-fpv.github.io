@@ -7,13 +7,17 @@ export function useInView<T extends Element>(opts: { once?: boolean; margin?: st
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
     const io = new IntersectionObserver(
       ([e]) => {
         if (!e) return;
         setInView(e.isIntersecting);
         if (e.isIntersecting && opts.once) io.disconnect();
       },
-      { rootMargin: opts.margin ?? '200px' },
+      { rootMargin: opts.margin ?? '400px' },
     );
     io.observe(el);
     return () => io.disconnect();

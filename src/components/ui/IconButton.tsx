@@ -1,14 +1,32 @@
-import type { ComponentProps, ReactNode } from 'react';
+import { forwardRef, type ComponentProps, type ReactNode } from 'react';
 
-interface Props extends Omit<ComponentProps<'button'>, 'children'> {
+export type IconButtonTone = 'default' | 'hot' | 'online' | 'active';
+export type IconButtonSize = 'sm' | 'md';
+
+export interface IconButtonProps extends Omit<ComponentProps<'button'>, 'children'> {
   label: string;
+  active?: boolean;
+  tone?: IconButtonTone;
+  size?: IconButtonSize;
   children: ReactNode;
 }
 
-export function IconButton({ label, children, className = '', ...rest }: Props) {
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { label, active, tone = 'default', size = 'md', className = '', children, ...rest },
+  ref,
+) {
   return (
-    <button type="button" aria-label={label} title={label} className={`icon-btn ${className}`} {...rest}>
+    <button
+      ref={ref}
+      type="button"
+      aria-label={label}
+      title={label}
+      data-active={active ? 'true' : undefined}
+      data-tone={tone !== 'default' ? tone : undefined}
+      className={`icon-btn ${size === 'sm' ? 'icon-btn-sm' : ''} ${className}`}
+      {...rest}
+    >
       {children}
     </button>
   );
-}
+});

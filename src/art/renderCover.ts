@@ -1,4 +1,5 @@
-import { makePalette } from './color';
+import { makePalette, type ArtTheme } from './color';
+import { drawCornerFiducials, finishCover } from './drafting';
 import { drawGroove } from './styles/groove';
 import { drawOrbital } from './styles/orbital';
 import { drawPrism } from './styles/prism';
@@ -15,6 +16,7 @@ export interface RenderOpts {
   h: number;
   dpr?: number;
   t?: number;
+  theme?: ArtTheme;
 }
 
 const DRAWERS: Record<ArtStyle, (a: StyleArgs) => void> = {
@@ -25,7 +27,7 @@ const DRAWERS: Record<ArtStyle, (a: StyleArgs) => void> = {
   groove: drawGroove,
 };
 
-/** Deterministic: same (seed, style, hue, size, t) → same pixels. */
+/** Deterministic: same (seed, style, hue, theme, size, t) -> same pixels. */
 export function renderCover(canvas: HTMLCanvasElement | OffscreenCanvas, o: RenderOpts) {
   const dpr = o.dpr ?? 1;
   canvas.width = Math.max(1, Math.round(o.w * dpr));
@@ -33,20 +35,8 @@ export function renderCover(canvas: HTMLCanvasElement | OffscreenCanvas, o: Rend
   const ctx = canvas.getContext('2d') as Ctx2D | null;
   if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pal = makePalette(o.hue);
+  const pal = makePalette(o.hue, o.theme ?? 'obsidian');
   DRAWERS[o.style]({ ctx, w: o.w, h: o.h, seed: o.seed, pal, t: o.t ?? 0 });
-  finish(ctx, o.w, o.h);
-}
-
-function finish(ctx: Ctx2D, w: number, h: number) {
-  const vig = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.8);
-  vig.addColorStop(0, 'rgba(7,8,10,0)');
-  vig.addColorStop(1, 'rgba(7,8,10,0.55)');
-  ctx.fillStyle = vig;
-  ctx.fillRect(0, 0, w, h);
-  const fade = ctx.createLinearGradient(0, h * 0.55, 0, h);
-  fade.addColorStop(0, 'rgba(13,16,21,0)');
-  fade.addColorStop(1, 'rgba(13,16,21,0.92)');
-  ctx.fillStyle = fade;
-  ctx.fillRect(0, h * 0.55, w, h * 0.45);
+  drawCornerFiducials(ctx, o.w, o.h, pal);
+  finishCover(ctx, o.w, o.h, pal);
 }

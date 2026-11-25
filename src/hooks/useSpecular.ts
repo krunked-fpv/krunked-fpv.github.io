@@ -6,7 +6,10 @@ export function useSpecular<T extends HTMLElement = HTMLElement>() {
   return useCallback((el: T | null) => {
     cleanup.current?.();
     cleanup.current = null;
-    if (!el || !window.matchMedia('(hover: hover)').matches) return;
+    if (!el || typeof window === 'undefined') return;
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     let raf = 0;
     let x = 0;
     let y = 0;
