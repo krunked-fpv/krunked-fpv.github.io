@@ -65,6 +65,13 @@ export function SpotlightTile({
       exit={reduced ? { opacity: 0 } : { opacity: 0, y: 5, scale: 0.985 }}
       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       className={`hologram-hud reticle-box relative flex w-full items-center gap-2 overflow-hidden px-2.5 py-2.5 xl:gap-3 xl:px-3 ${className}`}
+      style={
+        isDaylight
+          ? undefined
+          : {
+              boxShadow: `inset 0 1px 0 rgba(214,91,255,0.24), inset 0 0 0 1px rgba(184,41,255,0.26), 0 0 36px -10px rgba(184,41,255,0.28), 0 24px 64px -18px rgba(0,0,0,0.98)`,
+            }
+      }
       data-active="true"
     >
       {/* Animated Dynamic OKLCH Top Accent Edge */}
@@ -79,12 +86,14 @@ export function SpotlightTile({
         }}
       />
 
-      {/* Subtle Ambient Accent Bloom under Top Seam */}
+      {/* Subtle Ambient Accent & Neon-Purple Singularity Bloom under Top Seam */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-10 top-0 z-[1] h-10 opacity-75"
+        className="pointer-events-none absolute inset-x-8 top-0 z-[1] h-11 opacity-80"
         style={{
-          background: `radial-gradient(ellipse 65% 100% at 50% 0%, ${accentSoft}, transparent 74%)`,
+          background: isDaylight
+            ? `radial-gradient(ellipse 65% 100% at 50% 0%, ${accentSoft}, transparent 74%)`
+            : `radial-gradient(ellipse 52% 95% at 50% 0%, ${accentSoft}, transparent 72%), radial-gradient(ellipse 78% 100% at 50% 0%, rgba(184, 41, 255, 0.14), transparent 76%)`,
         }}
       />
 

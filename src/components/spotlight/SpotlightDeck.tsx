@@ -341,7 +341,7 @@ export function SpotlightDeck({
                             ? {
                                 boxShadow: isDaylight
                                   ? `inset 0 2px 0 ${accentSolid}, inset 0 0 0 1.5px #0A0A0B, 0 8px 24px -8px ${accentGlow}, 0 14px 32px -12px rgba(10,10,11,0.28)`
-                                  : `inset 0 1.5px 0 ${accentSolid}, inset 0 0 0 1px ${accentCss(hue, false, 0.72)}, 0 0 26px -6px ${accentGlow}, 0 16px 34px -12px rgba(0,0,0,0.96)`,
+                                  : `inset 0 1.5px 0 ${accentSolid}, inset 0 0 0 1px ${accentCss(hue, false, 0.72)}, 0 0 28px -5px rgba(184,41,255,0.34), 0 0 22px -6px ${accentGlow}, 0 16px 34px -12px rgba(0,0,0,0.96)`,
                               }
                             : undefined
                         }
@@ -458,7 +458,7 @@ export function SpotlightDeck({
                             ? {
                                 boxShadow: isDaylight
                                   ? `inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px #0A0A0B, 0 6px 20px -8px ${accentGlow}, 0 10px 24px -10px rgba(10,10,11,0.22)`
-                                  : `inset 0 1px 0 rgba(245,243,236,0.24), inset 0 0 0 1px ${accentCss(hue, false, 0.72)}, 0 0 22px -6px ${accentGlow}, 0 12px 26px -10px rgba(0,0,0,0.96)`,
+                                  : `inset 0 1px 0 rgba(245,243,236,0.24), inset 0 0 0 1px ${accentCss(hue, false, 0.72)}, 0 0 24px -5px rgba(184,41,255,0.32), 0 0 20px -6px ${accentGlow}, 0 12px 26px -10px rgba(0,0,0,0.96)`,
                               }
                             : undefined
                         }

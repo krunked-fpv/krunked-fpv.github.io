@@ -10,7 +10,7 @@ export interface HeroCanvasProps {
   theme?: ArtTheme;
   /** false = dense gravitational singularity at rest; true = blown-open supernova & active orbital arena */
   exploded?: boolean;
-  /** Incrementing counter triggering a blazing Flash-style shockwave ring + accretion flare */
+  /** Incrementing counter triggering a blazing shockwave ring + accretion flare */
   burstSeq?: number;
   /** True while pointer hovers near the event horizon core (coils gravitational energy / pinch) */
   hoverCore?: boolean;
@@ -110,7 +110,7 @@ float sq(float x) {
   return x * x;
 }
 
-// Multi-scale crisp pinpoint deep-space starfield with parallax, 4-point glints & Einstein lensing
+// Multi-scale crisp pinpoint deep-space starfield with parallax, 4-point glints & neon-purple Einstein sheen
 vec3 sampleStarfield(
   vec2 baseCoord,
   vec2 ptrOffset,
@@ -118,7 +118,8 @@ vec3 sampleStarfield(
   float einsteinBoost,
   vec3 accentA,
   vec3 acidLime,
-  vec3 aeroCyan
+  vec3 neonPurple,
+  vec3 ultraPlasma
 ) {
   vec3 stars = vec3(0.0);
   for (int layer = 0; layer < 3; layer++) {
@@ -133,24 +134,28 @@ vec3 sampleStarfield(
     vec2 delta = f - pos;
     float d = length(delta);
 
-    float bright = step(0.845 - fl * 0.038, rnd.x);
+    float bright = step(0.842 - fl * 0.038, rnd.x);
     float twinkle = 0.68 + 0.32 * sin(time * (1.7 + rnd.y * 3.4) + rnd.x * 42.0);
-    float radius = 0.056 - fl * 0.008 + einsteinBoost * 0.028;
+    float radius = 0.056 - fl * 0.008 + einsteinBoost * 0.030;
     float core = smoothstep(radius, 0.0, d) * bright * twinkle;
 
-    // Subtle 4-point optical diffraction glint on rare brightest foreground stars
-    float glintMask = step(0.955, rnd.x) * (1.0 - step(0.5, fl));
+    // Crisp 4-point optical diffraction glint on rare brightest foreground stars
+    float glintMask = step(0.952, rnd.x) * (1.0 - step(0.5, fl));
     float crossGlint =
       (exp(-abs(delta.x) * 42.0) * exp(-abs(delta.y) * 9.5) +
         exp(-abs(delta.y) * 42.0) * exp(-abs(delta.x) * 9.5)) *
       glintMask *
       twinkle *
-      0.55;
+      0.58;
 
-    // Strictly non-purple astronomical tints: warm ivory, acid-lime, accent, or aerospace cyan
-    vec3 coolOrWarm = mix(aeroCyan, mix(accentA, acidLime, step(0.88, rnd.y)), step(0.42, rnd.y));
-    vec3 tint = mix(vec3(0.97, 0.96, 0.91), coolOrWarm, 0.34);
-    stars += tint * (core * (0.92 - fl * 0.22) + crossGlint);
+    // Electric neon-purple, ultraviolet, warm ivory, accent & subtle acid-lime astronomical star tints
+    vec3 cosmicTint = mix(
+      mix(neonPurple, ultraPlasma, rnd.x),
+      mix(accentA, acidLime, step(0.88, rnd.y)),
+      step(0.56, rnd.y)
+    );
+    vec3 tint = mix(vec3(0.97, 0.96, 0.92), cosmicTint, 0.44 + einsteinBoost * 0.34);
+    stars += tint * (core * (0.94 - fl * 0.22) + crossGlint);
   }
   return stars;
 }
@@ -245,7 +250,7 @@ void main() {
   float rH = mix(0.154, 0.114, uExploded);
   rH -= uHoverCore * 0.017 * (1.0 - uExploded * 0.45);
   rH += burstFlash * 0.024 * sin(uBurstAge * 20.0);
-  float charge = clamp(uHoverCore * 0.88 + uExploded * 0.58 + burstFlash * 1.5, 0.0, 2.1);
+  float charge = clamp(uHoverCore * 0.88 + uExploded * 0.62 + burstFlash * 1.5, 0.0, 2.1);
 
   // Relativistic gravitational distortion wave warp
   vec2 dir = p / max(0.0001, r);
@@ -265,22 +270,24 @@ void main() {
   vec2 eqCoord = vec2(pr.x, pr.y * tiltSquash);
   float rEq = length(eqCoord);
   float aEq = atan(eqCoord.y, eqCoord.x + 1e-6);
-  float eqOuter = mix(0.60, 0.78, uExploded) + burstFlash * 0.18 + uHoverCore * 0.03;
+  float eqOuter = mix(0.62, 0.80, uExploded) + burstFlash * 0.18 + uHoverCore * 0.03;
 
   // Slight ISCO plunge cliff lets the double photon ring pop crisply against dark space
   float eqInnerMask = smoothstep(rH * 1.02, rH * 1.16, rEq);
   float eqOuterMask = 1.0 - smoothstep(rH * 1.38, eqOuter, rEq);
-  float eqRadialHeat = mix(0.46, 1.38, exp(-max(0.0, rEq - rH * 1.14) * 4.4));
+  float eqRadialHeat = mix(0.48, 1.40, exp(-max(0.0, rEq - rH * 1.14) * 4.2));
   vec2 eqField = plasmaField(rEq, aEq, uTime, charge);
-  float eqIntensity = eqInnerMask * eqOuterMask * eqRadialHeat * (0.38 + eqField.x * 1.08);
+  float eqIntensity = eqInnerMask * eqOuterMask * eqRadialHeat * (0.38 + eqField.x * 1.10);
   float eqKnots = eqInnerMask * eqOuterMask * eqField.y;
+  // Outer disk radial factor drives vivid neon-purple outer ribbons -> molten gold/ivory inner wall
+  float eqOuterRatio = smoothstep(rH * 1.18, eqOuter * 0.78, rEq);
 
   // Front-vs-back hemisphere occlusion across the curved 3D shadow silhouette
   float frontArcOffset = -0.011 * (1.0 - smoothstep(0.0, rH * 1.35, abs(pr.x)));
   float frontHalf = smoothstep(0.030, -0.024, pr.y - frontArcOffset);
 
   // --- 2. GRAVITATIONALLY-LENSED UPPER & LOWER ARCHES ---
-  float archOuter = rH * mix(2.14, 2.40, uExploded) + burstFlash * 0.14 + uHoverCore * 0.02;
+  float archOuter = rH * mix(2.18, 2.46, uExploded) + burstFlash * 0.14 + uHoverCore * 0.02;
   float upperMask = smoothstep(-0.018, 0.075, pr.y);
   float lowerMask = smoothstep(0.018, -0.075, pr.y);
 
@@ -288,23 +295,25 @@ void main() {
   float rUp = length(upP);
   float upBand = smoothstep(rH * 0.99, rH * 1.085, rUp) * (1.0 - smoothstep(rH * 1.16, archOuter, rUp));
   vec2 upField = plasmaField(rUp * 1.14, atan(upP.y, upP.x + 1e-6), uTime * 1.08, charge);
-  float upperArch = upperMask * upBand * (0.34 + upField.x * 1.04);
-  float upperKnots = upperMask * upBand * upField.y * 0.72;
+  float upperArch = upperMask * upBand * (0.36 + upField.x * 1.06);
+  float upperKnots = upperMask * upBand * upField.y * 0.74;
+  float upOuterRatio = smoothstep(rH * 1.08, archOuter * 0.82, rUp);
 
   vec2 loP = vec2(pr.x * 0.955, min(0.0, pr.y) * 1.24);
   float rLo = length(loP);
-  float loOuter = rH * mix(1.66, 1.88, uExploded) + burstFlash * 0.08;
+  float loOuter = rH * mix(1.70, 1.94, uExploded) + burstFlash * 0.08;
   float loBand = smoothstep(rH * 0.985, rH * 1.06, rLo) * (1.0 - smoothstep(rH * 1.11, loOuter, rLo));
   vec2 loField = plasmaField(rLo * 1.24, atan(loP.y, loP.x + 1e-6), uTime * 0.96, charge);
-  float lowerArch = lowerMask * loBand * (0.28 + loField.x * 0.88);
-  float lowerKnots = lowerMask * loBand * loField.y * 0.55;
+  float lowerArch = lowerMask * loBand * (0.30 + loField.x * 0.90);
+  float lowerKnots = lowerMask * loBand * loField.y * 0.56;
+  float loOuterRatio = smoothstep(rH * 1.06, loOuter * 0.82, rLo);
 
-  // --- 3. RELATIVISTIC DOPPLER BEAMING (Left Approaching White-Hot -> Right Receding Copper) ---
+  // --- 3. RELATIVISTIC DOPPLER BEAMING (Left Approaching White-Hot -> Right Receding Ultraviolet/Amber) ---
   float dopplerDir = clamp(-pr.x * 1.55, -1.0, 1.0);
-  float doppler = clamp(1.0 + dopplerDir * 0.78, 0.34, 1.92);
+  float doppler = clamp(1.0 + dopplerDir * 0.78, 0.36, 1.92);
   float dopplerLimb = smoothstep(-0.35, 0.88, dopplerDir);
 
-  // --- 4. DOUBLE PHOTON RING + MICRO-CAUSTIC SHIMMER + CHROMATIC DISPERSION ---
+  // --- 4. DOUBLE PHOTON RING + MICRO-CAUSTIC SHIMMER + ELECTRIC NEON-PURPLE DISPERSION ---
   float rPhotonPrimary = rH * 1.036;
   float rPhotonSub = rH * 1.004;
   float dP1 = rw - rPhotonPrimary;
@@ -314,132 +323,192 @@ void main() {
   float causticB =
     0.66 + 0.34 * sin(ang * 19.0 + uTime * (5.2 + uHoverCore * 5.8) + sin(ang * 5.0 - uTime * 2.2) * 1.4);
 
-  // Primary razor-sharp photon ring + delicate non-purple prism dispersion fringes
+  // Primary razor-sharp photon ring + vivid neon-purple outer chromatic dispersion fringe
   float photonW = 0.0058 + burstFlash * 0.0052;
   float photonCore = exp(-sq(dP1 / photonW));
-  float photonDispWarm = exp(-sq((dP1 - 0.0036) / (photonW * 1.45)));
-  float photonDispCool = exp(-sq((dP1 + 0.0028) / (photonW * 0.92)));
+  float photonDispOuter = exp(-sq((dP1 - 0.0052) / (photonW * 1.95)));
+  float photonDispInner = exp(-sq((dP1 + 0.0028) / (photonW * 0.95)));
 
   // Ultra-fine inner secondary gravitationally-lensed sub-ring right on the shadow cliff
   float subRing = exp(-sq(dP2 / (0.0022 + burstFlash * 0.0016))) * (0.68 + 0.52 * causticB);
 
   float photonHalo =
-    exp(-max(0.0, dP1) * (12.2 - uExploded * 2.6 - burstFlash * 4.4 - uHoverCore * 2.0)) *
+    exp(-max(0.0, dP1) * (10.6 - uExploded * 2.4 - burstFlash * 4.2 - uHoverCore * 2.0)) *
     smoothstep(rH * 0.96, rH * 1.028, rw);
 
   // Crisp event horizon shadow occlusion
   float shadowMask = smoothstep(rH - 0.0035, rH + 0.0045, rw);
 
   // Curved volumetric front equatorial belt sweeping cleanly in front of the obsidian sphere
-  float frontThickness = smoothstep(0.068, 0.004, abs(pr.y - frontArcOffset));
+  float frontThickness = smoothstep(0.072, 0.004, abs(pr.y - frontArcOffset));
+  float frontEdgeSheath = smoothstep(0.088, 0.018, abs(pr.y - frontArcOffset)) * (1.0 - frontThickness * 0.55);
   float frontBelt = eqIntensity * frontHalf * frontThickness * (0.76 + 0.52 * eqField.x);
   float frontKnots = eqKnots * frontHalf * frontThickness;
-  float visibleDisk = eqIntensity * mix(shadowMask, 1.0, frontHalf) + (upperArch + lowerArch) * shadowMask;
+  float visibleEq = eqIntensity * mix(shadowMask, 1.0, frontHalf);
+  float visibleArch = (upperArch + lowerArch) * shadowMask;
+  float visibleDisk = visibleEq + visibleArch;
   float visibleKnots = eqKnots * mix(shadowMask, 1.0, frontHalf) + (upperKnots + lowerKnots) * shadowMask;
+
+  // Weighted outer-ribbon factor across equatorial ribbons & vaulted Einstein arches
+  float archNeonWeight = (upperArch * (0.58 + 0.42 * upOuterRatio) + lowerArch * (0.62 + 0.38 * loOuterRatio)) * shadowMask;
+  float eqNeonWeight = visibleEq * (0.28 + 0.72 * eqOuterRatio);
+  float neonFactor = clamp((archNeonWeight * 1.15 + eqNeonWeight) / max(0.001, visibleDisk), 0.0, 1.0);
 
   // Shared Einstein gravitational lensing coordinate for starfields
   float rE = rH * 1.25;
   float einstein = (rE * rE) / max(0.0028, rw * rw);
   vec2 starCoord = pw * (1.0 - clamp(einstein, 0.0, 0.93));
 
-  // Strict non-purple studio palette (Obsidian + Acid Lime + Ivory + Aerospace Cyan + Molten Gold/Copper)
+  // Electric Neon-Purple Event Horizon palette + incandescent core highlights
+  vec3 neonPurple = vec3(0.74, 0.16, 1.0);
+  vec3 ultraPlasma = vec3(0.90, 0.30, 1.0);
+  vec3 cosmicViolet = vec3(0.44, 0.07, 0.90);
+  vec3 lavenderHot = vec3(0.96, 0.78, 1.0);
   vec3 acidLime = vec3(0.8235, 1.0, 0.1569);
-  vec3 aeroCyan = vec3(0.0, 0.8314, 1.0);
   vec3 ivoryHot = vec3(1.0, 0.988, 0.935);
-  vec3 moltenGold = vec3(1.0, 0.78, 0.22);
-  vec3 moltenAmber = vec3(1.0, 0.54, 0.10);
-  vec3 deepCopper = vec3(0.68, 0.19, 0.035);
+  vec3 moltenGold = vec3(1.0, 0.76, 0.22);
+  vec3 moltenAmber = vec3(1.0, 0.52, 0.12);
 
   vec3 darkCol = vec3(0.0);
   vec3 lightCol = vec3(0.0);
 
   // =========================================================================
-  // DARK MODE ("EVENT HORIZON" -- Gargantua Cinema Grade)
+  // DARK MODE ("EVENT HORIZON" -- Electric Neon-Purple Gargantua)
   // =========================================================================
   if (uLight < 0.999) {
     vec3 darkVoid = vec3(0.0078, 0.0078, 0.0118); // #020203
 
-    float einsteinRingMask = exp(-sq((rw - rH * 1.28) / 0.046));
-    vec3 stars =
-      sampleStarfield(starCoord, ptr, uTime, einsteinRingMask, uAccentA, acidLime, aeroCyan) * shadowMask;
+    float einsteinRingMask = exp(-sq((rw - rH * 1.28) / 0.048));
+    vec3 stars = sampleStarfield(
+      starCoord,
+      ptr,
+      uTime,
+      einsteinRingMask,
+      uAccentA,
+      acidLime,
+      neonPurple,
+      ultraPlasma
+    ) * shadowMask;
 
-    // Delicate gravitationally-lensed tangential Einstein star arcs hugging the Einstein radius
+    // Delicate gravitationally-lensed tangential Einstein star arcs gleaming in neon purple & ultraviolet
     float arcPhase = sin(ang * 22.0 + 0.4 * sin(ang * 7.0));
-    float arcGlints = smoothstep(0.935, 0.998, arcPhase) * einsteinRingMask * shadowMask;
+    float arcGlints = smoothstep(0.93, 0.998, arcPhase) * einsteinRingMask * shadowMask;
     float arcSub =
-      smoothstep(0.91, 0.995, sin(ang * 34.0 - 1.7)) *
-      exp(-sq((rw - rH * 1.36) / 0.022)) *
+      smoothstep(0.905, 0.995, sin(ang * 34.0 - 1.7)) *
+      exp(-sq((rw - rH * 1.37) / 0.024)) *
       shadowMask;
     vec3 einsteinArcs =
-      mix(ivoryHot, aeroCyan, 0.42) * arcGlints * 0.48 + mix(moltenGold, acidLime, 0.35) * arcSub * 0.24;
+      mix(ultraPlasma, ivoryHot, 0.36) * arcGlints * 0.56 +
+      mix(neonPurple, acidLime, 0.24) * arcSub * 0.30;
 
-    // Tightly-contained deep-space gravitational dust bloom (clean dark void outer margin for pod contrast)
-    float dust = fbm3(pw * 2.4 + vec2(uTime * 0.025, -uTime * 0.018)) * exp(-rw * 2.35) * shadowMask;
-    darkCol = darkVoid + stars + einsteinArcs + mix(uAccentB, uAccentA, 0.48) * dust * (0.11 + uExploded * 0.07);
+    // Lush cosmic violet & electric neon-purple deep-space dust nebula + gravitational corona halo
+    float dustA = fbm3(pw * 2.25 + vec2(uTime * 0.025, -uTime * 0.018));
+    float dustB = fbm3(pr * 3.4 - vec2(uTime * 0.032, uTime * 0.014));
+    float nebulaEnv = exp(-rw * 1.85) * shadowMask;
+    float coronaGlow = exp(-max(0.0, rw - rH * 1.02) * (3.6 - uExploded * 0.65)) * shadowMask;
 
-    // Relativistic Doppler-shifted accretion plasma spectrum
-    float heat = clamp(visibleDisk * doppler, 0.0, 2.45);
-    vec3 recedingPal = mix(deepCopper, moltenAmber, smoothstep(0.04, 0.55, heat));
-    recedingPal = mix(recedingPal, moltenGold, smoothstep(0.45, 1.25, heat) * 0.85);
+    vec3 nebulaCol =
+      cosmicViolet * (dustA * 0.28 + coronaGlow * (0.28 + uExploded * 0.14 + uHoverCore * 0.14)) * nebulaEnv +
+      neonPurple * dustB * exp(-rw * 2.35) * (0.20 + uExploded * 0.10) * shadowMask +
+      mix(uAccentB, cosmicViolet, 0.62) * dustA * exp(-rw * 2.6) * 0.08 * shadowMask;
 
-    vec3 approachingPal = mix(moltenAmber, moltenGold, smoothstep(0.05, 0.42, heat));
-    approachingPal = mix(approachingPal, mix(uAccentA, acidLime, 0.42 + uHoverCore * 0.24), smoothstep(0.28, 0.95, heat) * 0.56);
-    approachingPal = mix(approachingPal, mix(ivoryHot, aeroCyan, 0.16), smoothstep(0.95, 1.85, heat) * 0.72);
+    darkCol = darkVoid + stars + einsteinArcs + nebulaCol;
 
-    vec3 diskColor = mix(recedingPal, approachingPal, dopplerLimb);
-    diskColor = mix(diskColor, ivoryHot, smoothstep(1.15, 2.05, heat));
+    // Relativistic accretion plasma: vivid neon purple & ultraviolet outer ribbons/arches ->
+    // molten amber/gold mid-bands -> blazing incandescent ivory-white + subtle acid-lime inner edge
+    float heat = clamp(visibleDisk * doppler, 0.0, 2.50);
 
-    darkCol += diskColor * heat * 0.96;
+    // Outer & lensed-arch ultraviolet / neon-purple plasma spectrum
+    vec3 violetSpectrum = mix(cosmicViolet, neonPurple, smoothstep(0.04, 0.48, heat));
+    violetSpectrum = mix(violetSpectrum, ultraPlasma, smoothstep(0.38, 1.05, heat));
+    violetSpectrum = mix(violetSpectrum, lavenderHot, smoothstep(1.05, 1.90, heat) * 0.72);
 
-    // Incandescent orbiting hot plasma knots
-    vec3 knotCol = mix(moltenGold, mix(ivoryHot, acidLime, 0.35), dopplerLimb);
-    darkCol += knotCol * visibleKnots * doppler * 0.78;
+    // Inner relativistic incandescent thermal core (molten amber/gold -> ivory-white + subtle acid-lime)
+    vec3 coreSpectrum = mix(moltenAmber, moltenGold, smoothstep(0.08, 0.55, heat));
+    coreSpectrum = mix(
+      coreSpectrum,
+      mix(moltenGold, acidLime, 0.28 + uHoverCore * 0.18),
+      smoothstep(0.45, 1.15, heat) * dopplerLimb * 0.42
+    );
+    coreSpectrum = mix(coreSpectrum, ivoryHot, smoothstep(0.92, 1.78, heat));
 
-    // Photon halo & razor-sharp primary photon ring with subtle non-purple chromatic rim dispersion
-    float ringDoppler = 0.68 + 0.58 * dopplerLimb;
-    vec3 photonCol = mix(moltenAmber, mix(uAccentA, acidLime, 0.46), 0.32 + 0.34 * dopplerLimb);
-    darkCol += photonCol * photonHalo * (0.66 + charge * 0.34) * causticA * ringDoppler;
+    // Blend outer neon-purple ribbons & arches seamlessly into the blinding inner Doppler core
+    float purpleBlend = clamp(neonFactor * (1.12 - smoothstep(0.95, 1.95, heat) * 0.42) + 0.16, 0.0, 0.96);
+    vec3 diskColor = mix(coreSpectrum, violetSpectrum, purpleBlend);
+    // Blazing white-hot incandescent peak at the very hottest approaching edge
+    diskColor = mix(diskColor, ivoryHot, smoothstep(1.38, 2.25, heat) * (0.45 + 0.55 * dopplerLimb));
 
-    // Chromatic prism glint along primary photon edge (warm gold outer -> ivory core -> acid-lime/cyan inner)
-    darkCol += moltenGold * photonDispWarm * (0.58 + burstFlash * 0.55) * causticA;
-    darkCol += mix(acidLime, aeroCyan, 0.48) * photonDispCool * (0.48 + uHoverCore * 0.38 + burstFlash * 0.55) * ringDoppler;
-    darkCol += mix(ivoryHot, acidLime, 0.14 + uHoverCore * 0.22) * photonCore * (1.42 + burstFlash * 1.25) * ringDoppler;
+    darkCol += diskColor * heat * 0.98;
 
-    // Pitch-black event horizon shadow sphere
-    darkCol *= mix(0.015, 1.0, shadowMask);
+    // Luminous orbiting plasma knots (ultraviolet outer eddies -> incandescent ivory/gold inner knots)
+    vec3 knotCol = mix(mix(moltenGold, ivoryHot, dopplerLimb), mix(ultraPlasma, lavenderHot, 0.5), neonFactor);
+    darkCol += knotCol * visibleKnots * doppler * 0.84;
 
-    // Ultra-fine inner secondary gravitationally-lensed sub-ring perched right on the shadow cliff
+    // Gravitational photon corona & Double Photon Ring with electric neon-purple outer chromatic shimmer
+    float ringDoppler = 0.70 + 0.56 * dopplerLimb;
+    vec3 photonHaloCol = mix(neonPurple, ultraPlasma, 0.35 + 0.40 * dopplerLimb);
+    photonHaloCol = mix(photonHaloCol, moltenGold, 0.18 * (1.0 - dopplerLimb));
+    darkCol += photonHaloCol * photonHalo * (0.76 + charge * 0.38) * causticA * ringDoppler;
+
+    // Electric neon-purple outer chromatic shimmer wrapping the razor photon ring
+    darkCol +=
+      mix(neonPurple, ultraPlasma, 0.45 + 0.35 * causticB) *
+      photonDispOuter *
+      (0.95 + uHoverCore * 0.42 + burstFlash * 0.75) *
+      causticA;
+    // Inner hot chromatic glint (ultraviolet -> subtle acid-lime on approaching limb)
+    darkCol +=
+      mix(ultraPlasma, acidLime, 0.34 * dopplerLimb) *
+      photonDispInner *
+      (0.56 + uHoverCore * 0.38 + burstFlash * 0.55) *
+      ringDoppler;
+    // Blazing primary razor photon core
+    darkCol +=
+      mix(ivoryHot, mix(lavenderHot, acidLime, 0.38 * dopplerLimb), 0.24 + uHoverCore * 0.16) *
+      photonCore *
+      (1.46 + burstFlash * 1.25) *
+      ringDoppler;
+
+    // Pure hypnotic pitch-black event horizon void center (unobstructed when exploded!)
+    darkCol *= mix(0.008, 1.0, shadowMask);
+
+    // Ultra-fine inner secondary gravitationally-lensed sub-ring perched right on the black cliff edge
     float subRingClip = smoothstep(rH - 0.0025, rH + 0.001, rw);
-    vec3 subRingCol = mix(moltenGold, mix(ivoryHot, aeroCyan, 0.36), dopplerLimb);
-    darkCol += subRingCol * subRing * subRingClip * (0.76 + uHoverCore * 0.45 + burstFlash * 0.68) * ringDoppler;
+    vec3 subRingCol = mix(neonPurple, mix(lavenderHot, ivoryHot, 0.55), dopplerLimb);
+    darkCol += subRingCol * subRing * subRingClip * (0.86 + uHoverCore * 0.48 + burstFlash * 0.72) * ringDoppler;
 
-    // Volumetric front equatorial plasma belt + hot knots crossing cleanly in front of the black sphere
+    // Volumetric front equatorial plasma belt: neon-purple sheath + molten gold/ivory blazing spine
     float frontHeat = frontBelt * doppler;
-    vec3 frontCol = mix(moltenAmber, mix(moltenGold, ivoryHot, smoothstep(0.32, 1.15, frontHeat)), 0.42 + 0.48 * dopplerLimb);
-    frontCol = mix(frontCol, mix(ivoryHot, acidLime, 0.28), smoothstep(0.85, 1.65, frontHeat) * dopplerLimb);
-    darkCol += frontCol * frontBelt * 1.08;
-    darkCol += mix(moltenGold, ivoryHot, dopplerLimb) * frontKnots * doppler * 0.72;
+    vec3 frontCol = mix(
+      mix(neonPurple, moltenAmber, 0.46),
+      mix(moltenGold, ivoryHot, smoothstep(0.32, 1.15, frontHeat)),
+      0.38 + 0.50 * dopplerLimb
+    );
+    frontCol = mix(frontCol, mix(ivoryHot, acidLime, 0.24), smoothstep(0.95, 1.75, frontHeat) * dopplerLimb);
+    darkCol += mix(neonPurple, ultraPlasma, 0.45) * eqIntensity * frontHalf * frontEdgeSheath * doppler * 0.56;
+    darkCol += frontCol * frontBelt * 1.06;
+    darkCol += mix(ultraPlasma, ivoryHot, 0.45 + 0.45 * dopplerLimb) * frontKnots * doppler * 0.76;
 
-    // Sleek Panavision anamorphic horizontal lens flare (non-purple: ivory core + gold/lime/cyan wings)
+    // Sleek Panavision anamorphic horizontal lens flare (incandescent core + electric neon-purple wings)
     float anamCore = exp(-abs(pr.y) * (42.0 - burstFlash * 18.0)) * exp(-abs(pr.x) * (2.5 - burstFlash * 1.2));
-    float anamWing = exp(-abs(pr.y) * (18.0 - burstFlash * 8.0)) * exp(-abs(pr.x) * (1.85 - burstFlash * 0.85));
-    float flareGain = 0.13 + uHoverCore * 0.28 + burstFlash * 1.38;
-    vec3 wingTint = mix(moltenGold, mix(acidLime, aeroCyan, 0.44), dopplerLimb);
-    darkCol += ivoryHot * anamCore * flareGain * 1.05;
-    darkCol += wingTint * anamWing * flareGain * 0.42;
+    float anamWing = exp(-abs(pr.y) * (15.5 - burstFlash * 7.5)) * exp(-abs(pr.x) * (1.72 - burstFlash * 0.78));
+    float flareGain = 0.15 + uHoverCore * 0.30 + burstFlash * 1.42;
+    vec3 wingTint = mix(neonPurple, ultraPlasma, 0.35 + 0.40 * dopplerLimb);
+    darkCol += mix(ivoryHot, lavenderHot, 0.22) * anamCore * flareGain * 1.05;
+    darkCol += wingTint * anamWing * flareGain * 0.62;
 
-    // Multi-ring relativistic supernova shockwave (ivory/lime primary + cyan/accent secondary + gold echo)
-    darkCol += mix(acidLime, ivoryHot, 0.52) * shockRing1 * 1.48;
-    darkCol += mix(uAccentA, aeroCyan, 0.42) * shockRing2 * 0.78;
-    darkCol += moltenGold * shockRing3 * 0.42;
+    // Multi-ring electric neon-purple relativistic supernova shockwave
+    darkCol += mix(ultraPlasma, ivoryHot, 0.44) * shockRing1 * 1.52;
+    darkCol += mix(neonPurple, acidLime, 0.24) * shockRing2 * 0.94;
+    darkCol += mix(cosmicViolet, moltenGold, 0.32) * shockRing3 * 0.56;
 
-    // Clean cinema vignette framing so orbiting world pods & Flash vectors pop with razor contrast
-    float edgeFade = 1.0 - smoothstep(0.64, 1.12, r * (1.0 - uExploded * 0.14));
-    darkCol = mix(darkVoid, darkCol, clamp(edgeFade + shockRing1 + shockRing2 * 0.65, 0.0, 1.0));
+    // Clean cinema vignette framing so orbiting world pods pop with razor contrast
+    float edgeFade = 1.0 - smoothstep(0.66, 1.14, r * (1.0 - uExploded * 0.14));
+    darkCol = mix(darkVoid, darkCol, clamp(edgeFade + shockRing1 + shockRing2 * 0.72, 0.0, 1.0));
   }
 
   // =========================================================================
-  // LIGHT MODE ("TOTAL SOLAR ECLIPSE" -- Swiss/Japanese Archival Vellum Print)
+  // LIGHT MODE ("TOTAL SOLAR ECLIPSE" -- Archival Vellum + Royal Ultraviolet)
   // =========================================================================
   if (uLight > 0.001) {
     vec3 vellum = vec3(0.9608, 0.9529, 0.9255); // #F5F3EC (100% pure outer vellum -- zero muddy gray!)
@@ -447,19 +516,21 @@ void main() {
     vec3 vermilion = vec3(0.8510, 0.3059, 0.0); // #D94E00
     vec3 burntAmber = vec3(0.7059, 0.3255, 0.0353); // #B45309
     vec3 solarGold = vec3(0.9569, 0.6941, 0.0706); // molten archival gold
+    vec3 royalUltra = vec3(0.50, 0.10, 0.86); // electric royal ultraviolet harmonic accent
     vec3 sunWhite = vec3(1.0, 0.992, 0.935);
     vec3 deepInk = vec3(0.0392, 0.0392, 0.0431); // #0A0A0B
 
     // Strict radial containment so outer viewport stays 100% crisp #F5F3EC museum paper
-    float coronaOuter = rH * mix(2.38, 2.75, uExploded) + burstFlash * 0.16;
+    float coronaOuter = rH * mix(2.42, 2.80, uExploded) + burstFlash * 0.16;
     float coronaBound = 1.0 - smoothstep(rH * 1.06, coronaOuter, rw);
+    float coronaOuterEdge = smoothstep(rH * 1.38, coronaOuter * 0.88, rw);
     float eqBound = 1.0 - smoothstep(rH * 1.38, eqOuter * 0.78, rEq);
 
     // Pure #F5F3EC vellum + ultra-crisp sparse archival ink pinpoints
     float inkStars = sampleDaylightStars(starCoord + ptr * 0.025, uTime) * smoothstep(rH * 1.32, rH * 1.75, rw);
     lightCol = mix(vellum, deepInk, inkStars);
 
-    // Finely etched radially-streamed solar eclipse corona rays (seamless polar coordinates)
+    // Finely etched radially-streamed solar eclipse corona rays kissed with royal ultraviolet at outer tips
     float pAng = atan(pr.y, pr.x + 1e-6);
     vec2 pSc = vec2(cos(pAng), sin(pAng));
     float streamerTex = fbm3(pSc * 7.2 + vec2(log(max(0.08, rw)) * 2.1 - uTime * 0.14, uTime * 0.05));
@@ -478,38 +549,41 @@ void main() {
       exp(-max(0.0, rw - rH * 1.015) * (24.0 - uHoverCore * 5.0)) *
       smoothstep(rH * 0.985, rH * 1.015, rw);
 
-    float warmCorona = clamp((photonHalo * 0.96 + etchedRays * 0.78) * coronaBound, 0.0, 1.0);
+    float warmCorona = clamp((photonHalo * 0.92 + etchedRays * 0.80) * coronaBound, 0.0, 1.0);
     float lensedFlame =
       clamp((upperArch * 1.05 + lowerArch * 0.88 + eqIntensity * eqBound * 0.80) * doppler * 0.68, 0.0, 1.0);
 
-    // Layer molten solar gold -> fiery vermilion -> burnt copper onto pure #F5F3EC
-    vec3 coronaTint = mix(solarGold, vermilion, smoothstep(0.20, 0.78, warmCorona));
-    lightCol = mix(lightCol, coronaTint, warmCorona * 0.68);
+    // Layer molten solar gold -> fiery vermilion -> electric royal ultraviolet outer coronal kiss onto pure #F5F3EC
+    vec3 coronaTint = mix(solarGold, vermilion, smoothstep(0.22, 0.78, warmCorona));
+    coronaTint = mix(coronaTint, royalUltra, coronaOuterEdge * 0.58);
+    lightCol = mix(lightCol, coronaTint, warmCorona * 0.70);
 
     vec3 flameCol = mix(burntAmber, vermilion, smoothstep(0.18, 0.74, lensedFlame));
-    flameCol = mix(flameCol, mix(solarGold, uAccentA, 0.24), smoothstep(0.56, 1.0, lensedFlame) * 0.52);
+    flameCol = mix(flameCol, mix(solarGold, uAccentA, 0.22), smoothstep(0.56, 1.0, lensedFlame) * 0.48);
+    flameCol = mix(flameCol, royalUltra, neonFactor * 0.36);
     lightCol = mix(lightCol, flameCol, clamp(lensedFlame * 0.78, 0.0, 0.84));
 
     // Fiery vermilion chromosphere & prominences
     lightCol = mix(lightCol, mix(vermilion, solarGold, 0.22), clamp(promLoops * 0.88, 0.0, 0.92));
 
-    // Crisp multi-ring archival shockwaves (vermilion + deep ink + molten gold, vanish completely after burst)
-    lightCol = mix(lightCol, vermilion, clamp(shockRing1 * 0.82, 0.0, 0.82));
+    // Crisp multi-ring archival shockwaves (vermilion + electric royal ultraviolet + deep ink)
+    lightCol = mix(lightCol, vermilion, clamp(shockRing1 * 0.80, 0.0, 0.80));
+    lightCol = mix(lightCol, royalUltra, clamp(shockRing2 * 0.68, 0.0, 0.68));
     float inkShock = exp(-sq((r - shockR * 0.93) / 0.0075)) * (1.0 - bNorm) * burstActive;
-    lightCol = mix(lightCol, deepInk, clamp(inkShock * 0.66, 0.0, 0.66));
-    lightCol = mix(lightCol, solarGold, clamp(shockRing3 * 0.48, 0.0, 0.48));
+    lightCol = mix(lightCol, deepInk, clamp(inkShock * 0.64, 0.0, 0.64));
 
     // Velvet obsidian eclipse disk (#070709) with subtle tactile inner limb contrast
     float innerLimb = smoothstep(rH * 0.82, rH, rw);
     vec3 diskInk = mix(eclipseCore, vec3(0.015, 0.015, 0.020), innerLimb * 0.45);
     lightCol = mix(diskInk, lightCol, shadowMask);
 
-    // Double incised golden-vermilion eclipse rim hugging the obsidian moon
+    // Double incised golden-vermilion eclipse rim with delicate royal-ultraviolet outer prism whisper
+    lightCol = mix(lightCol, royalUltra, clamp(photonDispOuter * 0.42 * shadowMask, 0.0, 0.48));
     vec3 rimGold = mix(vermilion, sunWhite, smoothstep(0.28, 0.88, photonCore));
     lightCol = mix(lightCol, rimGold, clamp(photonCore * (0.94 + burstFlash * 0.1), 0.0, 0.98));
     lightCol = mix(lightCol, solarGold, clamp(subRing * 0.68, 0.0, 0.76));
 
-    // Razor-crisp Solar Diamond-Ring glint + 4-point diffraction spikes & Baily's beads on upper-left limb
+    // Razor-crisp Solar Diamond-Ring glint + royal-ultraviolet prism dispersion + Baily's beads on upper-left limb
     vec2 diamondPos = vec2(-0.72, 0.694) * (rH * 1.016);
     vec2 dVec = pw - diamondPos;
     float dDist = length(dVec);
@@ -523,11 +597,13 @@ void main() {
     float diamondPulse = 0.92 + 0.08 * sin(uTime * 2.6) + uHoverCore * 0.25 + burstFlash * 0.65;
     float diamondCore = exp(-dDist * 30.0) * diamondPulse;
     float diamondHalo = exp(-dDist * 7.8) * 0.44 * diamondPulse;
+    float diamondUltraRing = exp(-sq((dDist - 0.042) / 0.022)) * 0.36 * diamondPulse * shadowMask;
 
     // Two jewel-like Baily's beads peeking past adjacent upper-left lunar craters
     float bead1 = exp(-length(pw - vec2(-0.835, 0.550) * (rH * 1.014)) * 78.0) * (0.76 + 0.24 * sin(uTime * 3.4));
     float bead2 = exp(-length(pw - vec2(-0.575, 0.818) * (rH * 1.014)) * 84.0) * (0.76 + 0.24 * sin(uTime * 2.9 + 1.4));
 
+    lightCol = mix(lightCol, royalUltra, clamp(diamondUltraRing, 0.0, 0.44));
     lightCol = mix(lightCol, mix(vermilion, solarGold, 0.58), clamp(diamondHalo * shadowMask, 0.0, 0.62));
     lightCol = mix(lightCol, sunWhite, clamp(diamondCore + dSpikes * 0.82 * diamondPulse + (bead1 + bead2) * 0.9, 0.0, 0.98));
 
@@ -593,7 +669,7 @@ function createProgram(gl: WebGL2RenderingContext): WebGLProgram | null {
   return prog;
 }
 
-/** High-craft Canvas2D Gargantua Black Hole / Total Solar Eclipse fallback when WebGL2 is unavailable. */
+/** High-craft Canvas2D Electric Neon-Purple Black Hole / Total Solar Eclipse fallback when WebGL2 is unavailable. */
 function drawBlackHole2DFallback(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -601,7 +677,6 @@ function drawBlackHole2DFallback(
   t: number,
   ptrX: number,
   ptrY: number,
-  colA: Vec3,
   lightMix: number,
   explodedMix: number,
   hoverMix: number,
@@ -612,9 +687,6 @@ function drawBlackHole2DFallback(
   const cx = w * 0.5;
   const cy = h * centerYRatio;
   const minD = Math.min(w, h);
-  const rA = Math.round(colA[0] * 255);
-  const gA = Math.round(colA[1] * 255);
-  const bA = Math.round(colA[2] * 255);
 
   const bNorm = burstAge > 0 && burstAge < 1.28 ? Math.min(1, burstAge / 1.14) : -1;
   const rH = minD * (0.154 - explodedMix * 0.04 - hoverMix * 0.015);
@@ -624,7 +696,7 @@ function drawBlackHole2DFallback(
   ctx.fillStyle = isLight ? '#F5F3EC' : '#020203';
   ctx.fillRect(0, 0, w, h);
 
-  // Crisp pinpoint starfield with subtle pointer parallax
+  // Crisp pinpoint starfield with neon-purple glints & subtle pointer parallax
   const pxOff = (ptrX - 0.5) * 14;
   const pyOff = (ptrY - centerYRatio) * 14;
   for (let i = 0; i < (isLight ? 40 : 96); i++) {
@@ -636,10 +708,12 @@ function drawBlackHole2DFallback(
     const tw = 0.4 + 0.6 * Math.sin(t * 1.9 + i);
     if (isLight) {
       ctx.fillStyle = `rgba(10,10,11,${(tw * 0.2).toFixed(3)})`;
-    } else if (i % 11 === 0) {
-      ctx.fillStyle = `rgba(0,212,255,${(tw * 0.6).toFixed(3)})`;
+    } else if (i % 5 === 0) {
+      ctx.fillStyle = `rgba(188,52,255,${(tw * 0.72).toFixed(3)})`;
+    } else if (i % 9 === 0) {
+      ctx.fillStyle = `rgba(214,91,255,${(tw * 0.68).toFixed(3)})`;
     } else if (i % 13 === 0) {
-      ctx.fillStyle = `rgba(210,255,40,${(tw * 0.65).toFixed(3)})`;
+      ctx.fillStyle = `rgba(210,255,40,${(tw * 0.62).toFixed(3)})`;
     } else {
       ctx.fillStyle = `rgba(245,243,236,${(tw * 0.58).toFixed(3)})`;
     }
@@ -647,18 +721,19 @@ function drawBlackHole2DFallback(
     ctx.fillRect(sx, sy, sz, sz);
   }
 
-  // Tightly contained solar corona (daylight) / gravitational plasma corona (obsidian)
-  const coronaR = rH * (isLight ? 2.4 + explodedMix * 0.35 : 2.65 + explodedMix * 0.78);
+  // Cosmic violet / neon-purple corona (obsidian) or royal-ultraviolet-kissed solar corona (daylight)
+  const coronaR = rH * (isLight ? 2.45 + explodedMix * 0.35 : 2.95 + explodedMix * 0.85);
   const corona = ctx.createRadialGradient(cx, cy, rH * 0.94, cx, cy, coronaR);
   if (isLight) {
     corona.addColorStop(0, 'rgba(217,78,0,0.74)');
     corona.addColorStop(0.28, 'rgba(245,158,11,0.42)');
-    corona.addColorStop(0.62, 'rgba(180,83,9,0.12)');
+    corona.addColorStop(0.62, 'rgba(128,26,219,0.18)');
     corona.addColorStop(1, 'rgba(245,243,236,0)');
   } else {
-    corona.addColorStop(0, 'rgba(255,248,226,0.88)');
-    corona.addColorStop(0.18, 'rgba(255,158,34,0.56)');
-    corona.addColorStop(0.46, `rgba(${rA},${gA},${bA},0.26)`);
+    corona.addColorStop(0, 'rgba(255,248,228,0.88)');
+    corona.addColorStop(0.16, 'rgba(214,91,255,0.68)');
+    corona.addColorStop(0.38, 'rgba(188,52,255,0.42)');
+    corona.addColorStop(0.68, 'rgba(112,18,230,0.18)');
     corona.addColorStop(1, 'rgba(2,2,3,0)');
   }
   ctx.fillStyle = corona;
@@ -671,13 +746,18 @@ function drawBlackHole2DFallback(
   ctx.translate(cx, cy);
   ctx.rotate(tilt);
 
-  // Finely etched coronal streamers in daylight mode
+  // Finely etched coronal streamers in daylight mode (vermilion, gold & royal ultraviolet)
   if (isLight) {
     for (let ray = 0; ray < 32; ray++) {
       const ra = (ray / 32) * Math.PI * 2 + Math.sin(t * 0.3 + ray) * 0.02;
       const dipole = 0.55 + 0.45 * Math.abs(Math.cos(ra));
-      const len = rH * (1.28 + dipole * (0.72 + (ray % 3) * 0.14));
-      ctx.strokeStyle = ray % 2 === 0 ? 'rgba(217,78,0,0.22)' : 'rgba(245,158,11,0.26)';
+      const len = rH * (1.28 + dipole * (0.74 + (ray % 3) * 0.14));
+      ctx.strokeStyle =
+        ray % 3 === 0
+          ? 'rgba(128,26,219,0.22)'
+          : ray % 2 === 0
+            ? 'rgba(217,78,0,0.22)'
+            : 'rgba(245,158,11,0.26)';
       ctx.lineWidth = ray % 4 === 0 ? 1.4 : 0.8;
       ctx.beginPath();
       ctx.moveTo(Math.cos(ra) * rH * 1.02, Math.sin(ra) * rH * 1.02);
@@ -685,25 +765,29 @@ function drawBlackHole2DFallback(
       ctx.stroke();
     }
   } else {
-    // Subtle Einstein ring hairline arc in dark mode
-    ctx.strokeStyle = 'rgba(0,212,255,0.18)';
-    ctx.lineWidth = 1.1;
+    // Neon-purple Einstein ring hairline arc in dark mode
+    ctx.strokeStyle = 'rgba(214,91,255,0.28)';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.arc(0, 0, rH * 1.28, -Math.PI * 0.85, -Math.PI * 0.15);
+    ctx.arc(0, 0, rH * 1.28, -Math.PI * 0.86, -Math.PI * 0.14);
     ctx.stroke();
   }
 
-  // Gravitationally-lensed upper & lower accretion arches
+  // Gravitationally-lensed upper & lower accretion arches (vivid neon purple & ultraviolet in dark mode)
   for (let pass = 0; pass < 3; pass++) {
-    const ar = rH * (1.14 + pass * 0.21);
+    const ar = rH * (1.14 + pass * 0.22);
     ctx.strokeStyle = isLight
       ? pass === 0
         ? 'rgba(217,78,0,0.74)'
-        : `rgba(180,83,9,${(0.42 - pass * 0.11).toFixed(3)})`
+        : pass === 1
+          ? 'rgba(180,83,9,0.40)'
+          : 'rgba(128,26,219,0.28)'
       : pass === 0
-        ? 'rgba(255,244,210,0.76)'
-        : `rgba(${rA},${gA},${bA},${(0.46 - pass * 0.11).toFixed(3)})`;
-    ctx.lineWidth = (4.2 - pass * 1.05) * (1 + explodedMix * 0.24);
+        ? 'rgba(255,244,220,0.82)'
+        : pass === 1
+          ? 'rgba(214,91,255,0.62)'
+          : 'rgba(188,52,255,0.38)';
+    ctx.lineWidth = (4.4 - pass * 1.05) * (1 + explodedMix * 0.24);
     ctx.beginPath();
     ctx.arc(0, 0, ar, Math.PI * 1.04, Math.PI * 1.96);
     ctx.stroke();
@@ -713,24 +797,26 @@ function drawBlackHole2DFallback(
     ctx.stroke();
   }
 
-  // Back equatorial disk with relativistic Doppler beaming (brighter approaching left -> amber right)
-  const diskRx = rH * (2.68 + explodedMix * 0.95);
+  // Back equatorial disk: electric neon-purple outer ribbons -> molten gold/ivory Doppler inner limb
+  const diskRx = rH * (2.72 + explodedMix * 0.96);
   const diskRy = rH * (0.56 + (ptrY - centerYRatio) * 0.12);
   const backDisk = ctx.createLinearGradient(-diskRx, 0, diskRx, 0);
   if (isLight) {
-    backDisk.addColorStop(0, 'rgba(217,78,0,0)');
-    backDisk.addColorStop(0.28, 'rgba(217,78,0,0.62)');
+    backDisk.addColorStop(0, 'rgba(128,26,219,0)');
+    backDisk.addColorStop(0.24, 'rgba(217,78,0,0.62)');
     backDisk.addColorStop(0.68, 'rgba(180,83,9,0.40)');
-    backDisk.addColorStop(1, 'rgba(180,83,9,0)');
+    backDisk.addColorStop(0.88, 'rgba(128,26,219,0.24)');
+    backDisk.addColorStop(1, 'rgba(128,26,219,0)');
   } else {
-    backDisk.addColorStop(0, 'rgba(210,255,40,0)');
-    backDisk.addColorStop(0.25, 'rgba(255,248,224,0.78)');
-    backDisk.addColorStop(0.55, 'rgba(255,158,36,0.58)');
-    backDisk.addColorStop(0.84, 'rgba(174,52,12,0.34)');
-    backDisk.addColorStop(1, 'rgba(174,52,12,0)');
+    backDisk.addColorStop(0, 'rgba(188,52,255,0)');
+    backDisk.addColorStop(0.18, 'rgba(214,91,255,0.72)');
+    backDisk.addColorStop(0.36, 'rgba(255,248,228,0.84)');
+    backDisk.addColorStop(0.62, 'rgba(255,168,46,0.58)');
+    backDisk.addColorStop(0.84, 'rgba(188,52,255,0.52)');
+    backDisk.addColorStop(1, 'rgba(112,18,230,0)');
   }
   ctx.strokeStyle = backDisk;
-  ctx.lineWidth = rH * 0.2;
+  ctx.lineWidth = rH * 0.22;
   ctx.beginPath();
   ctx.ellipse(0, 0, diskRx * 0.82, Math.max(8, diskRy), 0, Math.PI, Math.PI * 2);
   ctx.stroke();
@@ -741,32 +827,41 @@ function drawBlackHole2DFallback(
   ctx.arc(0, 0, rH, 0, Math.PI * 2);
   ctx.fill();
 
-  // Double Photon Ring (outer primary + ultra-fine inner secondary sub-ring)
-  ctx.strokeStyle = isLight ? '#D94E00' : '#D2FF28';
-  ctx.lineWidth = 2.4;
+  // Double Photon Ring with electric neon-purple outer shimmer
+  if (!isLight) {
+    ctx.strokeStyle = 'rgba(188,52,255,0.78)';
+    ctx.lineWidth = 4.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, rH * 1.046, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = isLight ? '#D94E00' : '#F5F3EC';
+  ctx.lineWidth = 2.2;
   ctx.beginPath();
-  ctx.arc(0, 0, rH * 1.026, 0, Math.PI * 2);
+  ctx.arc(0, 0, rH * 1.034, 0, Math.PI * 2);
   ctx.stroke();
 
-  ctx.strokeStyle = isLight ? 'rgba(255,246,214,0.88)' : 'rgba(0,212,255,0.68)';
-  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = isLight ? 'rgba(255,246,214,0.88)' : '#D65BFF';
+  ctx.lineWidth = 1.0;
   ctx.beginPath();
   ctx.arc(0, 0, rH * 1.005, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Front equatorial plasma belt (Doppler-beamed ivory/lime left -> molten amber/copper right)
+  // Front equatorial plasma belt (neon-purple sheath + incandescent ivory/gold Doppler spine)
   const belt = ctx.createLinearGradient(-diskRx, 0, diskRx, 0);
   if (isLight) {
     belt.addColorStop(0, 'rgba(217,78,0,0)');
     belt.addColorStop(0.28, 'rgba(217,78,0,0.88)');
     belt.addColorStop(0.56, 'rgba(245,158,11,0.86)');
-    belt.addColorStop(1, 'rgba(180,83,9,0)');
+    belt.addColorStop(1, 'rgba(128,26,219,0)');
   } else {
-    belt.addColorStop(0, 'rgba(210,255,40,0)');
-    belt.addColorStop(0.26, 'rgba(255,250,234,0.96)');
-    belt.addColorStop(0.46, 'rgba(210,255,40,0.78)');
-    belt.addColorStop(0.72, 'rgba(255,148,26,0.74)');
-    belt.addColorStop(1, 'rgba(174,52,12,0)');
+    belt.addColorStop(0, 'rgba(188,52,255,0)');
+    belt.addColorStop(0.18, 'rgba(214,91,255,0.84)');
+    belt.addColorStop(0.36, 'rgba(255,250,236,0.96)');
+    belt.addColorStop(0.58, 'rgba(255,176,56,0.80)');
+    belt.addColorStop(0.82, 'rgba(188,52,255,0.72)');
+    belt.addColorStop(1, 'rgba(112,18,230,0)');
   }
   ctx.strokeStyle = belt;
   ctx.lineWidth = Math.max(4, rH * 0.13);
@@ -774,31 +869,32 @@ function drawBlackHole2DFallback(
   ctx.ellipse(0, 0, diskRx * 0.84, Math.max(7, diskRy * 0.7), 0, 0.04, Math.PI - 0.04);
   ctx.stroke();
 
-  // Subtle Panavision anamorphic horizontal lens flare in dark mode
+  // Panavision anamorphic horizontal lens flare in electric neon purple + incandescent core
   if (!isLight) {
-    const flare = ctx.createLinearGradient(-diskRx * 1.15, 0, diskRx * 1.15, 0);
-    flare.addColorStop(0, 'rgba(0,212,255,0)');
-    flare.addColorStop(0.38, 'rgba(210,255,40,0.18)');
-    flare.addColorStop(0.5, 'rgba(255,252,238,0.42)');
-    flare.addColorStop(0.64, 'rgba(255,176,46,0.18)');
-    flare.addColorStop(1, 'rgba(255,140,26,0)');
+    const flare = ctx.createLinearGradient(-diskRx * 1.18, 0, diskRx * 1.18, 0);
+    flare.addColorStop(0, 'rgba(158,46,255,0)');
+    flare.addColorStop(0.28, 'rgba(188,52,255,0.34)');
+    flare.addColorStop(0.5, 'rgba(255,248,255,0.52)');
+    flare.addColorStop(0.72, 'rgba(214,91,255,0.34)');
+    flare.addColorStop(1, 'rgba(158,46,255,0)');
     ctx.fillStyle = flare;
-    ctx.fillRect(-diskRx * 1.15, -1.5, diskRx * 2.3, 3);
+    ctx.fillRect(-diskRx * 1.18, -1.75, diskRx * 2.36, 3.5);
   }
   ctx.restore();
 
-  // Razor-crisp Solar Diamond-Ring Glint on upper-left limb in daylight mode
+  // Razor-crisp Solar Diamond-Ring Glint with royal-ultraviolet edge dispersion on upper-left limb
   if (isLight) {
     const dx = cx - rH * 0.72 * 1.016;
     const dy = cy - rH * 0.694 * 1.016;
-    const dg = ctx.createRadialGradient(dx, dy, 0, dx, dy, rH * 0.36);
+    const dg = ctx.createRadialGradient(dx, dy, 0, dx, dy, rH * 0.38);
     dg.addColorStop(0, 'rgba(255,253,240,0.98)');
     dg.addColorStop(0.24, 'rgba(245,179,18,0.72)');
-    dg.addColorStop(0.6, 'rgba(217,78,0,0.22)');
+    dg.addColorStop(0.54, 'rgba(217,78,0,0.26)');
+    dg.addColorStop(0.76, 'rgba(128,26,219,0.20)');
     dg.addColorStop(1, 'rgba(245,243,236,0)');
     ctx.fillStyle = dg;
     ctx.beginPath();
-    ctx.arc(dx, dy, rH * 0.36, 0, Math.PI * 2);
+    ctx.arc(dx, dy, rH * 0.38, 0, Math.PI * 2);
     ctx.fill();
 
     // 4-point diffraction glint spikes
@@ -813,22 +909,22 @@ function drawBlackHole2DFallback(
     ctx.stroke();
   }
 
-  // Multi-ring supernova detonation shockwave
+  // Multi-ring electric neon-purple / royal-ultraviolet detonation shockwave
   if (bNorm >= 0) {
     const ease = 1 - Math.pow(1 - bNorm, 3);
     const sr = rH + ease * minD * 0.58;
     ctx.strokeStyle = isLight
       ? `rgba(217,78,0,${((1 - bNorm) * 0.85).toFixed(3)})`
-      : `rgba(210,255,40,${((1 - bNorm) * 0.94).toFixed(3)})`;
+      : `rgba(214,91,255,${((1 - bNorm) * 0.94).toFixed(3)})`;
     ctx.lineWidth = Math.max(1, (1 - bNorm) * 5.2);
     ctx.beginPath();
     ctx.arc(cx, cy, sr, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = isLight
-      ? `rgba(10,10,11,${((1 - bNorm) * 0.58).toFixed(3)})`
-      : `rgba(0,212,255,${((1 - bNorm) * 0.52).toFixed(3)})`;
-    ctx.lineWidth = Math.max(0.8, (1 - bNorm) * 2.4);
+      ? `rgba(128,26,219,${((1 - bNorm) * 0.64).toFixed(3)})`
+      : `rgba(188,52,255,${((1 - bNorm) * 0.68).toFixed(3)})`;
+    ctx.lineWidth = Math.max(0.8, (1 - bNorm) * 2.8);
     ctx.beginPath();
     ctx.arc(cx, cy, sr * 0.84, 0, Math.PI * 2);
     ctx.stroke();
@@ -838,11 +934,11 @@ function drawBlackHole2DFallback(
 }
 
 /**
- * Full-bleed 60fps Interstellar Gargantua WebGL2 Black Hole Singularity (Event Horizon)
+ * Full-bleed 60fps Electric Neon-Purple Gargantua WebGL2 Black Hole Singularity (Event Horizon)
  * and Museum Archival Total Solar Eclipse on pure Vellum Ivory #F5F3EC (Daylight), complete with
- * double photon ring, Keplerian plasma knots, relativistic Doppler beaming, Einstein-ring star arcs,
- * multi-ring supernova shockwaves, synchronized centerYRatio, Canvas2D fallback, reduced-motion
- * static mode, and visibility/viewport auto-pause.
+ * double photon ring, ultraviolet plasma ribbons & Keplerian knots, relativistic Doppler beaming,
+ * Einstein-ring star arcs, multi-ring supernova shockwaves, synchronized centerYRatio, Canvas2D
+ * fallback, reduced-motion static mode, and visibility/viewport auto-pause.
  */
 export function HeroCanvas({
   accentHue = 112,
@@ -1013,7 +1109,6 @@ export function HeroCanvas({
           timeSec,
           curPtrX,
           curPtrY,
-          curA,
           curLight,
           curExploded,
           curHover,

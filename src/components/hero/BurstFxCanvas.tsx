@@ -1,12 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { nonPurpleRgb, remapHue } from '../../art/color';
-import {
-  drawRegistrationMark,
-  easeBackOut,
-  easeExpoOut,
-  evalQuadBezier,
-  type Vec2,
-} from '../../art/flashMovieClips';
 import { useInView } from '../../hooks/useInView';
 import { useReducedMotion } from '../../hooks/useMediaQuery';
 import { useDeck } from '../../store/deckStore';
@@ -24,7 +17,7 @@ export interface OrbitNodeTarget {
 
 export interface BurstFxCanvasProps {
   exploded: boolean;
-  /** Increment to trigger a full golden-age Flash vector explosion (starburst spikes, speed lines, shockwaves, sparks) */
+  /** Increment to trigger a dramatic supernova shockwave, starburst spikes, and sparks */
   burstSeq: number;
   /** Increment to trigger a dramatic vortex implosion pulling sparks spiraling into the black hole */
   implodeSeq?: number;
@@ -34,11 +27,12 @@ export interface BurstFxCanvasProps {
   hoveredId?: string | null;
   /** Normalized vertical center ratio from top edge (0..1, default 0.47; desktop lg+ 0.435) */
   centerYRatio?: number;
-  /** Optional Macromedia Flash multi-frame onion-skin ghost echo on active tether & lock reticle */
-  onionSkin?: boolean;
-  /** Optional Flash authoring Bezier tangent handles & control nodes on active orbital tether */
-  showGuides?: boolean;
   className?: string;
+}
+
+interface Vec2 {
+  x: number;
+  y: number;
 }
 
 interface BurstSpark {
@@ -89,7 +83,7 @@ interface VortexSpark {
 
 interface AmbientMote {
   angle: number;
-  /** Radius in multiples of event-horizon core radius (tightly bound 1.06..2.05) */
+  /** Radius in multiples of event-horizon core radius (tightly bound 1.06..2.02) */
   rMult: number;
   speed: number;
   size: number;
@@ -98,8 +92,26 @@ interface AmbientMote {
 const TAU = Math.PI * 2;
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
-/** Daylight Eclipse Ink & Solar Ember high-contrast palette (zero washed-out lime on ivory). */
-const DAYLIGHT_PALETTE = ['#0A0A0B', '#D94E00', '#B45309', '#006B8F'] as const;
+function easeBackOut(t: number, overshoot = 1.45): number {
+  const x = clamp(t, 0, 1) - 1;
+  return 1 + (overshoot + 1) * x * x * x + overshoot * x * x;
+}
+
+function evalQuadBezier(p0: Vec2, p1: Vec2, p2: Vec2, rawT: number): { x: number; y: number; angle: number } {
+  const t = clamp(rawT, 0, 1);
+  const mt = 1 - t;
+  const x = mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x;
+  const y = mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y;
+  const dx = 2 * mt * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
+  const dy = 2 * mt * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
+  return { x, y, angle: Math.atan2(dy, dx) };
+}
+
+/** Daylight Solar Eclipse palette kissed with royal ultraviolet (#7A1ED6), vermilion & archival ink. */
+const DAYLIGHT_PALETTE = ['#7A1ED6', '#D94E00', '#0A0A0B', '#B45309'] as const;
+
+/** Obsidian Event Horizon palette infused with electric neon purple (#B829FF / #D65BFF / #9E2EFF) + acid-lime & ivory. */
+const NEON_DARK_PALETTE = ['#B829FF', '#D65BFF', '#D2FF28', '#F5F3EC', '#9E2EFF'] as const;
 
 function nonPurpleCss(isLight: boolean, rawHue: number, a = 1): string {
   const L = isLight ? 0.42 : 0.78;
@@ -108,7 +120,7 @@ function nonPurpleCss(isLight: boolean, rawHue: number, a = 1): string {
   return a >= 1 ? `rgb(${r} ${g} ${b})` : `rgb(${r} ${g} ${b} / ${Number(clamp(a, 0, 1).toFixed(4))})`;
 }
 
-/** Computes a graceful curved Flash Bezier Motion-Guide tether from photon ring to orbital world. */
+/** Computes a sleek curved quadratic Bezier orbital tether from photon ring to orbiting world. */
 function buildCurvedTether(
   cx: number,
   cy: number,
@@ -130,11 +142,10 @@ function buildCurvedTether(
   const spanX = tx - sx;
   const spanY = ty - sy;
   const span = Math.hypot(spanX, spanY) || 1;
-  // Perpendicular normal for subtle opposing orbital curvature (inner clockwise, outer counter-clockwise)
   const nx = -spanY / span;
   const ny = spanX / span;
   const bendDir = ring === 'inner' ? 1 : -0.82;
-  const bend = Math.min(54, span * 0.17) * bendDir;
+  const bend = Math.min(50, span * 0.155) * bendDir;
 
   return {
     p0: { x: sx, y: sy },
@@ -146,7 +157,7 @@ function buildCurvedTether(
   };
 }
 
-/** Draws a crisp procedural Flash chevron arrowhead oriented along `angle`. */
+/** Draws a subtle vector directional pulse chevron along a curved orbital tether. */
 function drawEnergyChevron(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -164,20 +175,15 @@ function drawEnergyChevron(
   ctx.lineCap = 'round';
   ctx.lineJoin = 'miter';
   ctx.beginPath();
-  ctx.moveTo(-size * 0.9, -size * 0.65);
+  ctx.moveTo(-size * 0.85, -size * 0.6);
   ctx.lineTo(size * 0.55, 0);
-  ctx.lineTo(-size * 0.9, size * 0.65);
+  ctx.lineTo(-size * 0.85, size * 0.6);
   ctx.stroke();
   ctx.restore();
 }
 
-/**
- * Draws the upgraded Flash shape-tweening lock-on targeting reticle:
- * - Phase 1 (0..0.11s): Contracting precision circle with rotating degree ticks
- * - Phase 2 (0.11..0.22s): Morphing sharp vector diamond flare
- * - Phase 3 (0.22s+): Snapped 4-corner aerospace bracket with inward leader ticks & midpoint pips
- */
-function drawShapeTweenLockReticle(
+/** Draws a razor-clean snapping 4-corner targeting reticle with subtle leader ticks on the hovered world. */
+function drawSnapReticle(
   ctx: CanvasRenderingContext2D,
   tx: number,
   ty: number,
@@ -185,117 +191,59 @@ function drawShapeTweenLockReticle(
   lockAge: number,
   timeSec: number,
   isLight: boolean,
-  primaryColor: string,
-  secondaryColor: string,
-  ghostMode = false,
 ): void {
   const baseHw = ring === 'inner' ? 93 : 69;
   const baseHh = ring === 'inner' ? 54 : 24;
-  const arm = ring === 'inner' ? 12 : 8.5;
+  const arm = ring === 'inner' ? 11.5 : 8.5;
+
+  const t = clamp(lockAge / 0.22, 0, 1);
+  const snap = easeBackOut(t, 1.35);
+  const expand = (1 - snap) * 16;
+  const breath = Math.sin(timeSec * 3.0) * 0.9;
+  const hw = baseHw + expand + breath;
+  const hh = baseHh + expand * 0.6 + breath * 0.5;
 
   ctx.save();
   ctx.translate(tx, ty);
 
-  if (lockAge < 0.11 && !ghostMode) {
-    // Phase 1: Contracting targeting circle
-    const p = clamp(lockAge / 0.11, 0, 1);
-    const e = easeExpoOut(p);
-    const rad = (ring === 'inner' ? 116 : 82) * (1 - e * 0.34);
-    ctx.strokeStyle = secondaryColor;
-    ctx.lineWidth = 1.65;
-    ctx.setLineDash([8, 5]);
+  // Subtle neon-purple ambient halo behind the snapped corner brackets in dark mode
+  if (!isLight) {
+    ctx.strokeStyle = 'rgba(184, 41, 255, 0.45)';
+    ctx.lineWidth = 4.2;
     ctx.beginPath();
-    ctx.arc(0, 0, rad, p * 1.4, p * 1.4 + TAU);
+    ctx.moveTo(-hw, -hh + arm); ctx.lineTo(-hw, -hh); ctx.lineTo(-hw + arm, -hh);
+    ctx.moveTo(hw - arm, -hh); ctx.lineTo(hw, -hh); ctx.lineTo(hw, -hh + arm);
+    ctx.moveTo(hw, hh - arm); ctx.lineTo(hw, hh); ctx.lineTo(hw - arm, hh);
+    ctx.moveTo(-hw + arm, hh); ctx.lineTo(-hw, hh); ctx.lineTo(-hw, hh - arm);
     ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 4 rotating tick needles
-    ctx.strokeStyle = primaryColor;
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 4; i++) {
-      const a = p * 1.2 + (i * Math.PI) / 2;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * (rad + 7), Math.sin(a) * (rad + 7));
-      ctx.lineTo(Math.cos(a) * (rad - 6), Math.sin(a) * (rad - 6));
-      ctx.stroke();
-    }
-    ctx.restore();
-    return;
   }
 
-  if (lockAge < 0.22 && !ghostMode) {
-    // Phase 2: Shape-tweened sharp diamond morphing into bracket bounds
-    const p = clamp((lockAge - 0.11) / 0.11, 0, 1);
-    const e = easeBackOut(p, 1.35);
-    const dx = baseHw * (1.26 - e * 0.22);
-    const dy = baseHh * (1.55 - e * 0.48);
-
-    ctx.strokeStyle = primaryColor;
-    ctx.lineWidth = 1.85;
-    ctx.beginPath();
-    ctx.moveTo(0, -dy);
-    ctx.lineTo(dx, 0);
-    ctx.lineTo(0, dy);
-    ctx.lineTo(-dx, 0);
-    ctx.closePath();
-    ctx.stroke();
-
-    // Inner cross leader ticks previewing final bracket lock
-    ctx.strokeStyle = secondaryColor;
-    ctx.lineWidth = 1.15;
-    ctx.beginPath();
-    ctx.moveTo(-dx - 7, 0); ctx.lineTo(-dx + 4, 0);
-    ctx.moveTo(dx - 4, 0); ctx.lineTo(dx + 7, 0);
-    ctx.stroke();
-
-    ctx.restore();
-    return;
-  }
-
-  // Phase 3: Snapped 4-corner aerospace vector bracket with leader ticks
-  const settleP = clamp((lockAge - 0.22) / 0.14, 0, 1);
-  const settleEase = easeBackOut(settleP, 1.45);
-  const expand = ghostMode ? 0 : (1 - settleEase) * 14;
-  const breath = ghostMode ? 0 : Math.sin(timeSec * 3.4) * 1.1;
-  const hw = baseHw + expand + breath;
-  const hh = baseHh + expand * 0.65 + breath * 0.6;
-
-  ctx.strokeStyle = ghostMode ? secondaryColor : isLight ? '#0A0A0B' : '#D2FF28';
-  ctx.lineWidth = ghostMode ? 1.1 : 1.8;
+  // Razor crisp 4-corner aerospace brackets
+  ctx.strokeStyle = isLight ? '#0A0A0B' : '#D2FF28';
+  ctx.lineWidth = 1.75;
   ctx.beginPath();
-  // 4 corner L-brackets
   ctx.moveTo(-hw, -hh + arm); ctx.lineTo(-hw, -hh); ctx.lineTo(-hw + arm, -hh);
   ctx.moveTo(hw - arm, -hh); ctx.lineTo(hw, -hh); ctx.lineTo(hw, -hh + arm);
   ctx.moveTo(hw, hh - arm); ctx.lineTo(hw, hh); ctx.lineTo(hw - arm, hh);
   ctx.moveTo(-hw + arm, hh); ctx.lineTo(-hw, hh); ctx.lineTo(-hw, hh - arm);
   ctx.stroke();
 
-  if (!ghostMode) {
-    // Surgical inward horizontal leader ticks & tiny accent lock pips
-    ctx.strokeStyle = secondaryColor;
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(-hw - 6, 0); ctx.lineTo(-hw + 3, 0);
-    ctx.moveTo(hw - 3, 0); ctx.lineTo(hw + 6, 0);
-    ctx.moveTo(0, -hh - 5); ctx.lineTo(0, -hh + 2);
-    ctx.moveTo(0, hh - 2); ctx.lineTo(0, hh + 5);
-    ctx.stroke();
-
-    ctx.fillStyle = primaryColor;
-    ctx.fillRect(-hw - 1.5, -hh - 1.5, 3, 3);
-    ctx.fillRect(hw - 1.5, -hh - 1.5, 3, 3);
-    ctx.fillRect(hw - 1.5, hh - 1.5, 3, 3);
-    ctx.fillRect(-hw - 1.5, hh - 1.5, 3, 3);
-  }
+  // Delicate neon-purple / royal-ultraviolet midpoint leader ticks
+  ctx.strokeStyle = isLight ? 'rgba(122, 30, 214, 0.72)' : 'rgba(214, 91, 255, 0.82)';
+  ctx.lineWidth = 1.15;
+  ctx.beginPath();
+  ctx.moveTo(-hw - 5.5, 0); ctx.lineTo(-hw + 2.5, 0);
+  ctx.moveTo(hw - 2.5, 0); ctx.lineTo(hw + 5.5, 0);
+  ctx.stroke();
 
   ctx.restore();
 }
 
 /**
- * Golden-age Flash vector kinetics layer: surgical detonation shockwaves, cel-edged starburst
- * spikes, speed-lines, sparks, logarithmic vortex implosion, viewport-clamped refined orbital
- * hairlines, curved Flash Bezier Motion-Guide tethers with traveling energy chevrons, and a
- * shape-tweening lock-on targeting reticle. Strictly synchronized to centerYRatio.
+ * Pure Event Horizon kinetics canvas: delicate neon-purple & warm-gold accretion motes at rest,
+ * dramatic neon-purple supernova detonation shockwaves/sparks/starburst streaks, logarithmic
+ * vortex implosion, viewport-clamped orbital hairlines, curved Bezier world tethers, and a
+ * snapping 4-corner targeting reticle. Strictly synchronized to centerYRatio.
  */
 export function BurstFxCanvas({
   exploded,
@@ -306,8 +254,6 @@ export function BurstFxCanvas({
   nodes,
   hoveredId = null,
   centerYRatio = 0.47,
-  onionSkin = false,
-  showGuides = false,
   className = '',
 }: BurstFxCanvasProps) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -324,8 +270,6 @@ export function BurstFxCanvas({
     centerYRatio,
     nodes: nodes ?? [],
     hoveredId,
-    onionSkin,
-    showGuides,
     reduced,
     inView,
     hoverLockId: hoveredId,
@@ -350,8 +294,6 @@ export function BurstFxCanvas({
     st.isLight = theme === 'daylight';
     st.centerYRatio = centerYRatio;
     st.nodes = nodes ?? [];
-    st.onionSkin = onionSkin;
-    st.showGuides = showGuides;
     st.reduced = reduced;
     st.inView = inView;
 
@@ -375,20 +317,7 @@ export function BurstFxCanvas({
     prevExplodedRef.current = exploded;
 
     if (reduced) renderStaticRef.current?.();
-  }, [
-    exploded,
-    burstSeq,
-    implodeSeq,
-    accentHue,
-    theme,
-    nodes,
-    hoveredId,
-    centerYRatio,
-    onionSkin,
-    showGuides,
-    reduced,
-    inView,
-  ]);
+  }, [exploded, burstSeq, implodeSeq, accentHue, theme, nodes, hoveredId, centerYRatio, reduced, inView]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -423,13 +352,13 @@ export function BurstFxCanvas({
     const vortex: VortexSpark[] = [];
     const ambient: AmbientMote[] = [];
 
-    // Subtle delicate micro-motes tightly bound to the accretion corona (ZERO outer clutter at rest)
-    for (let i = 0; i < 28; i++) {
+    // Delicate accretion micro-motes tightly kissing the horizon (ZERO outer clutter at rest!)
+    for (let i = 0; i < 32; i++) {
       ambient.push({
-        angle: (i / 28) * TAU + Math.random() * 0.4,
-        rMult: 1.12 + Math.random() * 0.88,
-        speed: 0.35 + Math.random() * 0.52,
-        size: 0.9 + (i % 3) * 0.38,
+        angle: (i / 32) * TAU + Math.random() * 0.4,
+        rMult: 1.1 + Math.random() * 0.9,
+        speed: 0.34 + Math.random() * 0.54,
+        size: 0.85 + (i % 3) * 0.38,
       });
     }
 
@@ -442,89 +371,89 @@ export function BurstFxCanvas({
       const isLight = st.isLight;
       const hBase = st.accentHue;
 
-      // Controlled radial bloom so FlashMovieStage's 2-frame cel-ink impact starburst reads razor-clear!
-      st.flashAlpha = isLight ? 0.34 : 0.44;
+      st.flashAlpha = isLight ? 0.5 : 0.72;
       st.guidesVel = Math.max(st.guidesVel, 7.2);
 
+      // Electric neon-purple + acid-lime + incandescent ivory shockwaves
       waves.push(
         {
           age: 0,
-          duration: 0.74,
-          maxR: safeMaxR * 0.94,
+          duration: 0.78,
+          maxR: safeMaxR * 0.96,
           kind: 'primary',
-          color: isLight ? '#D94E00' : '#D2FF28',
+          color: isLight ? '#7A1ED6' : '#B829FF',
           rotSpeed: 0,
           startAngle: 0,
         },
         {
           age: -0.055,
-          duration: 0.84,
-          maxR: safeMaxR * 0.86,
+          duration: 0.88,
+          maxR: safeMaxR * 0.88,
           kind: 'secondary',
-          color: isLight ? '#0A0A0B' : '#F5F3EC',
+          color: isLight ? '#D94E00' : '#D65BFF',
           rotSpeed: 0.42,
           startAngle: 0,
         },
         {
-          age: -0.095,
-          duration: 0.68,
-          maxR: safeMaxR * 0.7,
+          age: -0.1,
+          duration: 0.72,
+          maxR: safeMaxR * 0.72,
           kind: 'segmented',
-          color: isLight ? '#006B8F' : nonPurpleCss(false, hBase, 1),
+          color: isLight ? '#0A0A0B' : '#D2FF28',
           rotSpeed: -1.4,
           startAngle: Math.random() * TAU,
         },
       );
 
-      // Surgical cel-edged Flash starburst spikes (26) + crisp radial speed-lines (34)
       const palette = isLight
         ? DAYLIGHT_PALETTE
-        : (['#F5F3EC', '#D2FF28', '#00D4FF', nonPurpleCss(false, hBase, 1)] as const);
+        : ([...NEON_DARK_PALETTE, nonPurpleCss(false, hBase, 1)] as const);
 
-      for (let i = 0; i < 26; i++) {
-        const a = (i / 26) * TAU + (Math.random() - 0.5) * 0.08;
+      // Crisp tapered starburst spikes (30) + high-velocity radial streaks (38)
+      for (let i = 0; i < 30; i++) {
+        const a = (i / 30) * TAU + (Math.random() - 0.5) * 0.08;
         spikes.push({
           angle: a,
-          speed: minDim * (0.76 + Math.random() * 0.82),
-          length: minDim * (0.12 + Math.random() * 0.2),
-          baseWidth: 2.0 + Math.random() * 4.2,
+          speed: minDim * (0.76 + Math.random() * 0.86),
+          length: minDim * (0.13 + Math.random() * 0.22),
+          baseWidth: 2.0 + Math.random() * 4.4,
           life: 0,
-          maxLife: 0.34 + Math.random() * 0.24,
+          maxLife: 0.35 + Math.random() * 0.26,
           color: palette[i % palette.length]!,
           speedLine: false,
         });
       }
-      for (let i = 0; i < 34; i++) {
+      for (let i = 0; i < 38; i++) {
         const a = Math.random() * TAU;
         spikes.push({
           angle: a,
-          speed: minDim * (1.02 + Math.random() * 0.88),
-          length: minDim * (0.13 + Math.random() * 0.22),
-          baseWidth: 0.85 + Math.random() * 1.25,
+          speed: minDim * (1.04 + Math.random() * 0.9),
+          length: minDim * (0.14 + Math.random() * 0.24),
+          baseWidth: 0.9 + Math.random() * 1.35,
           life: 0,
-          maxLife: 0.28 + Math.random() * 0.24,
+          maxLife: 0.28 + Math.random() * 0.25,
           color: palette[(i + 1) % palette.length]!,
           speedLine: true,
         });
       }
 
-      // 144 surgical vector sparks & diamond glints harmonizing cleanly with FlashMovieStage
-      const startR = minDim * 0.09;
-      for (let i = 0; i < 144; i++) {
+      // 176 luminous neon-purple, acid-lime & ivory sparks decaying cleanly
+      const startR = minDim * 0.088;
+      for (let i = 0; i < 176; i++) {
         const a = Math.random() * TAU;
-        const speed = minDim * (0.36 + Math.pow(Math.random(), 0.72) * 1.48);
+        const speed = minDim * (0.36 + Math.pow(Math.random(), 0.72) * 1.54);
         sparks.push({
           x: cx + Math.cos(a) * startR,
           y: cy + Math.sin(a) * startR,
           vx: Math.cos(a) * speed,
           vy: Math.sin(a) * speed,
-          drag: 2.15 + Math.random() * 1.65,
-          curl: (Math.random() - 0.5) * 1.4,
+          drag: 2.05 + Math.random() * 1.65,
+          curl: (Math.random() - 0.5) * 1.45,
           life: 0,
-          maxLife: 0.44 + Math.random() * 0.58,
-          size: 1.3 + Math.random() * 2.3,
+          maxLife: 0.46 + Math.random() * 0.62,
+          size: 1.35 + Math.random() * 2.45,
           color: palette[i % palette.length]!,
-          kind: i % 4 === 0 ? 'diamond' : 'streak',
+          kind: i % 5 === 0 ? 'diamond' : 'streak',
         });
       }
     };
@@ -532,9 +461,8 @@ export function BurstFxCanvas({
     const spawnImplosion = () => {
       const st = stateRef.current;
       const minDim = Math.max(320, Math.min(cssW, cssH));
-      const safeMaxR = Math.min(cssW * 0.5, cssH * st.centerYRatio, cssH * (1 - st.centerYRatio)) * 0.94;
+      const safeMaxR = Math.min(cssW * 0.5, cssH * st.centerYRatio, cssH * (1 - st.centerYRatio)) * 0.95;
       const isLight = st.isLight;
-      const hBase = st.accentHue;
 
       spikes.length = 0;
       sparks.length = 0;
@@ -542,37 +470,34 @@ export function BurstFxCanvas({
       waves.push(
         {
           age: 0,
-          duration: 0.56,
+          duration: 0.58,
           maxR: safeMaxR,
           kind: 'implode',
-          color: isLight ? '#0A0A0B' : '#D2FF28',
+          color: isLight ? '#7A1ED6' : '#B829FF',
           rotSpeed: 1.5,
           startAngle: 0,
         },
         {
-          age: -0.075,
-          duration: 0.52,
-          maxR: safeMaxR * 0.72,
+          age: -0.08,
+          duration: 0.54,
+          maxR: safeMaxR * 0.74,
           kind: 'implode',
-          color: isLight ? '#D94E00' : nonPurpleCss(false, hBase, 1),
+          color: isLight ? '#D94E00' : '#D2FF28',
           rotSpeed: -1.8,
           startAngle: 1.1,
         },
       );
 
-      const cols = isLight
-        ? DAYLIGHT_PALETTE
-        : (['#F5F3EC', '#D2FF28', '#00D4FF', nonPurpleCss(false, hBase, 1)] as const);
-
-      for (let i = 0; i < 112; i++) {
+      const cols = isLight ? DAYLIGHT_PALETTE : NEON_DARK_PALETTE;
+      for (let i = 0; i < 136; i++) {
         vortex.push({
           angle: Math.random() * TAU,
-          radius: minDim * (0.24 + Math.random() * 0.34),
-          radialSpeed: minDim * (0.64 + Math.random() * 0.74),
+          radius: minDim * (0.24 + Math.random() * 0.36),
+          radialSpeed: minDim * (0.62 + Math.random() * 0.76),
           angSpeed: 3.6 + Math.random() * 4.2,
           life: 0,
-          maxLife: 0.46 + Math.random() * 0.32,
-          size: 1.35 + Math.random() * 2.0,
+          maxLife: 0.48 + Math.random() * 0.34,
+          size: 1.4 + Math.random() * 2.15,
           color: cols[i % cols.length]!,
         });
       }
@@ -587,7 +512,7 @@ export function BurstFxCanvas({
       const minD = Math.min(cssW, cssH);
       const isLight = st.isLight;
 
-      // 1. Refined 1px orbital guide hairlines STRICTLY clamped within viewport bounds (>= 24px margin)
+      // 1. Subtle 1px orbital track hairlines STRICTLY clamped within viewport bounds (>= 24px margin)
       if (guideScale > 0.04) {
         const isDesktop = cssW >= 1024;
         const maxRx = Math.max(24, Math.min(cx, cssW - cx) - 24);
@@ -633,8 +558,8 @@ export function BurstFxCanvas({
 
         ctx.save();
         ctx.strokeStyle = isLight
-          ? `rgba(10,10,11,${(0.14 * gAlpha).toFixed(3)})`
-          : `rgba(210,255,40,${(0.14 * gAlpha).toFixed(3)})`;
+          ? `rgba(122,30,214,${(0.16 * gAlpha).toFixed(3)})`
+          : `rgba(184,41,255,${(0.22 * gAlpha).toFixed(3)})`;
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 7]);
         ctx.lineDashOffset = -timeSec * 10;
@@ -644,7 +569,7 @@ export function BurstFxCanvas({
 
         ctx.strokeStyle = isLight
           ? `rgba(10,10,11,${(0.11 * gAlpha).toFixed(3)})`
-          : `rgba(0,212,255,${(0.12 * gAlpha).toFixed(3)})`;
+          : `rgba(210,255,40,${(0.11 * gAlpha).toFixed(3)})`;
         ctx.setLineDash([2, 8]);
         ctx.lineDashOffset = timeSec * 8;
         ctx.beginPath();
@@ -654,8 +579,8 @@ export function BurstFxCanvas({
 
         if (isDesktop && gAlpha > 0.4) {
           ctx.strokeStyle = isLight
-            ? `rgba(10,10,11,${(0.24 * gAlpha).toFixed(3)})`
-            : `rgba(210,255,40,${(0.22 * gAlpha).toFixed(3)})`;
+            ? `rgba(122,30,214,${(0.24 * gAlpha).toFixed(3)})`
+            : `rgba(214,91,255,${(0.24 * gAlpha).toFixed(3)})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           for (let d = 0; d < 16; d++) {
@@ -671,7 +596,7 @@ export function BurstFxCanvas({
         ctx.restore();
       }
 
-      // 2. Curved Flash Bezier Motion-Guide Orbital Tethers from photon ring to orbiting worlds
+      // 2. Ultra-fine curved Bezier orbital tethers with subtle neon-purple & world-hue harmony
       if (st.nodes.length === 0) return;
       const coreEdge = minD * 0.116;
       let activeNode: OrbitNodeTarget | null = null;
@@ -688,73 +613,58 @@ export function BurstFxCanvas({
         const curve = buildCurvedTether(cx, cy, coreEdge, tx, ty, n.ring);
         if (!curve) continue;
 
-        ctx.strokeStyle = isLight ? 'rgba(10,10,11,0.14)' : nonPurpleCss(false, n.hue, 0.17);
+        ctx.strokeStyle = isLight
+          ? i % 2 === 0
+            ? 'rgba(122,30,214,0.14)'
+            : 'rgba(10,10,11,0.12)'
+          : i % 2 === 0
+            ? 'rgba(184,41,255,0.18)'
+            : nonPurpleCss(false, n.hue, 0.16);
         ctx.lineWidth = 0.85;
         ctx.beginPath();
         ctx.moveTo(curve.p0.x, curve.p0.y);
         ctx.quadraticCurveTo(curve.p1.x, curve.p1.y, curve.p2.x, curve.p2.y);
         ctx.stroke();
 
-        // Subtle traveling directional pulse pip gliding along each non-active Bezier tether
-        const uPip = (timeSec * 0.34 + i * 0.19) % 1;
+        // Delicate traveling directional pulse pip along the Bezier tether
+        const uPip = (timeSec * 0.32 + i * 0.19) % 1;
         const pip = evalQuadBezier(curve.p0, curve.p1, curve.p2, uPip);
         drawEnergyChevron(
           ctx,
           pip.x,
           pip.y,
           pip.angle,
-          3.1,
-          isLight ? 'rgba(180,83,9,0.45)' : nonPurpleCss(false, n.hue, 0.42),
-          1.05,
+          2.9,
+          isLight ? 'rgba(122,30,214,0.44)' : 'rgba(214,91,255,0.46)',
+          1.0,
         );
 
-        ctx.fillStyle = isLight ? 'rgba(180,83,9,0.52)' : nonPurpleCss(false, n.hue, 0.48);
+        ctx.fillStyle = isLight ? 'rgba(122,30,214,0.5)' : 'rgba(184,41,255,0.58)';
         ctx.beginPath();
-        ctx.arc(curve.p0.x, curve.p0.y, 1.55, 0, TAU);
+        ctx.arc(curve.p0.x, curve.p0.y, 1.5, 0, TAU);
         ctx.fill();
       }
 
-      // 3. Blazing Curved Flash Bezier Telemetry Beam + Traveling Energy Chevrons + Shape-Tween Lock Reticle
+      // 3. Active hovered world: neon-purple & world-hue curved telemetry beam + snapping 4-corner reticle
       if (activeNode) {
         const tx = activeNode.nx * cssW;
         const ty = activeNode.ny * cssH;
         const curve = buildCurvedTether(cx, cy, coreEdge, tx, ty, activeNode.ring);
-        const primaryCol = isLight ? '#D94E00' : '#D2FF28';
-        const secondaryCol = isLight ? '#006B8F' : '#00D4FF';
 
         if (curve) {
-          ctx.save();
-
-          // Optional Flash onion-skin ghost echo curves flanking the active curved tether
-          if (st.onionSkin) {
-            const ghostOffsets = [
-              { dx: -6, dy: -4, col: isLight ? 'rgba(0,107,143,0.34)' : 'rgba(0,212,255,0.34)' },
-              { dx: 6, dy: 4, col: isLight ? 'rgba(217,78,0,0.28)' : 'rgba(210,255,40,0.28)' },
-            ] as const;
-            for (const g of ghostOffsets) {
-              ctx.strokeStyle = g.col;
-              ctx.lineWidth = 1.25;
-              ctx.setLineDash([4, 4]);
-              ctx.beginPath();
-              ctx.moveTo(curve.p0.x, curve.p0.y);
-              ctx.quadraticCurveTo(curve.p1.x + g.dx, curve.p1.y + g.dy, curve.p2.x, curve.p2.y);
-              ctx.stroke();
-            }
-            ctx.setLineDash([]);
-          }
-
           const beamGrad = ctx.createLinearGradient(curve.p0.x, curve.p0.y, curve.p2.x, curve.p2.y);
           if (isLight) {
-            beamGrad.addColorStop(0, 'rgba(217,78,0,0.32)');
-            beamGrad.addColorStop(0.55, 'rgba(180,83,9,0.42)');
+            beamGrad.addColorStop(0, 'rgba(122,30,214,0.38)');
+            beamGrad.addColorStop(0.52, 'rgba(217,78,0,0.44)');
             beamGrad.addColorStop(1, 'rgba(10,10,11,0.62)');
           } else {
-            beamGrad.addColorStop(0, 'rgba(210,255,40,0.38)');
-            beamGrad.addColorStop(0.55, nonPurpleCss(false, activeNode.hue, 0.54));
+            beamGrad.addColorStop(0, 'rgba(184,41,255,0.52)');
+            beamGrad.addColorStop(0.5, nonPurpleCss(false, activeNode.hue, 0.54));
             beamGrad.addColorStop(1, '#F5F3EC');
           }
 
-          // Soft wide vector energy sheath
+          ctx.save();
+          // Ambient neon energy sheath
           ctx.strokeStyle = beamGrad;
           ctx.lineWidth = 4.2;
           ctx.beginPath();
@@ -763,14 +673,14 @@ export function BurstFxCanvas({
           ctx.stroke();
 
           // Razor inner vector spline
-          ctx.strokeStyle = primaryCol;
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = isLight ? '#7A1ED6' : '#D65BFF';
+          ctx.lineWidth = 1.45;
           ctx.beginPath();
           ctx.moveTo(curve.p0.x, curve.p0.y);
           ctx.quadraticCurveTo(curve.p1.x, curve.p1.y, curve.p2.x, curve.p2.y);
           ctx.stroke();
 
-          // 4 animated traveling energy chevrons gliding along the exact Bezier tangent!
+          // 4 sleek traveling energy chevrons gliding along the Bezier tangent
           for (let k = 0; k < 4; k++) {
             const u = (timeSec * 0.85 + k * 0.25) % 1;
             const sample = evalQuadBezier(curve.p0, curve.p1, curve.p2, u);
@@ -779,80 +689,32 @@ export function BurstFxCanvas({
               sample.x,
               sample.y,
               sample.angle,
-              5.4,
+              5.0,
               isLight ? '#0A0A0B' : '#FFFFFF',
-              2.1,
+              2.0,
             );
-            // Secondary trailing chevron pulse
-            const sampleBack = evalQuadBezier(curve.p0, curve.p1, curve.p2, clamp(u - 0.032, 0, 1));
-            drawEnergyChevron(ctx, sampleBack.x, sampleBack.y, sampleBack.angle, 4.1, primaryCol, 1.3);
+            const sampleBack = evalQuadBezier(curve.p0, curve.p1, curve.p2, clamp(u - 0.03, 0, 1));
+            drawEnergyChevron(
+              ctx,
+              sampleBack.x,
+              sampleBack.y,
+              sampleBack.angle,
+              3.8,
+              isLight ? '#D94E00' : '#D2FF28',
+              1.25,
+            );
           }
 
           // Photon-ring origin jewel anchor
-          ctx.fillStyle = primaryCol;
-          ctx.strokeStyle = isLight ? '#0A0A0B' : '#050608';
-          ctx.lineWidth = 1.1;
+          ctx.fillStyle = isLight ? '#7A1ED6' : '#D65BFF';
           ctx.beginPath();
-          ctx.arc(curve.p0.x, curve.p0.y, 3.3, 0, TAU);
+          ctx.arc(curve.p0.x, curve.p0.y, 3.2, 0, TAU);
           ctx.fill();
-          ctx.stroke();
-
-          // Optional Flash authoring Bezier tangent handles on the active tether!
-          if (st.showGuides) {
-            ctx.strokeStyle = isLight ? 'rgba(0,107,143,0.58)' : 'rgba(0,212,255,0.56)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([3, 3]);
-            ctx.beginPath();
-            ctx.moveTo(curve.p0.x, curve.p0.y);
-            ctx.lineTo(curve.p1.x, curve.p1.y);
-            ctx.lineTo(curve.p2.x, curve.p2.y);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Hollow Bezier control-point circle at quadratic apex
-            ctx.fillStyle = isLight ? '#F5F3EC' : '#050608';
-            ctx.strokeStyle = secondaryCol;
-            ctx.lineWidth = 1.3;
-            ctx.beginPath();
-            ctx.arc(curve.p1.x, curve.p1.y, 3.4, 0, TAU);
-            ctx.fill();
-            ctx.stroke();
-
-            drawRegistrationMark(ctx, curve.p0.x, curve.p0.y, secondaryCol, 4);
-          }
-
           ctx.restore();
         }
 
-        // Shape-tweening vector lock-on reticle (circle -> diamond -> 4-corner aerospace bracket)
-        if (st.onionSkin) {
-          ctx.save();
-          ctx.globalAlpha = 0.34;
-          drawShapeTweenLockReticle(
-            ctx,
-            tx - 4,
-            ty - 3,
-            activeNode.ring,
-            1,
-            timeSec,
-            isLight,
-            primaryCol,
-            secondaryCol,
-            true,
-          );
-          ctx.restore();
-        }
-        drawShapeTweenLockReticle(
-          ctx,
-          tx,
-          ty,
-          activeNode.ring,
-          st.hoverLockAge,
-          timeSec,
-          isLight,
-          primaryCol,
-          secondaryCol,
-        );
+        // Crisp snapping 4-corner aerospace targeting reticle
+        drawSnapReticle(ctx, tx, ty, activeNode.ring, st.hoverLockAge, timeSec, isLight);
       }
     };
 
@@ -924,9 +786,9 @@ export function BurstFxCanvas({
       const minD = Math.min(cssW, cssH);
       const isLight = st.isLight;
 
-      // 1. Delicate accretion micro-motes tightly bound to the photon ring
+      // 1. Delicate accretion micro-motes tightly kissing the horizon (neon-purple + warm gold glints!)
       const coreR = minD * (st.exploded ? 0.116 : 0.156);
-      const moteCount = st.exploded ? 12 : ambient.length;
+      const moteCount = st.exploded ? 16 : ambient.length;
       for (let i = 0; i < moteCount; i++) {
         const m = ambient[i]!;
         const pull = 0.24 + 0.35 / Math.max(0.8, m.rMult);
@@ -939,47 +801,57 @@ export function BurstFxCanvas({
         const rad = coreR * m.rMult;
         const px = cx + Math.cos(m.angle) * rad * 1.12;
         const py = cy + Math.sin(m.angle) * rad * 0.96;
-        const fade = clamp(1 - (m.rMult - 1.04) / 1.05, 0.05, 0.68) * clamp((m.rMult - 1.02) * 8, 0, 1);
+        const fade = clamp(1 - (m.rMult - 1.04) / 1.05, 0.05, 0.72) * clamp((m.rMult - 1.02) * 8, 0, 1);
 
         ctx.fillStyle = isLight
-          ? i % 2 === 0
-            ? `rgba(217,78,0,${(fade * 0.62).toFixed(3)})`
-            : `rgba(10,10,11,${(fade * 0.42).toFixed(3)})`
+          ? i % 3 === 0
+            ? `rgba(122,30,214,${(fade * 0.65).toFixed(3)})`
+            : i % 3 === 1
+              ? `rgba(217,78,0,${(fade * 0.6).toFixed(3)})`
+              : `rgba(10,10,11,${(fade * 0.42).toFixed(3)})`
           : i % 3 === 0
-            ? `rgba(210,255,40,${(fade * 0.66).toFixed(3)})`
-            : `rgba(255,224,160,${(fade * 0.58).toFixed(3)})`;
+            ? `rgba(184,41,255,${(fade * 0.85).toFixed(3)})`
+            : i % 3 === 1
+              ? `rgba(214,91,255,${(fade * 0.72).toFixed(3)})`
+              : `rgba(255,224,160,${(fade * 0.62).toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(px, py, m.size, 0, TAU);
         ctx.fill();
       }
 
-      // 2. Refined orbital guide hairlines & curved Bezier Motion-Guide world tethers
+      // 2. Refined orbital track hairlines & curved Bezier world tethers
       drawGuidesAndTethers(elapsed, st.guidesScale);
 
-      // 3. Controlled radial detonation bloom (harmonizes with FlashMovieStage's 2-frame impact starburst)
+      // 3. Electric neon-purple radial detonation flash bloom
       if (st.flashAlpha > 0.01) {
-        st.flashAlpha *= Math.exp(-dt * 16);
-        const fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, minD * 0.44);
+        st.flashAlpha *= Math.exp(-dt * 14);
+        const fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, minD * 0.5);
         fg.addColorStop(
           0,
           isLight
-            ? `rgba(255,245,214,${st.flashAlpha.toFixed(3)})`
-            : `rgba(245,243,236,${st.flashAlpha.toFixed(3)})`,
+            ? `rgba(255,245,224,${st.flashAlpha.toFixed(3)})`
+            : `rgba(255,245,255,${st.flashAlpha.toFixed(3)})`,
         );
         fg.addColorStop(
-          0.38,
+          0.34,
           isLight
-            ? `rgba(217,78,0,${(st.flashAlpha * 0.34).toFixed(3)})`
-            : `rgba(210,255,40,${(st.flashAlpha * 0.38).toFixed(3)})`,
+            ? `rgba(122,30,214,${(st.flashAlpha * 0.36).toFixed(3)})`
+            : `rgba(184,41,255,${(st.flashAlpha * 0.56).toFixed(3)})`,
+        );
+        fg.addColorStop(
+          0.68,
+          isLight
+            ? `rgba(217,78,0,${(st.flashAlpha * 0.14).toFixed(3)})`
+            : `rgba(110,30,255,${(st.flashAlpha * 0.22).toFixed(3)})`,
         );
         fg.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = fg;
         ctx.beginPath();
-        ctx.arc(cx, cy, minD * 0.44, 0, TAU);
+        ctx.arc(cx, cy, minD * 0.5, 0, TAU);
         ctx.fill();
       }
 
-      // 4. Crisp double shockwave & collapsing implosion rings
+      // 4. Crisp shockwave & collapsing vortex rings
       for (let i = waves.length - 1; i >= 0; i--) {
         const wv = waves[i]!;
         wv.age += dt;
@@ -998,9 +870,9 @@ export function BurstFxCanvas({
         if (wv.kind === 'implode') {
           const easeIn = 1 - Math.pow(u, 2.2);
           const rad = Math.max(8, easeIn * wv.maxR);
-          ctx.globalAlpha = Math.sin(u * Math.PI) * 0.85;
+          ctx.globalAlpha = Math.sin(u * Math.PI) * 0.88;
           ctx.strokeStyle = wv.color;
-          ctx.lineWidth = 1.4 + u * 3.0;
+          ctx.lineWidth = 1.4 + u * 3.1;
           ctx.setLineDash([10, 8]);
           ctx.beginPath();
           ctx.arc(0, 0, rad, 0, TAU);
@@ -1009,26 +881,26 @@ export function BurstFxCanvas({
         } else {
           const easeOut = 1 - Math.pow(1 - u, 3);
           const rad = minD * 0.1 + easeOut * wv.maxR;
-          const alpha = Math.pow(1 - u, 1.5);
+          const alpha = Math.pow(1 - u, 1.48);
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = wv.color;
 
           if (wv.kind === 'primary') {
-            ctx.lineWidth = Math.max(0.8, (1 - u) * 4.2);
+            ctx.lineWidth = Math.max(0.85, (1 - u) * 4.8);
             ctx.beginPath();
             ctx.arc(0, 0, rad, 0, TAU);
             ctx.stroke();
           } else if (wv.kind === 'secondary') {
-            ctx.lineWidth = Math.max(0.75, (1 - u) * 1.6);
+            ctx.lineWidth = Math.max(0.75, (1 - u) * 2.1);
             ctx.beginPath();
             ctx.arc(0, 0, rad, 0, TAU);
             ctx.stroke();
           } else {
-            ctx.lineWidth = Math.max(1.2, (1 - u) * 4.6);
+            ctx.lineWidth = Math.max(1.2, (1 - u) * 4.8);
             for (let seg = 0; seg < 4; seg++) {
               const a0 = seg * (Math.PI * 0.5);
               ctx.beginPath();
-              ctx.arc(0, 0, rad, a0, a0 + 0.5);
+              ctx.arc(0, 0, rad, a0, a0 + 0.52);
               ctx.stroke();
             }
           }
@@ -1036,7 +908,7 @@ export function BurstFxCanvas({
         ctx.restore();
       }
 
-      // 5. Surgical cel-edged triangular Flash starburst spikes & radial speed-lines
+      // 5. Refined tapered starburst spikes & radial speed-lines
       for (let i = spikes.length - 1; i >= 0; i--) {
         const sp = spikes[i]!;
         sp.life += dt;
@@ -1048,7 +920,7 @@ export function BurstFxCanvas({
         const ease = 1 - Math.pow(1 - u, 2.6);
         const dist = minD * 0.08 + ease * sp.speed * sp.maxLife;
         const len = sp.length * (1 - u * 0.55);
-        const alpha = Math.pow(1 - u, 1.3);
+        const alpha = Math.pow(1 - u, 1.28);
 
         ctx.save();
         ctx.translate(cx, cy);
@@ -1068,18 +940,15 @@ export function BurstFxCanvas({
           ctx.beginPath();
           ctx.moveTo(dist + len * 0.45, 0);
           ctx.lineTo(Math.max(0, dist - len * 0.55), -bw);
-          ctx.lineTo(Math.max(0, dist - len * 0.32), 0);
+          ctx.lineTo(Math.max(0, dist - len * 0.34), 0);
           ctx.lineTo(Math.max(0, dist - len * 0.55), bw);
           ctx.closePath();
           ctx.fill();
-          ctx.strokeStyle = isLight ? '#0A0A0B' : '#050608';
-          ctx.lineWidth = 0.85;
-          ctx.stroke();
         }
         ctx.restore();
       }
 
-      // 6. Surgical glowing explosion sparks & diamond glints
+      // 6. Luminous neon-purple & ivory detonation sparks
       if (!isLight) ctx.globalCompositeOperation = 'lighter';
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i]!;
@@ -1099,7 +968,7 @@ export function BurstFxCanvas({
         p.x += p.vx * dt;
         p.y += p.vy * dt;
 
-        ctx.globalAlpha = Math.pow(1 - u, 1.25);
+        ctx.globalAlpha = Math.pow(1 - u, 1.22);
         if (p.kind === 'diamond') {
           const s = p.size * (1.2 - u * 0.5);
           ctx.fillStyle = p.color;
@@ -1111,8 +980,8 @@ export function BurstFxCanvas({
           ctx.closePath();
           ctx.fill();
         } else {
-          const tx = p.x - (p.x - px0) * 2.4;
-          const ty = p.y - (p.y - py0) * 2.4;
+          const tx = p.x - (p.x - px0) * 2.5;
+          const ty = p.y - (p.y - py0) * 2.5;
           ctx.strokeStyle = p.color;
           ctx.lineWidth = Math.max(0.8, p.size * (1 - u * 0.45));
           ctx.lineCap = 'round';
@@ -1123,7 +992,7 @@ export function BurstFxCanvas({
         }
       }
 
-      // 7. Vortex implosion sparks spiraling down into the singularity
+      // 7. Vortex implosion sparks spiraling violently down into the singularity
       for (let i = vortex.length - 1; i >= 0; i--) {
         const v = vortex[i]!;
         v.life += dt;
