@@ -54,37 +54,47 @@
   --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Theme 1: EVENT HORIZON (Deep-Space Pitch Void + Kinetic Acid-Lime) ---------- */
+/* ---------- Theme 1: EVENT HORIZON (Velvet Obsidian Void + Kinetic Acid-Lime) ---------- */
 :root,
 [data-theme='obsidian'] {
   color-scheme: dark;
 
-  /* Pure Pitch Event Horizon Void & Basalt Surface Ladder */
-  --bg-chassis: #020203;
-  --bg-inset: #08090b;
-  --bg-surface: #0c0d10;
-  --bg-elevated: #13151a;
-  --bg-bar: rgba(2, 2, 3, 0.78);
-  --bezel-frame: #010102;
+  /* Velvet Obsidian Event Horizon Void & Machined Carbon Surface Ladder */
+  --bg-chassis: #030304;
+  --bg-inset: #07080b;
+  --bg-surface: #0b0d11;
+  --bg-elevated: #12151c;
+  --bg-bar: rgba(3, 3, 5, 0.8);
+  --bezel-frame: #020203;
 
   /* Warm Chalk / Bone White Ink Hierarchy (>= 5.0:1 AA across all levels) */
   --ink-primary: #f5f3ec;
-  --ink-secondary: #aba89e;
+  --ink-secondary: #b0ada3;
   --ink-muted: #8a877e;
 
-  /* Structural 1px Architectural Hairlines & Subtle Specular Rim */
-  --hairline: rgba(245, 243, 236, 0.1);
-  --hairline-strong: rgba(245, 243, 236, 0.22);
-  --inset-highlight: rgba(245, 243, 236, 0.08);
-  --sheen-border: rgba(210, 255, 40, 0.46);
-  --sheen-fill: rgba(245, 243, 236, 0.03);
-  --surface-tint: rgba(245, 243, 236, 0.036);
-  --hover-tint: rgba(245, 243, 236, 0.072);
+  /* Structural 1px Architectural Hairlines & Machined Specular Rim */
+  --hairline: rgba(245, 243, 236, 0.095);
+  --hairline-strong: rgba(245, 243, 236, 0.21);
+  --inset-highlight: rgba(245, 243, 236, 0.095);
+  --sheen-border: rgba(210, 255, 40, 0.52);
+  --sheen-fill: rgba(245, 243, 236, 0.036);
+  --flash-sheen-color: rgba(255, 253, 245, 0.16);
+  --flash-sheen-accent: rgba(210, 255, 40, 0.22);
+  --topbar-glow: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(210, 255, 40, 0.28) 22%,
+    rgba(245, 243, 236, 0.22) 50%,
+    rgba(0, 212, 255, 0.2) 78%,
+    transparent 100%
+  );
+  --surface-tint: rgba(245, 243, 236, 0.038);
+  --hover-tint: rgba(245, 243, 236, 0.075);
   --scrim: rgba(2, 2, 3, 0.86);
-  --grid-line: rgba(245, 243, 236, 0.036);
-  --keycap-shadow: rgba(0, 0, 0, 0.82);
+  --grid-line: rgba(245, 243, 236, 0.038);
+  --keycap-shadow: rgba(0, 0, 0, 0.84);
   --grain-opacity: 0.02;
-  --stage-glow-color: rgba(210, 255, 40, 0.09);
+  --stage-glow-color: rgba(210, 255, 40, 0.095);
 
   /* Kinetic Acid-Lime Signature Accent + High-Contrast Status LEDs */
   --accent-lime: #d2ff28;
@@ -112,19 +122,19 @@
   --heat-3: #ff5226;
 
   /* Cover Art & Floating Plate Tokens */
-  --cover-scrim-end: rgba(2, 2, 3, 0.96);
-  --badge-bg: rgba(2, 2, 3, 0.84);
-  --badge-border: rgba(245, 243, 236, 0.18);
+  --cover-scrim-end: rgba(3, 3, 4, 0.96);
+  --badge-bg: rgba(4, 5, 8, 0.86);
+  --badge-border: rgba(245, 243, 236, 0.19);
 
   /* Sharp Monolith Elevation & Physical Shadows */
   --shadow-surface: inset 0 1px 0 var(--inset-highlight), 0 12px 32px -20px rgba(0, 0, 0, 0.96);
-  --shadow-elevated: inset 0 1px 0 rgba(245, 243, 236, 0.11), 0 20px 48px -18px rgba(0, 0, 0, 0.98);
-  --shadow-stage: inset 0 1px 0 rgba(245, 243, 236, 0.12), 0 28px 68px -22px rgba(0, 0, 0, 0.98);
-  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.65), inset 0 0 0 1px var(--hairline);
+  --shadow-elevated: inset 0 1px 0 rgba(245, 243, 236, 0.12), 0 20px 48px -18px rgba(0, 0, 0, 0.98);
+  --shadow-stage: inset 0 1px 0 rgba(245, 243, 236, 0.13), 0 28px 68px -22px rgba(0, 0, 0, 0.98);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.68), inset 0 0 0 1px var(--hairline);
   --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 32px 84px -16px rgba(0, 0, 0, 0.98);
   --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(210, 255, 40, 0.24);
-  --scrollbar-thumb: rgba(245, 243, 236, 0.15);
-  --scrollbar-thumb-hover: rgba(245, 243, 236, 0.3);
+  --scrollbar-thumb: rgba(245, 243, 236, 0.16);
+  --scrollbar-thumb-hover: rgba(245, 243, 236, 0.34);
 
   /* Sharp Architectural Chamfer Geometry */
   --topbar-h: 52px;
@@ -140,41 +150,51 @@
   --radius-pill: 999px;
 }
 
-/* ---------- Theme 2: KUNSTHALLE VELLUM (Swiss Archival Editorial) ---------- */
+/* ---------- Theme 2: SOLAR ECLIPSE (Archival Vellum + Pitch Ink + Warm Vermilion) ---------- */
 [data-theme='daylight'] {
   color-scheme: light;
 
   --bg-chassis: #f5f3ec;
-  --bg-inset: #eae7dd;
+  --bg-inset: #eae6da;
   --bg-surface: #ffffff;
-  --bg-elevated: #ffffff;
-  --bg-bar: rgba(245, 243, 236, 0.86);
+  --bg-elevated: #fffefb;
+  --bg-bar: rgba(245, 243, 236, 0.88);
   --bezel-frame: #0a0a0b;
 
   /* Deep Pitch Gallery Ink Hierarchy (>= 5.7:1 AA across vellum & white) */
   --ink-primary: #0a0a0b;
-  --ink-secondary: #3a3a3e;
-  --ink-muted: #58585e;
+  --ink-secondary: #38383d;
+  --ink-muted: #56565c;
 
-  --hairline: rgba(10, 10, 11, 0.11);
-  --hairline-strong: rgba(10, 10, 11, 0.24);
-  --inset-highlight: rgba(255, 255, 255, 0.96);
-  --sheen-border: rgba(10, 10, 11, 0.36);
+  --hairline: rgba(10, 10, 11, 0.12);
+  --hairline-strong: rgba(10, 10, 11, 0.26);
+  --inset-highlight: rgba(255, 255, 255, 0.98);
+  --sheen-border: rgba(217, 78, 0, 0.44);
   --sheen-fill: rgba(10, 10, 11, 0.022);
+  --flash-sheen-color: rgba(255, 255, 255, 0.62);
+  --flash-sheen-accent: rgba(217, 78, 0, 0.14);
+  --topbar-glow: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(217, 78, 0, 0.34) 22%,
+    rgba(10, 10, 11, 0.2) 50%,
+    rgba(217, 78, 0, 0.24) 78%,
+    transparent 100%
+  );
   --surface-tint: rgba(10, 10, 11, 0.036);
-  --hover-tint: rgba(10, 10, 11, 0.065);
+  --hover-tint: rgba(10, 10, 11, 0.068);
   --scrim: rgba(10, 10, 11, 0.44);
   --grid-line: rgba(10, 10, 11, 0.048);
-  --keycap-shadow: rgba(10, 10, 11, 0.18);
+  --keycap-shadow: rgba(10, 10, 11, 0.2);
   --grain-opacity: 0.015;
-  --stage-glow-color: rgba(70, 120, 0, 0.065);
+  --stage-glow-color: rgba(217, 78, 0, 0.075);
 
-  /* High-Contrast Swiss Print LED Inks (>= 5.2:1 on white/vellum) */
+  /* High-Contrast Solar Eclipse Vermilion + Obsidian Print Inks (>= 5.7:1 on white/vellum) */
   --accent-lime: #d2ff28;
-  --reticle-ink: #c2410c;
-  --led-hot: #467800;
-  --led-hot-ink: #386200;
-  --led-hot-soft: rgba(70, 120, 0, 0.11);
+  --reticle-ink: #d94e00;
+  --led-hot: #d94e00;
+  --led-hot-ink: #b53d00;
+  --led-hot-soft: rgba(217, 78, 0, 0.1);
 
   --led-online: #0e9f6e;
   --led-online-ink: #046b49;
@@ -188,33 +208,33 @@
   --led-alarm-ink: #b91c1c;
   --led-alarm-soft: rgba(220, 38, 38, 0.1);
 
-  --heat-0: rgba(10, 10, 11, 0.12);
+  --heat-0: rgba(10, 10, 11, 0.11);
   --heat-1: #046b49;
-  --heat-2: #467800;
-  --heat-3: #c23914;
+  --heat-2: #d94e00;
+  --heat-3: #9a2e00;
 
   --cover-scrim-end: rgba(255, 255, 255, 0.96);
-  --badge-bg: rgba(255, 255, 255, 0.92);
-  --badge-border: rgba(10, 10, 11, 0.16);
+  --badge-bg: rgba(255, 254, 250, 0.94);
+  --badge-border: rgba(10, 10, 11, 0.18);
 
   /* Crisp Architectural Gallery Shadows */
   --shadow-surface:
     inset 0 1px 0 var(--inset-highlight),
-    0 1px 2px rgba(10, 10, 11, 0.04),
-    0 10px 24px -16px rgba(10, 10, 11, 0.12);
+    0 1px 2px rgba(10, 10, 11, 0.05),
+    0 10px 24px -16px rgba(10, 10, 11, 0.13);
   --shadow-elevated:
     inset 0 1px 0 var(--inset-highlight),
-    0 2px 6px rgba(10, 10, 11, 0.05),
-    0 16px 34px -16px rgba(10, 10, 11, 0.16);
+    0 2px 6px rgba(10, 10, 11, 0.06),
+    0 16px 34px -16px rgba(10, 10, 11, 0.17);
   --shadow-stage:
     inset 0 1px 0 var(--inset-highlight),
-    0 4px 12px rgba(10, 10, 11, 0.05),
-    0 24px 52px -20px rgba(10, 10, 11, 0.16);
-  --shadow-inset: inset 0 1px 2px rgba(10, 10, 11, 0.07), inset 0 0 0 1px var(--hairline);
+    0 4px 12px rgba(10, 10, 11, 0.06),
+    0 24px 52px -20px rgba(10, 10, 11, 0.17);
+  --shadow-inset: inset 0 1px 2px rgba(10, 10, 11, 0.075), inset 0 0 0 1px var(--hairline);
   --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 28px 64px -16px rgba(10, 10, 11, 0.24);
-  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(70, 120, 0, 0.22);
-  --scrollbar-thumb: rgba(10, 10, 11, 0.2);
-  --scrollbar-thumb-hover: rgba(10, 10, 11, 0.36);
+  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(217, 78, 0, 0.24);
+  --scrollbar-thumb: rgba(10, 10, 11, 0.22);
+  --scrollbar-thumb-hover: rgba(10, 10, 11, 0.4);
 }
 
 /* ---------- Document Base & Global Precision Scrollbars ---------- */
@@ -290,7 +310,7 @@ body::before {
   color: var(--ink-primary);
 }
 [data-theme='daylight'] ::selection {
-  background-color: rgba(210, 255, 40, 0.55);
+  background-color: rgba(217, 78, 0, 0.22);
   color: #0a0a0b;
 }
 
@@ -579,17 +599,28 @@ kbd,
 
   /* ---------- Event Horizon & Golden-Age Flash Kinetic Spacecraft Primitives ---------- */
 
-  /* Circular Event Horizon Singularity Core Trigger with Breathing Photon Ring */
+  /* Circular Event Horizon Singularity Core Trigger with Machined Rim Lighting & Charge Aura */
   .singularity-core {
     position: relative;
     border-radius: 999px;
     isolation: isolate;
-    background: radial-gradient(circle at 50% 50%, #010102 58%, rgba(2, 2, 3, 0.86) 80%, rgba(210, 255, 40, 0.14) 100%);
+    background:
+      radial-gradient(circle at 50% 24%, rgba(255, 252, 232, 0.08) 0%, transparent 48%),
+      radial-gradient(
+        circle at 50% 50%,
+        #020203 54%,
+        rgba(5, 6, 9, 0.92) 76%,
+        rgba(210, 255, 40, 0.18) 95%,
+        rgba(255, 198, 92, 0.24) 100%
+      );
     box-shadow:
-      inset 0 0 0 1px rgba(255, 244, 210, 0.42),
-      0 0 0 1px rgba(210, 255, 40, 0.24),
-      0 0 42px -4px rgba(210, 255, 40, 0.28),
-      0 0 72px -12px rgba(255, 184, 46, 0.24);
+      inset 0 1px 0 rgba(255, 252, 235, 0.56),
+      inset 0 0 0 1px rgba(255, 244, 210, 0.44),
+      inset 0 -10px 24px rgba(210, 255, 40, 0.1),
+      0 0 0 1px rgba(210, 255, 40, 0.28),
+      0 0 38px -4px rgba(210, 255, 40, 0.34),
+      0 0 76px -10px rgba(255, 184, 46, 0.26),
+      0 18px 46px -14px rgba(0, 0, 0, 0.92);
     transition:
       scale 220ms var(--ease-snap),
       box-shadow 260ms var(--ease-snap),
@@ -603,9 +634,11 @@ kbd,
     inset: -7px;
     border-radius: inherit;
     pointer-events: none;
-    border: 1px solid rgba(210, 255, 40, 0.42);
-    box-shadow: 0 0 28px -2px rgba(210, 255, 40, 0.34);
-    animation: horizon-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    border: 1px solid rgba(210, 255, 40, 0.48);
+    box-shadow:
+      0 0 28px -2px rgba(210, 255, 40, 0.36),
+      inset 0 0 14px -4px rgba(210, 255, 40, 0.2);
+    animation: core-breathe 2.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
   .singularity-core::after {
     content: '';
@@ -613,7 +646,7 @@ kbd,
     inset: -16px;
     border-radius: inherit;
     pointer-events: none;
-    border: 1px dashed rgba(245, 243, 236, 0.18);
+    border: 1px dashed rgba(245, 243, 236, 0.22);
     transition:
       inset 260ms var(--ease-snap),
       border-color 220ms var(--ease-snap),
@@ -621,48 +654,62 @@ kbd,
   }
   @media (hover: hover) {
     .singularity-core:hover {
-      scale: 0.97;
+      scale: 0.975;
       box-shadow:
-        inset 0 0 0 1.5px rgba(210, 255, 40, 0.82),
-        0 0 0 2px rgba(210, 255, 40, 0.44),
-        0 0 58px -2px rgba(210, 255, 40, 0.46),
-        0 0 92px -10px rgba(255, 184, 46, 0.36);
+        inset 0 1px 0 rgba(255, 255, 245, 0.78),
+        inset 0 0 0 1.5px rgba(210, 255, 40, 0.88),
+        inset 0 -12px 26px rgba(210, 255, 40, 0.18),
+        0 0 0 2px rgba(210, 255, 40, 0.48),
+        0 0 60px -2px rgba(210, 255, 40, 0.52),
+        0 0 98px -10px rgba(255, 184, 46, 0.4),
+        0 20px 54px -14px rgba(0, 0, 0, 0.96);
     }
     .singularity-core:hover::after {
       inset: -10px;
-      border-color: rgba(210, 255, 40, 0.54);
+      border-color: rgba(210, 255, 40, 0.62);
     }
   }
   .singularity-core:active {
-    scale: 0.93;
+    scale: 0.935;
   }
 
-  /* Solar Eclipse Daylight variant for .singularity-core (jet-black core + blazing amber/ember corona on #F5F3EC) */
+  /* Solar Eclipse Daylight variant for .singularity-core (velvet jet-black umbra + vermilion/gold corona) */
   [data-theme='daylight'] .singularity-core {
-    background: radial-gradient(circle at 50% 50%, #050506 60%, #0a0a0b 82%, rgba(194, 65, 12, 0.34) 100%);
+    background:
+      radial-gradient(circle at 50% 22%, rgba(255, 238, 198, 0.14) 0%, transparent 46%),
+      radial-gradient(
+        circle at 50% 50%,
+        #050506 58%,
+        #0a0a0b 80%,
+        rgba(217, 78, 0, 0.36) 100%
+      );
     box-shadow:
-      inset 0 0 0 1.5px rgba(255, 244, 214, 0.72),
+      inset 0 1px 0 rgba(255, 246, 224, 0.82),
+      inset 0 0 0 1.5px rgba(255, 236, 194, 0.66),
       0 0 0 2px #0a0a0b,
-      0 0 40px -2px rgba(217, 119, 6, 0.42),
-      0 14px 36px -12px rgba(10, 10, 11, 0.42);
+      0 0 42px -2px rgba(217, 78, 0, 0.42),
+      0 16px 38px -12px rgba(10, 10, 11, 0.44);
   }
   [data-theme='daylight'] .singularity-core::before {
-    border-color: rgba(194, 65, 12, 0.56);
-    box-shadow: 0 0 28px -2px rgba(217, 119, 6, 0.46);
+    border-color: rgba(217, 78, 0, 0.62);
+    box-shadow:
+      0 0 28px -2px rgba(217, 78, 0, 0.44),
+      inset 0 0 12px -4px rgba(217, 119, 6, 0.25);
   }
   [data-theme='daylight'] .singularity-core::after {
-    border-color: rgba(10, 10, 11, 0.28);
+    border-color: rgba(10, 10, 11, 0.3);
   }
   @media (hover: hover) {
     [data-theme='daylight'] .singularity-core:hover {
       box-shadow:
-        inset 0 0 0 2px rgba(255, 236, 179, 0.92),
+        inset 0 1px 0 rgba(255, 250, 235, 0.96),
+        inset 0 0 0 2px rgba(255, 226, 168, 0.92),
         0 0 0 2px #0a0a0b,
-        0 0 54px -2px rgba(194, 65, 12, 0.52),
-        0 18px 44px -12px rgba(10, 10, 11, 0.48);
+        0 0 58px -2px rgba(217, 78, 0, 0.56),
+        0 20px 48px -12px rgba(10, 10, 11, 0.5);
     }
     [data-theme='daylight'] .singularity-core:hover::after {
-      border-color: #c2410c;
+      border-color: #d94e00;
     }
   }
 
@@ -718,80 +765,97 @@ kbd,
     position: relative;
     isolation: isolate;
     border-radius: var(--radius-md);
-    background: rgba(8, 9, 13, 0.78);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: linear-gradient(180deg, rgba(13, 15, 22, 0.84) 0%, rgba(7, 8, 12, 0.86) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     box-shadow:
-      inset 0 1px 0 rgba(245, 243, 236, 0.14),
+      inset 0 1px 0 rgba(245, 243, 236, 0.16),
       inset 0 0 0 1px rgba(245, 243, 236, 0.16),
-      0 10px 26px -12px rgba(0, 0, 0, 0.94);
+      0 10px 28px -12px rgba(0, 0, 0, 0.96);
     transition:
       background-color 180ms var(--ease-snap),
       box-shadow 180ms var(--ease-snap),
       border-color 180ms var(--ease-snap);
   }
   .orbit-pod[data-active='true'] {
-    background: rgba(14, 16, 22, 0.94);
+    background: linear-gradient(180deg, rgba(17, 20, 28, 0.95) 0%, rgba(10, 12, 17, 0.95) 100%);
     box-shadow:
-      inset 0 1px 0 rgba(210, 255, 40, 0.45),
-      inset 0 0 0 1px rgba(210, 255, 40, 0.68),
-      0 0 24px -6px rgba(210, 255, 40, 0.34),
-      0 14px 32px -12px rgba(0, 0, 0, 0.96);
+      inset 0 1px 0 rgba(210, 255, 40, 0.54),
+      inset 0 0 0 1px rgba(210, 255, 40, 0.72),
+      0 0 26px -6px rgba(210, 255, 40, 0.36),
+      0 16px 34px -12px rgba(0, 0, 0, 0.98);
   }
   @media (hover: hover) {
     .orbit-pod:hover {
-      background: rgba(14, 16, 22, 0.92);
+      background: linear-gradient(180deg, rgba(16, 19, 27, 0.94) 0%, rgba(9, 11, 16, 0.94) 100%);
       box-shadow:
-        inset 0 1px 0 rgba(210, 255, 40, 0.38),
-        inset 0 0 0 1px rgba(210, 255, 40, 0.56),
-        0 0 22px -6px rgba(210, 255, 40, 0.28),
-        0 14px 30px -12px rgba(0, 0, 0, 0.96);
+        inset 0 1px 0 rgba(210, 255, 40, 0.42),
+        inset 0 0 0 1px rgba(210, 255, 40, 0.58),
+        0 0 24px -6px rgba(210, 255, 40, 0.3),
+        0 14px 32px -12px rgba(0, 0, 0, 0.98);
     }
   }
 
-  /* Solar Eclipse Daylight warm vellum glass pods with crisp pitch-ink & solar-ember authority */
+  /* Solar Eclipse Daylight warm vellum glass pods with crisp pitch-ink & solar-vermilion authority */
   [data-theme='daylight'] .orbit-pod {
-    background: rgba(255, 254, 250, 0.9);
+    background: linear-gradient(180deg, rgba(255, 255, 252, 0.94) 0%, rgba(248, 246, 239, 0.92) 100%);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.98),
+      inset 0 1px 0 rgba(255, 255, 255, 1),
       inset 0 0 0 1px rgba(10, 10, 11, 0.22),
       0 2px 6px -2px rgba(10, 10, 11, 0.12),
       0 10px 24px -10px rgba(10, 10, 11, 0.22);
   }
   [data-theme='daylight'] .orbit-pod[data-active='true'] {
-    background: rgba(255, 255, 253, 0.98);
+    background: linear-gradient(180deg, rgba(255, 255, 254, 0.99) 0%, rgba(252, 250, 245, 0.98) 100%);
     box-shadow:
-      inset 0 2px 0 #c2410c,
+      inset 0 2px 0 #d94e00,
       inset 0 0 0 1.5px #0a0a0b,
-      0 4px 10px -3px rgba(10, 10, 11, 0.16),
-      0 14px 30px -10px rgba(10, 10, 11, 0.28);
+      0 4px 12px -3px rgba(10, 10, 11, 0.16),
+      0 16px 32px -10px rgba(10, 10, 11, 0.28);
   }
   @media (hover: hover) {
     [data-theme='daylight'] .orbit-pod:hover {
-      background: rgba(255, 255, 253, 0.98);
+      background: rgba(255, 255, 253, 0.99);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 1),
-        inset 0 0 0 1.5px #c2410c,
+        inset 0 0 0 1.5px #d94e00,
         0 4px 10px -3px rgba(10, 10, 11, 0.14),
         0 12px 28px -10px rgba(10, 10, 11, 0.24);
     }
   }
 
-  /* Floating Spacecraft Hologram Inspector HUD (Double-Hairline Chamfer + Subtle Scanlines) */
+  /* Floating Spacecraft Hologram Inspector HUD (Frosted Specular Glass + Crisp Top Chamfer) */
   .hologram-hud {
     position: relative;
     isolation: isolate;
     overflow: hidden;
     border-radius: var(--radius-lg);
-    background: rgba(5, 6, 9, 0.86);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: linear-gradient(180deg, rgba(12, 14, 20, 0.9) 0%, rgba(5, 6, 10, 0.93) 100%);
+    backdrop-filter: blur(22px) saturate(130%);
+    -webkit-backdrop-filter: blur(22px) saturate(130%);
     box-shadow:
-      inset 0 1px 0 rgba(210, 255, 40, 0.34),
-      inset 0 0 0 1px rgba(245, 243, 236, 0.2),
-      inset 0 0 0 4px rgba(2, 2, 3, 0.55),
-      inset 0 0 0 5px rgba(245, 243, 236, 0.08),
-      0 24px 64px -18px rgba(0, 0, 0, 0.98);
+      inset 0 1px 0 rgba(245, 243, 236, 0.22),
+      inset 0 0 0 1px rgba(245, 243, 236, 0.18),
+      inset 0 0 0 4px rgba(3, 3, 5, 0.56),
+      inset 0 0 0 5px rgba(245, 243, 236, 0.075),
+      0 26px 68px -18px rgba(0, 0, 0, 0.98),
+      0 0 40px -22px rgba(210, 255, 40, 0.22);
+  }
+  .hologram-hud::before {
+    content: '';
+    position: absolute;
+    inset: 0 10% auto 10%;
+    height: 1px;
+    pointer-events: none;
+    z-index: 3;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(210, 255, 40, 0.65) 35%,
+      rgba(245, 243, 236, 0.72) 50%,
+      rgba(0, 212, 255, 0.52) 65%,
+      transparent 100%
+    );
   }
   .hologram-hud::after {
     content: '';
@@ -801,54 +865,144 @@ kbd,
     z-index: 1;
     background: repeating-linear-gradient(
       180deg,
-      rgba(245, 243, 236, 0.026) 0px,
-      rgba(245, 243, 236, 0.026) 1px,
+      rgba(245, 243, 236, 0.02) 0px,
+      rgba(245, 243, 236, 0.02) 1px,
       transparent 1px,
       transparent 3px
     );
   }
 
   [data-theme='daylight'] .hologram-hud {
-    background: rgba(255, 254, 250, 0.92);
+    background: linear-gradient(180deg, rgba(255, 255, 253, 0.96) 0%, rgba(248, 246, 239, 0.94) 100%);
     box-shadow:
-      inset 0 2px 0 rgba(194, 65, 12, 0.62),
+      inset 0 2px 0 rgba(217, 78, 0, 0.72),
       inset 0 0 0 1px rgba(10, 10, 11, 0.24),
-      inset 0 0 0 4px rgba(245, 243, 236, 0.72),
-      inset 0 0 0 5px rgba(10, 10, 11, 0.09),
-      0 4px 12px -4px rgba(10, 10, 11, 0.12),
-      0 24px 56px -16px rgba(10, 10, 11, 0.26);
+      inset 0 0 0 4px rgba(245, 243, 236, 0.78),
+      inset 0 0 0 5px rgba(10, 10, 11, 0.085),
+      0 4px 12px -4px rgba(10, 10, 11, 0.1),
+      0 22px 52px -16px rgba(10, 10, 11, 0.22);
+  }
+  [data-theme='daylight'] .hologram-hud::before {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(217, 78, 0, 0.55) 30%,
+      rgba(10, 10, 11, 0.35) 50%,
+      rgba(217, 78, 0, 0.45) 70%,
+      transparent 100%
+    );
   }
   [data-theme='daylight'] .hologram-hud::after {
     background: repeating-linear-gradient(
       180deg,
-      rgba(10, 10, 11, 0.02) 0px,
-      rgba(10, 10, 11, 0.02) 1px,
+      rgba(10, 10, 11, 0.015) 0px,
+      rgba(10, 10, 11, 0.015) 1px,
       transparent 1px,
       transparent 3px
     );
   }
 
-  /* Magnetic Archive Exhibition Plate: Pointer-Tracked Specular Spotlight + Snapping Reticle */
+  /* Reusable Macromedia Flash Stage Control & Timeline Bar */
+  .flash-bar {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, rgba(11, 13, 19, 0.86) 0%, rgba(5, 6, 10, 0.9) 100%);
+    backdrop-filter: blur(18px) saturate(125%);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
+    box-shadow:
+      inset 0 1px 0 rgba(245, 243, 236, 0.18),
+      inset 0 0 0 1px rgba(245, 243, 236, 0.16),
+      0 14px 36px -14px rgba(0, 0, 0, 0.94);
+  }
+  [data-theme='daylight'] .flash-bar {
+    background: linear-gradient(180deg, rgba(255, 255, 252, 0.94) 0%, rgba(246, 243, 235, 0.92) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.98),
+      inset 0 0 0 1px rgba(10, 10, 11, 0.22),
+      0 12px 28px -12px rgba(10, 10, 11, 0.2);
+  }
+
+  /* Machined Flash Timeline Keyframe Diamond Tick (pure CSS rotated square, zero Unicode icons) */
+  .flash-keyframe-tick {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    transform: rotate(45deg);
+    border-radius: 1px;
+    border: 1px solid var(--hairline-strong);
+    background: var(--bg-chassis);
+    transition:
+      background-color 140ms var(--ease-snap),
+      border-color 140ms var(--ease-snap),
+      box-shadow 140ms var(--ease-snap);
+  }
+  .flash-keyframe-tick[data-active='true'] {
+    border-color: var(--led-hot);
+    background: var(--led-hot);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--led-hot) 62%, transparent);
+  }
+  [data-theme='daylight'] .flash-keyframe-tick[data-active='true'] {
+    box-shadow: 0 0 6px rgba(217, 78, 0, 0.42);
+  }
+
+  /* Authentic Flash-Era Diagonal Specular Light-Sweep (triggers on self-hover or .group hover) */
+  .flash-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .flash-sheen::after {
+    content: '';
+    position: absolute;
+    inset: -24% -65%;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+    transform: translateX(-85%) skewX(-24deg);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 34%,
+      var(--flash-sheen-accent) 44%,
+      var(--flash-sheen-color) 50%,
+      var(--flash-sheen-accent) 55%,
+      transparent 66%,
+      transparent 100%
+    );
+    will-change: transform, opacity;
+  }
+  @media (hover: hover) {
+    .flash-sheen:hover::after,
+    .group:hover .flash-sheen::after {
+      animation: flash-sheen-sweep 760ms var(--ease-snap) 1 forwards;
+    }
+  }
+
+  /* Magnetic Archive Exhibition Plate: Dynamic OKLCH Spotlight + Machined Double-Bezel + Reticle */
   .card-magnetic {
     position: relative;
     isolation: isolate;
+    transition:
+      background-color 200ms var(--ease-snap),
+      box-shadow 220ms var(--ease-snap);
   }
   .card-magnetic::before {
     content: '';
     position: absolute;
     inset: 2px;
     pointer-events: none;
-    z-index: 6;
+    z-index: 7;
     opacity: 0;
     background:
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) top left / 12px 1.5px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) top left / 1.5px 12px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) top right / 12px 1.5px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) top right / 1.5px 12px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) bottom left / 12px 1.5px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) bottom left / 1.5px 12px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) bottom right / 12px 1.5px no-repeat,
-      linear-gradient(var(--reticle-ink), var(--reticle-ink)) bottom right / 1.5px 12px no-repeat;
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) top left / 13px 1.5px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) top left / 1.5px 13px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) top right / 13px 1.5px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) top right / 1.5px 13px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) bottom left / 13px 1.5px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) bottom left / 1.5px 13px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) bottom right / 13px 1.5px no-repeat,
+      linear-gradient(var(--card-accent, var(--reticle-ink)), var(--card-accent, var(--reticle-ink))) bottom right / 1.5px 13px no-repeat;
     transition:
       inset 180ms var(--ease-snap),
       opacity 180ms var(--ease-snap);
@@ -861,33 +1015,52 @@ kbd,
     z-index: 5;
     opacity: 0;
     background: radial-gradient(
-      320px circle at var(--mx, 50%) var(--my, 20%),
-      rgba(210, 255, 40, 0.075),
-      rgba(245, 243, 236, 0.02) 48%,
+      340px circle at var(--mx, 50%) var(--my, 20%),
+      color-mix(in srgb, var(--card-accent, var(--led-hot)) 14%, transparent),
+      rgba(245, 243, 236, 0.025) 48%,
       transparent 72%
     );
     transition: opacity 220ms var(--ease-snap);
   }
   [data-theme='daylight'] .card-magnetic::after {
     background: radial-gradient(
-      320px circle at var(--mx, 50%) var(--my, 20%),
-      rgba(194, 65, 12, 0.065),
+      340px circle at var(--mx, 50%) var(--my, 20%),
+      color-mix(in srgb, var(--card-accent, #d94e00) 9%, transparent),
       rgba(10, 10, 11, 0.022) 48%,
       transparent 72%
     );
   }
   @media (hover: hover) {
+    .card-magnetic:hover {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--card-accent, var(--led-hot)) 34%, transparent),
+        inset 0 1px 0 var(--inset-highlight);
+    }
     .card-magnetic:hover::before {
-      inset: 5px;
+      inset: 6px;
       opacity: 1;
     }
     .card-magnetic:hover::after {
       opacity: 1;
     }
+    [data-theme='daylight'] .card-magnetic:hover {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--card-accent, #d94e00) 36%, rgba(10, 10, 11, 0.14)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    }
   }
   .card-magnetic:focus-within::before {
-    inset: 5px;
-    opacity: 0.9;
+    inset: 6px;
+    opacity: 0.92;
+  }
+
+  /* Subtle Luminous Hairline Gradients for Cockpit TopBar & Studio Colophon */
+  .topbar-luminous,
+  .colophon-rule {
+    height: 1px;
+    width: 100%;
+    pointer-events: none;
+    background: var(--topbar-glow);
   }
 
   .glow-under {
@@ -1329,6 +1502,71 @@ kbd,
   animation: shock-ring 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1;
 }
 
+/* Macromedia Flash Timeline & Vernier Spacecraft Motion Keyframes */
+@keyframes flash-sheen-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-85%) skewX(-24deg);
+  }
+  16% {
+    opacity: 0.95;
+  }
+  82% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(95%) skewX(-24deg);
+  }
+}
+
+@keyframes flash-scan {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0.15;
+  }
+}
+.flash-scan {
+  animation: flash-scan 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes vernier-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.vernier-spin {
+  animation: vernier-spin 26s linear infinite;
+}
+.vernier-spin-reverse {
+  animation: vernier-spin 38s linear infinite reverse;
+}
+
+@keyframes core-breathe {
+  0%,
+  100% {
+    transform: scale(0.985);
+    opacity: 0.56;
+  }
+  50% {
+    transform: scale(1.045);
+    opacity: 0.96;
+  }
+}
+.core-breathe {
+  animation: core-breathe 2.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* ---------- Precision Scrollbars ---------- */
 .hide-scroll {
   scrollbar-width: none;
@@ -1482,14 +1720,20 @@ kbd,
     animation-duration: 0.001ms !important;
   }
   .beacon::after,
-  .singularity-core::before {
+  .singularity-core::before,
+  .flash-sheen::after {
     animation: none !important;
   }
-  .beacon::after {
+  .beacon::after,
+  .flash-sheen::after {
     display: none;
   }
   .orbit-float,
-  .shock-ring {
+  .shock-ring,
+  .flash-scan,
+  .vernier-spin,
+  .vernier-spin-reverse,
+  .core-breathe {
     animation: none !important;
   }
 }

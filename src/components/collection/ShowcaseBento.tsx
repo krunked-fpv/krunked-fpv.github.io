@@ -36,7 +36,7 @@ const XL_SPAN_CLASS: Record<ColSpan, string> = {
 /**
  * Asymmetric Architectural 12-Column Hairline Exhibition Wall.
  * Opens with a spacecraft-hangar telemetry strip and terminates in a razor-sharp 12/12
- * rectangular museum block with an integrated Studio Archive monolith plate.
+ * rectangular monograph block with an integrated Studio Archive monolith plate.
  */
 export function ShowcaseBento({ projects }: { projects: Project[] }) {
   const setPeek = useDeck((s) => s.setPeek);
@@ -86,9 +86,9 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
     : 'hidden md:flex md:col-span-3 xl:hidden';
 
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-4">
       {/* Spacecraft Hangar Section Intro Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline pb-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-hairline pb-3">
         <div className="flex items-center gap-2.5">
           <span
             className="beacon scale-[0.85]"
@@ -100,28 +100,33 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
             {liveCount === projects.length ? 'PLAYABLE WORLDS' : 'INDEXED BUILDS'}
           </h2>
         </div>
-        <div className="mono hidden items-center gap-2.5 text-[10px] tracking-[0.16em] text-mute sm:flex">
-          <span>SEC 02 · HANGAR DECK</span>
-          <span className="text-hairline-strong" aria-hidden="true">
-            /
+
+        <div className="mono hidden items-center gap-1.5 text-[10px] tracking-[0.14em] text-mute sm:flex">
+          <span className="rounded-[4px] border border-hairline bg-inset/75 px-2 py-0.5 text-mute">
+            SEC 02 · HANGAR DECK
           </span>
-          <span className="text-dim">{liveCount} LIVE</span>
+          <span className="inline-flex items-center gap-1.5 rounded-[4px] border border-hairline bg-surface/80 px-2 py-0.5 font-semibold text-ink">
+            <span
+              className="size-[5px] rounded-full"
+              style={{ background: 'var(--led-online)' }}
+              aria-hidden="true"
+            />
+            {liveCount} LIVE
+          </span>
           {commits30d > 0 && (
-            <>
-              <span className="text-hairline-strong" aria-hidden="true">
-                /
-              </span>
-              <span>{commits30d}C (30D)</span>
-            </>
+            <span className="rounded-[4px] border border-hairline bg-inset/75 px-2 py-0.5 text-dim">
+              {commits30d}C / 30D
+            </span>
           )}
         </div>
       </div>
 
+      {/* Physical 12-Column Hairline Architectural Monograph Wall */}
       <motion.div
         ref={containerRef}
         onKeyDown={onKeyDown}
         layout
-        className="monolith-grid grid grid-cols-1 gap-px overflow-hidden rounded-[8px] border border-hairline bg-hairline md:grid-cols-6 xl:grid-cols-12"
+        className="monolith-grid grid grid-cols-1 gap-px overflow-hidden rounded-[9px] border border-hairline bg-hairline [box-shadow:var(--shadow-stage)] md:grid-cols-6 xl:grid-cols-12"
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {projects.map((p, i) => {
@@ -146,10 +151,13 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
             animate={{ opacity: 1 }}
             transition={SPRING}
             aria-label="Studio Archive"
-            className={`monolith-cell hero-grid relative min-w-0 flex-col justify-between overflow-hidden p-6 ${archiveResponsiveClass}`}
+            className={`monolith-cell hero-grid reticle-box relative min-w-0 flex-col justify-between overflow-hidden p-6 sm:p-7 ${archiveResponsiveClass}`}
           >
-            <div className="relative z-[1] flex items-center justify-between gap-2">
-              <span className="chip rounded-[4px]!">
+            {/* Subtle ambient studio aura inside the monograph annex plate */}
+            <div aria-hidden="true" className="stage-glow opacity-80" />
+
+            <div className="relative z-[2] flex items-center justify-between gap-2">
+              <span className="chip rounded-[4px]! shadow-[inset_0_1px_0_var(--inset-highlight),inset_0_0_0_1px_var(--hairline-strong)]!">
                 <span
                   className="led-dot"
                   style={{ ['--c' as string]: 'var(--led-hot)' }}
@@ -157,29 +165,49 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
                 />
                 STUDIO ARCHIVE
               </span>
-              <span className="mono text-[10px] tracking-[0.16em] text-mute">ON THE BENCH</span>
+              <span className="mono rounded-[4px] border border-hairline bg-inset/75 px-2 py-0.5 text-[9.5px] font-medium tracking-[0.16em] text-mute">
+                SEC 02 // END
+              </span>
             </div>
 
             <div
-              className={`relative z-[1] my-auto py-8 ${
-                isWidePlate ? 'xl:flex xl:items-end xl:justify-between xl:gap-8' : 'flex flex-col gap-3'
+              className={`relative z-[2] my-auto py-8 ${
+                isWidePlate ? 'xl:flex xl:items-end xl:justify-between xl:gap-8' : 'flex flex-col gap-4'
               }`}
             >
               <div className={isWidePlate ? 'max-w-xl' : ''}>
-                <p className="mono text-[10.5px] uppercase tracking-[0.16em] text-hot-ink">
+                <p className="mono inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-hot-ink">
+                  <span className="h-[2px] w-3 rounded-full bg-hot" aria-hidden="true" />
                   @{GITHUB_USER} // ORBITAL HANGAR
                 </p>
-                <h3 className="display mt-2 text-[26px] leading-[1.06] text-ink">
+                <h3 className="display mt-2.5 text-[27px] leading-[1.05] text-ink sm:text-[30px]">
                   {liveCount > 0 ? `${liveCount} live worlds` : `${projects.length} tracked builds`}{' '}
                   <span className="serif font-normal text-dim">&amp; open prototypes.</span>
                 </h3>
-                <p className="mt-2.5 text-[13.5px] leading-relaxed text-dim">
+                <p className="mt-3 text-[13.5px] leading-relaxed text-dim">
                   Inspect source repositories, hardware instruments, and active experimental branches directly on GitHub.
                 </p>
               </div>
+
+              {isWidePlate && (
+                <div className="mono hidden shrink-0 grid-cols-2 gap-2 xl:grid">
+                  <div className="rounded-[6px] border border-hairline bg-inset/80 px-3.5 py-2.5 shadow-[inset_0_1px_0_var(--inset-highlight)]">
+                    <span className="block text-[9.5px] tracking-[0.15em] text-mute">ONLINE</span>
+                    <span className="mt-0.5 block text-[18px] font-semibold tracking-[-0.02em] text-ink">
+                      {String(liveCount).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="rounded-[6px] border border-hairline bg-inset/80 px-3.5 py-2.5 shadow-[inset_0_1px_0_var(--inset-highlight)]">
+                    <span className="block text-[9.5px] tracking-[0.15em] text-mute">30D PULSE</span>
+                    <span className="mt-0.5 block text-[18px] font-semibold tracking-[-0.02em] text-hot-ink">
+                      {commits30d}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="relative z-[1] flex flex-wrap items-center justify-between gap-2.5 border-t border-hairline pt-4">
+            <div className="relative z-[2] flex flex-wrap items-center justify-between gap-2.5 border-t border-hairline pt-4">
               <a
                 href={`https://github.com/${GITHUB_USER}`}
                 target="_blank"

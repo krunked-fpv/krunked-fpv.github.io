@@ -39,7 +39,7 @@ function Pill({
       onClick={onClick}
       aria-pressed={on}
       data-filter={id}
-      className={`relative flex h-8 shrink-0 items-center gap-1 rounded-[4px] px-2 text-[12px] font-medium whitespace-nowrap transition-colors max-md:h-9 max-md:gap-1.5 max-md:px-2.5 ${
+      className={`relative flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors max-md:h-9 max-md:px-3 ${
         on ? 'text-chassis' : 'text-dim hover:bg-hover hover:text-ink'
       }`}
     >
@@ -47,17 +47,23 @@ function Pill({
         <motion.span
           layoutId="pill-ind"
           transition={SPRING}
-          className="absolute inset-0 rounded-[4px] bg-ink"
+          className="absolute inset-0 rounded-[5px] bg-ink shadow-[0_4px_14px_-6px_rgba(0,0,0,0.65)]"
         >
           <span
             aria-hidden="true"
-            className="absolute inset-x-1.5 bottom-0 h-[2px] rounded-full bg-hot"
+            className="absolute inset-x-2 bottom-0 h-[2px] rounded-full bg-hot"
           />
         </motion.span>
       )}
       <span className="relative">{label}</span>
       {showCount && (
-        <span className={`mono relative text-[10.5px] ${on ? 'text-chassis/75' : 'text-mute'}`}>{count}</span>
+        <span
+          className={`mono relative text-[10px] font-semibold ${
+            on ? 'text-chassis/75' : 'text-mute'
+          }`}
+        >
+          {count}
+        </span>
       )}
     </button>
   );
@@ -147,7 +153,7 @@ function StackMenu({
         type="button"
         className={`btn min-h-8! gap-1.5 rounded-[6px]! px-2.5 text-[12px] ${
           activeLang
-            ? 'border-hot/60 bg-elevated text-ink ring-1 ring-hot/40'
+            ? 'bg-elevated text-ink shadow-[inset_0_1px_0_var(--inset-highlight),inset_0_0_0_1px_color-mix(in_srgb,var(--led-hot)_55%,transparent)]!'
             : open
               ? 'bg-elevated text-ink'
               : 'text-dim'
@@ -188,7 +194,7 @@ function StackMenu({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={SPRING}
-            className="surface surface-elevated thin-scroll absolute left-0 top-[calc(100%+6px)] z-50 max-h-72 w-52 overflow-y-auto rounded-[8px]! border border-hairline-strong bg-elevated p-1 shadow-xl sm:left-auto sm:right-0"
+            className="surface surface-elevated thin-scroll absolute left-0 top-[calc(100%+6px)] z-50 max-h-72 w-52 overflow-y-auto rounded-[8px]! border border-hairline-strong bg-elevated/96 p-1 backdrop-blur-xl shadow-xl sm:left-auto sm:right-0"
             style={{ transformOrigin: 'top right' }}
           >
             {options.map((o, i) => {
@@ -202,7 +208,7 @@ function StackMenu({
                   onPointerEnter={() => setActive(i)}
                   onClick={() => choose(i)}
                   className={`flex cursor-pointer items-center justify-between gap-2 rounded-[4px] px-2.5 py-2 text-[12.5px] transition-colors ${
-                    i === 0 ? 'mb-1 border-b border-hairline pb-2 rounded-b-none' : ''
+                    i === 0 ? 'mb-1 rounded-b-none border-b border-hairline pb-2' : ''
                   } ${i === active ? 'bg-hover text-ink' : selected ? 'text-ink' : 'text-dim'}`}
                 >
                   <span className="flex min-w-0 items-center gap-2">
@@ -306,9 +312,13 @@ export function FilterBar({
   };
 
   const showingHidden = showHidden && prefs.filter === 'hidden';
+  const mobileMatchCount = useMemo(
+    () => filterProjects(projects, prefs.filter).length,
+    [projects, prefs.filter],
+  );
 
   return (
-    <div className="relative z-30 w-full max-w-full border-y border-hairline bg-bar backdrop-blur-xl md:sticky md:top-[calc(var(--topbar-h)+env(safe-area-inset-top))]">
+    <div className="relative z-30 w-full max-w-full border-y border-hairline bg-bar/88 shadow-[inset_0_1px_0_var(--inset-highlight),0_10px_28px_-22px_rgba(0,0,0,0.65)] backdrop-blur-xl md:sticky md:top-[calc(var(--topbar-h)+env(safe-area-inset-top))]">
       <div className="mx-auto flex max-w-[1440px] items-center gap-0 px-4 py-2 sm:px-6">
         {/* Core + Category pill rail — fits 100% unclipped at 1440px, smooth fade on narrow screens */}
         <div className="relative min-w-0 flex-1 overflow-hidden">
@@ -321,8 +331,8 @@ export function FilterBar({
             style={
               fadeRight
                 ? {
-                    WebkitMaskImage: 'linear-gradient(to right, #000 0, #000 calc(100% - 36px), transparent 100%)',
-                    maskImage: 'linear-gradient(to right, #000 0, #000 calc(100% - 36px), transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to right, #000 0, #000 calc(100% - 38px), transparent 100%)',
+                    maskImage: 'linear-gradient(to right, #000 0, #000 calc(100% - 38px), transparent 100%)',
                   }
                 : undefined
             }
@@ -340,7 +350,7 @@ export function FilterBar({
             ))}
 
             {categoryChips.length > 0 && (
-              <span className="mx-1 h-4 w-px shrink-0 bg-hairline-strong" aria-hidden="true" />
+              <span className="mx-1.5 h-4 w-px shrink-0 bg-hairline-strong" aria-hidden="true" />
             )}
             {categoryChips.map((c) => (
               <Pill
@@ -355,7 +365,7 @@ export function FilterBar({
 
             {activeTopicChip && (
               <>
-                <span className="mx-1 h-4 w-px shrink-0 bg-hairline" aria-hidden="true" />
+                <span className="mx-1.5 h-4 w-px shrink-0 bg-hairline-strong" aria-hidden="true" />
                 <Pill
                   key={activeTopicChip.key}
                   id={activeTopicChip.key}
@@ -377,7 +387,7 @@ export function FilterBar({
         </div>
 
         {/* Clean architectural divider + right-hand Stack / Hidden / Sort / View controls */}
-        <div className="ml-1.5 flex shrink-0 items-center gap-1.5 border-l border-hairline pl-2">
+        <div className="ml-1.5 flex shrink-0 items-center gap-1.5 border-l border-hairline-strong/80 pl-2.5">
           <div className="hidden sm:block">
             <StackMenu
               languages={languageChips}
@@ -399,7 +409,9 @@ export function FilterBar({
               aria-pressed={showingHidden}
               aria-label={showingHidden ? 'Return to visible live apps' : `View ${hiddenCount} hidden repositories`}
               className={`btn min-h-8! gap-1.5 rounded-[6px]! px-2 text-[11.5px] ${
-                showingHidden ? 'border-hot/60 bg-hot-soft text-hot-ink' : 'text-dim'
+                showingHidden
+                  ? 'bg-hot-soft text-hot-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--led-hot)_52%,transparent)]!'
+                  : 'text-dim'
               }`}
               title={showingHidden ? 'Return to visible live apps' : `View ${hiddenCount} hidden repositories`}
             >
@@ -417,15 +429,15 @@ export function FilterBar({
       </div>
 
       {/* Compact mobile Stack + Build Count + Sort utility bar */}
-      <div className="mx-auto flex items-center justify-between gap-2 border-t border-hairline/70 px-4 py-1.5 sm:hidden">
+      <div className="mx-auto flex items-center justify-between gap-2 border-t border-hairline/75 bg-inset/40 px-4 py-1.5 sm:hidden">
         <StackMenu
           languages={languageChips}
           activeFilter={prefs.filter}
           onSelect={setFilter}
           onReset={resetStack}
         />
-        <span className="mono shrink-0 text-[10px] tracking-[0.14em] text-mute">
-          {filterProjects(projects, prefs.filter).length} BUILDS
+        <span className="mono shrink-0 rounded-[4px] border border-hairline bg-surface/80 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] text-dim">
+          {mobileMatchCount} {mobileMatchCount === 1 ? 'BUILD' : 'BUILDS'}
         </span>
         <SortMenu sort={prefs.sort} onChange={setSort} />
       </div>

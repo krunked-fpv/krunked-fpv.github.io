@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpRight, Eye } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { nonPurpleRgb } from '../../art/color';
 import { useFoley } from '../../audio/useFoley';
 import { hueOf } from '../../domain/buildProjects';
 import { useReducedMotion } from '../../hooks/useMediaQuery';
@@ -31,6 +32,11 @@ const FLASH_SPRING = {
   mass: 0.72,
 } as const;
 
+function accentCss(hue: number, isDaylight: boolean, alpha = 1): string {
+  const [r, g, b] = nonPurpleRgb(isDaylight ? 0.46 : 0.78, isDaylight ? 0.165 : 0.185, hue);
+  return alpha >= 1 ? `rgb(${r} ${g} ${b})` : `rgb(${r} ${g} ${b} / ${alpha})`;
+}
+
 export interface OrbitPlacement {
   project: Project;
   index: number;
@@ -44,22 +50,31 @@ export interface OrbitPlacement {
 
 /**
  * Computes zero-collision dual-ring orbital coordinates for up to 17 worlds around the Event Horizon.
- * Guarantees >= 24px air gap above the bottom Holographic Launch HUD (y <= arenaHeight - 134) at
- * both 1440x900 and 1024x768, while giving wide untruncated inner cartridges (184px) and outer pills
- * (up to 204px) clean mutual separation.
+ * Dynamically adapts horizontal margin to arenaWidth so long satellite pill names never clip at 1024px
+ * and guarantees clean clearance above Top HUD, Bottom-Left Flash Bar, Bottom-Center Launch HUD,
+ * and Bottom-Right Archive trigger across both 1440x900 and 1024x768.
  */
 export function computeOrbitLayout(
   worlds: readonly Project[],
   orbitShift = 0,
   centerYRatio = ORBIT_CENTER_Y_DESKTOP,
   arenaHeight = 848,
+  arenaWidth = 1440,
 ): { placements: OrbitPlacement[]; targets: OrbitNodeTarget[] } {
   const capped = worlds.slice(0, 17);
   const inner = capped.slice(0, INNER_COUNT);
   const outer = capped.slice(INNER_COUNT);
 
   const safeH = Math.max(600, arenaHeight);
-  // Keep every outer pod center safely above arenaHeight - 134 (accounting for ~18px pill half-height + >=24px gap over ~88px HUD)
+  const safeW = Math.max(800, arenaWidth);
+
+  // Horizontal outer margin guarantees >= 14px breathing room from left/right viewport edges even at 1024px
+  const minOuterNx = Math.max(0.088, 102 / safeW);
+  const maxOuterNx = 1 - minOuterNx;
+  const effectiveOuterRx = Math.min(OUTER_RX, 0.5 - minOuterNx);
+
+  // Vertical envelope guarantees >= 24px air gap above bottom HUD bay and clear of top corner bars
+  const minOuterNy = Math.max(0.085, 62 / safeH);
   const maxOuterNy = Math.min(0.715, (safeH - 134) / safeH);
   const maxInnerNy = Math.min(0.672, (safeH - 166) / safeH);
   const effectiveOuterRy = Math.min(OUTER_RY, 295 / safeH);
@@ -87,11 +102,11 @@ export function computeOrbitLayout(
   outer.forEach((project, idx) => {
     const total = outer.length;
     const slot = (idx + orbitShift * 2) % Math.max(1, total);
-    // Sweep 126deg clockwise through 180, 270, 0 to 414deg (54deg), keeping bottom-hemisphere outer pods well clear of the HUD bay
+    // Sweep 126deg clockwise through 180, 270, 0 to 414deg (54deg), keeping bottom hemisphere open for HUD bay
     const deg = total <= 1 ? 270 : 126 + (slot / (total - 1)) * 288;
     const rad = (deg * Math.PI) / 180;
-    const nx = Math.max(0.088, Math.min(0.912, ORBIT_CENTER_X + Math.cos(rad) * OUTER_RX));
-    const ny = Math.max(0.085, Math.min(maxOuterNy, centerYRatio + Math.sin(rad) * effectiveOuterRy));
+    const nx = Math.max(minOuterNx, Math.min(maxOuterNx, ORBIT_CENTER_X + Math.cos(rad) * effectiveOuterRx));
+    const ny = Math.max(minOuterNy, Math.min(maxOuterNy, centerYRatio + Math.sin(rad) * effectiveOuterRy));
     placements.push({
       project,
       index: inner.length + idx,
@@ -121,6 +136,7 @@ export interface SpotlightDeckProps {
   orbitShift?: number;
   centerYRatio?: number;
   arenaHeight?: number;
+  arenaWidth?: number;
   placements?: readonly OrbitPlacement[];
   activeSlug?: string | null;
   hoveredSlug?: string | null;
@@ -131,10 +147,10 @@ export interface SpotlightDeckProps {
 
 /**
  * Exploding 17-World Radial Orbital Constellation + Holographic Launch HUD:
- * - Desktop (lg+): Synchronously measures arena bounds on mount and immediately blasts 6 wide untruncated
- *   Inner Flagship cartridges (184px) & up to 11 auto-width Outer satellite pills outward from (50%, centerYRatio)
- *   with snappy Flash spring physics, dual pointer+mouse hover bindings, and a 3-row Holographic Launch HUD.
- * - Mobile (<1024px): Blasts out a staggered 2-column Top-6 constellation grid with generous pt-24 top clearance.
+ * - Desktop (lg+): Synchronously measures arena bounds and blasts 6 machined Inner Flagship cartridges
+ *   & up to 11 jewel-bezel Outer satellite pills outward from (50%, centerYRatio) with dynamic OKLCH
+ *   ignition accents, Flash diagonal specular sheen sweeps, and the docked Holographic Launch HUD.
+ * - Mobile (<1024px): Blasts out a staggered 2-column Top-6 constellation grid with generous clearance.
  */
 export function SpotlightDeck({
   projects,
@@ -142,6 +158,7 @@ export function SpotlightDeck({
   orbitShift = 0,
   centerYRatio = ORBIT_CENTER_Y_DESKTOP,
   arenaHeight: arenaHeightProp,
+  arenaWidth: arenaWidthProp,
   placements: placementsProp,
   activeSlug = null,
   hoveredSlug = null,
@@ -152,31 +169,39 @@ export function SpotlightDeck({
   const seenAtLoad = useRef(useDeck.getState().vault.seen);
   const markSeen = useDeck((s) => s.markSeen);
   const setPeek = useDeck((s) => s.setPeek);
+  const theme = useDeck((s) => s.vault.prefs.theme);
   const foley = useFoley();
   const reduced = useReducedMotion();
+  const isDaylight = theme === 'daylight';
 
   const arenaRef = useRef<HTMLDivElement | null>(null);
-  const [measuredHeight, setMeasuredHeight] = useState<number>(arenaHeightProp ?? 848);
+  const [measuredSize, setMeasuredSize] = useState({
+    width: arenaWidthProp ?? 1440,
+    height: arenaHeightProp ?? 848,
+  });
 
-  // Measure arena height synchronously on mount so pods never wait for an extra ResizeObserver tick
   useLayoutEffect(() => {
-    if (arenaHeightProp !== undefined) return;
+    if (arenaHeightProp !== undefined && arenaWidthProp !== undefined) return;
     const el = arenaRef.current;
     if (!el) return;
     const sync = () => {
-      const h = el.getBoundingClientRect().height;
-      if (h > 0) setMeasuredHeight(h);
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setMeasuredSize({ width: rect.width, height: rect.height });
+      }
     };
     sync();
     if (typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(sync);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [arenaHeightProp]);
+  }, [arenaHeightProp, arenaWidthProp]);
 
-  const effectiveHeight = arenaHeightProp ?? measuredHeight;
+  const effectiveHeight = arenaHeightProp ?? measuredSize.height;
+  const effectiveWidth = arenaWidthProp ?? measuredSize.width;
   const computed =
-    placementsProp ?? computeOrbitLayout(projects, orbitShift, centerYRatio, effectiveHeight).placements;
+    placementsProp ??
+    computeOrbitLayout(projects, orbitShift, centerYRatio, effectiveHeight, effectiveWidth).placements;
 
   const activePlacement =
     computed.find((p) => p.project.name === (hoveredSlug ?? activeSlug)) ??
@@ -236,6 +261,9 @@ export function SpotlightDeck({
               const num = String(index + 1).padStart(2, '0');
               const delay = reduced ? 0 : ring === 'inner' ? ringIndex * 0.015 : 0.06 + ringIndex * 0.014;
               const floatDelay = `${(index * 0.45) % 4}s`;
+              const accentSolid = accentCss(hue, isDaylight, 1);
+              const accentGlow = accentCss(hue, isDaylight, isDaylight ? 0.24 : 0.36);
+              const accentSoft = accentCss(hue, isDaylight, isDaylight ? 0.12 : 0.16);
 
               return (
                 <motion.div
@@ -270,11 +298,7 @@ export function SpotlightDeck({
                           transition: { duration: 0.34, ease: [0.4, 0, 0.2, 1] },
                         }
                   }
-                  transition={
-                    reduced
-                      ? { duration: 0.14 }
-                      : { ...FLASH_SPRING, delay }
-                  }
+                  transition={reduced ? { duration: 0.14 } : { ...FLASH_SPRING, delay }}
                   style={{
                     position: 'absolute',
                     x: '-50%',
@@ -312,38 +336,90 @@ export function SpotlightDeck({
                             handlePodClick(project, isSelected);
                           }
                         }}
+                        style={
+                          isSelected
+                            ? {
+                                boxShadow: isDaylight
+                                  ? `inset 0 2px 0 ${accentSolid}, inset 0 0 0 1.5px #0A0A0B, 0 8px 24px -8px ${accentGlow}, 0 14px 32px -12px rgba(10,10,11,0.28)`
+                                  : `inset 0 1.5px 0 ${accentSolid}, inset 0 0 0 1px ${accentCss(hue, false, 0.72)}, 0 0 26px -6px ${accentGlow}, 0 16px 34px -12px rgba(0,0,0,0.96)`,
+                              }
+                            : undefined
+                        }
                         aria-label={`${project.displayName} — ${project.category}. ${isSelected ? 'Press Enter to launch' : 'Focus to inspect'}`}
-                        className="orbit-pod reticle-box group relative flex w-[168px] cursor-pointer flex-col overflow-hidden text-left hover:scale-[1.04] xl:w-[184px]"
+                        className="orbit-pod reticle-box group relative flex w-[172px] cursor-pointer flex-col overflow-hidden text-left transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.035] xl:w-[192px]"
                       >
+                        {/* Dynamic OKLCH Top Ignition Hairline */}
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[2px] transition-opacity duration-200"
+                          style={{
+                            opacity: isSelected ? 1 : 0.72,
+                            background: `linear-gradient(90deg, transparent 3%, ${accentSolid} 28%, ${isDaylight ? '#FFFFFF' : '#F5F3EC'} 50%, ${accentSolid} 72%, transparent 97%)`,
+                          }}
+                        />
+
+                        {/* Flash Diagonal Specular Sheen Sweep on Hover */}
+                        {!reduced && (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 z-[4] -translate-x-[135%] skew-x-[-24deg] bg-gradient-to-r from-transparent via-white/18 to-transparent transition-transform duration-500 ease-out group-hover:translate-x-[135%]"
+                          />
+                        )}
+
                         {/* Miniature Bespoke CoverArt Banner */}
-                        <div className="relative h-[50px] w-full overflow-hidden bg-chassis">
+                        <div className="relative h-[52px] w-full overflow-hidden bg-chassis">
                           <CoverArt project={project} fill scrim="none" />
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface/75 via-transparent to-transparent" />
+                          <div
+                            className={`pointer-events-none absolute inset-0 ${
+                              isDaylight
+                                ? 'bg-gradient-to-t from-[#FFFEFA]/85 via-transparent to-black/10'
+                                : 'bg-gradient-to-t from-[#08090D]/90 via-transparent to-black/30'
+                            }`}
+                          />
                           <span
                             className="mono absolute top-1.5 left-1.5 rounded-[2px] px-1 py-[1px] text-[9px] font-semibold tracking-[0.12em] backdrop-blur-md"
                             style={{
                               color: isSelected ? 'var(--led-hot-ink)' : 'var(--ink-primary)',
                               background: 'var(--badge-bg)',
-                              boxShadow: 'inset 0 0 0 1px var(--badge-border)',
+                              boxShadow: `inset 0 0 0 1px ${isSelected ? accentCss(hue, isDaylight, 0.65) : 'var(--badge-border)'}`,
                             }}
                           >
                             {num}
                           </span>
                           <span
-                            className="led-dot absolute top-2 right-2"
+                            className="led-dot absolute top-2 right-2 ring-2 ring-chassis/70"
                             style={{ ['--c' as string]: tok.dot }}
                             aria-hidden="true"
                           />
                         </div>
 
+                        {/* Subtle Chromatic Seam */}
+                        <div
+                          aria-hidden="true"
+                          className="h-px w-full"
+                          style={{
+                            background: isSelected
+                              ? `linear-gradient(90deg, transparent, ${accentSolid}, transparent)`
+                              : 'var(--hairline)',
+                          }}
+                        />
+
                         {/* Crisp Untruncated Cartridge Footer */}
-                        <div className="flex items-center gap-2 px-2.5 py-2">
-                          <Glyph name={project.glyph} hue={hue} size={22} className="shrink-0" />
+                        <div className="relative flex items-center gap-1.5 px-2 py-2 xl:gap-2 xl:px-2.5">
+                          <span
+                            className="grid size-[22px] shrink-0 place-items-center rounded-[4px] transition-colors duration-200 xl:size-[26px]"
+                            style={{
+                              backgroundColor: isSelected ? accentSoft : 'var(--surface-tint)',
+                              boxShadow: `inset 0 0 0 1px ${isSelected ? accentCss(hue, isDaylight, 0.45) : 'var(--hairline)'}`,
+                            }}
+                          >
+                            <Glyph name={project.glyph} hue={hue} size={16} />
+                          </span>
                           <div className="min-w-0 flex-1">
-                            <div className="whitespace-nowrap text-[11.5px] font-semibold leading-tight text-ink transition-colors group-hover:text-hot-ink xl:text-[12.5px]">
+                            <div className="truncate text-[11.5px] font-semibold leading-tight tracking-[-0.015em] text-ink transition-colors group-hover:text-hot-ink xl:text-[12.5px]">
                               {project.displayName}
                             </div>
-                            <div className="mono truncate text-[9px] tracking-[0.1em] text-mute uppercase">
+                            <div className="mono mt-0.5 truncate text-[8.5px] tracking-[0.11em] text-mute uppercase">
                               {project.category}
                             </div>
                           </div>
@@ -358,9 +434,9 @@ export function SpotlightDeck({
                               }}
                               aria-label={`Launch ${project.displayName}`}
                               title={`Launch ${project.displayName}`}
-                              className="grid size-5 shrink-0 place-items-center rounded-[3px] text-mute transition hover:bg-hot hover:text-[#040503]"
+                              className="grid size-[18px] shrink-0 place-items-center rounded-[3px] text-mute transition duration-150 hover:bg-hot hover:text-[#040503] group-hover:text-ink xl:size-5"
                             >
-                              <ArrowUpRight size={12} aria-hidden="true" />
+                              <ArrowUpRight size={11.5} aria-hidden="true" />
                             </a>
                           )}
                         </div>
@@ -377,16 +453,44 @@ export function SpotlightDeck({
                           onActiveChange?.(project);
                         }}
                         onClick={() => handlePodClick(project, isSelected)}
+                        style={
+                          isSelected
+                            ? {
+                                boxShadow: isDaylight
+                                  ? `inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px #0A0A0B, 0 6px 20px -8px ${accentGlow}, 0 10px 24px -10px rgba(10,10,11,0.22)`
+                                  : `inset 0 1px 0 rgba(245,243,236,0.24), inset 0 0 0 1px ${accentCss(hue, false, 0.72)}, 0 0 22px -6px ${accentGlow}, 0 12px 26px -10px rgba(0,0,0,0.96)`,
+                              }
+                            : undefined
+                        }
                         aria-label={`${project.displayName} — ${project.category}`}
-                        className="orbit-pod reticle-box group inline-flex w-auto max-w-[204px] cursor-pointer items-center gap-2 px-2.5 py-1.5 text-left text-ink whitespace-nowrap hover:scale-[1.05]"
+                        className="orbit-pod reticle-box group relative inline-flex w-auto max-w-[174px] cursor-pointer items-center gap-1.5 overflow-hidden py-1.5 pr-2.5 pl-2 text-left text-ink whitespace-nowrap transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.045] xl:max-w-[210px] xl:gap-2 xl:pr-3 xl:pl-2.5"
                       >
-                        <Glyph name={project.glyph} hue={hue} size={20} className="shrink-0" />
-                        <span className="text-[12px] font-semibold tracking-[-0.01em] text-ink transition-colors group-hover:text-hot-ink">
+                        {/* Left Jewel Accent Edge Bar */}
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-1.5 left-0 w-[2.5px] rounded-r-full transition-opacity duration-200"
+                          style={{
+                            backgroundColor: accentSolid,
+                            opacity: isSelected ? 1 : 0.65,
+                            boxShadow: isSelected ? `0 0 8px ${accentGlow}` : 'none',
+                          }}
+                        />
+
+                        {/* Flash Specular Sheen Sweep on Hover */}
+                        {!reduced && (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 z-[3] -translate-x-[140%] skew-x-[-24deg] bg-gradient-to-r from-transparent via-white/16 to-transparent transition-transform duration-400 ease-out group-hover:translate-x-[140%]"
+                          />
+                        )}
+
+                        <Glyph name={project.glyph} hue={hue} size={18} className="shrink-0 xl:size-[20px]" />
+                        <span className="truncate text-[11.5px] font-semibold tracking-[-0.012em] text-ink transition-colors group-hover:text-hot-ink xl:text-[12px]">
                           {project.displayName}
                         </span>
                         <span
                           className="led-dot shrink-0"
-                          style={{ ['--c' as string]: isSelected ? 'var(--led-hot)' : tok.dot }}
+                          style={{ ['--c' as string]: isSelected ? accentSolid : tok.dot }}
                           aria-hidden="true"
                         />
                       </button>
@@ -397,8 +501,8 @@ export function SpotlightDeck({
             })}
         </AnimatePresence>
 
-        {/* Bottom-Center Docked Sleek 3-Row Holographic Launch HUD */}
-        <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 w-[min(720px,74vw)] -translate-x-1/2 xl:w-[min(760px,92vw)]">
+        {/* Bottom-Center Docked Sleek 3-Row Holographic Launch HUD (Exact clearance for 1024px & 1440px) */}
+        <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 w-[min(572px,56vw)] -translate-x-1/2 xl:w-[min(716px,54vw)] 2xl:w-[min(740px,52vw)]">
           <AnimatePresence mode="wait">
             {exploded && activePlacement && (
               <SpotlightTile
@@ -423,15 +527,16 @@ export function SpotlightDeck({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
-            className="relative z-20 mx-auto w-full max-w-[640px] px-4 pt-24 pb-16 lg:hidden"
+            className="relative z-20 mx-auto w-full max-w-[640px] px-4 pt-24 pb-20 lg:hidden"
           >
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               {mobileSix.map((item, i) => {
                 const { project, hue } = item;
                 const tok = TIER_TOKENS[project.freshness.tier];
                 const num = String(i + 1).padStart(2, '0');
                 const fromX = i % 2 === 0 ? 48 : -48;
                 const fromY = i < 2 ? 64 : i >= 4 ? -64 : 0;
+                const accentSolid = accentCss(hue, isDaylight, 1);
 
                 return (
                   <motion.div
@@ -440,12 +545,27 @@ export function SpotlightDeck({
                     animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                     exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.12, x: fromX, y: fromY }}
                     transition={reduced ? { duration: 0.14 } : { ...FLASH_SPRING, delay: i * 0.025 }}
-                    className="orbit-pod reticle-box flex min-w-0 flex-col overflow-hidden"
+                    className="orbit-pod reticle-box relative flex min-w-0 flex-col overflow-hidden"
                   >
-                    <div className="relative h-[78px] w-full overflow-hidden bg-chassis">
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[2px]"
+                      style={{
+                        background: `linear-gradient(90deg, transparent 4%, ${accentSolid} 35%, ${accentSolid} 65%, transparent 96%)`,
+                      }}
+                    />
+
+                    <div className="relative h-[82px] w-full overflow-hidden bg-chassis">
                       <CoverArt project={project} fill scrim="subtle" />
+                      <div
+                        className={`pointer-events-none absolute inset-0 ${
+                          isDaylight
+                            ? 'bg-gradient-to-t from-[#FFFEFA]/82 via-transparent to-black/10'
+                            : 'bg-gradient-to-t from-[#08090D]/88 via-transparent to-black/25'
+                        }`}
+                      />
                       <span
-                        className="mono absolute top-1.5 left-1.5 rounded-[2px] px-1 py-[1px] text-[9px] font-semibold tracking-[0.12em] backdrop-blur-md"
+                        className="mono absolute top-2 left-2 rounded-[2px] px-1.5 py-[1px] text-[9px] font-semibold tracking-[0.12em] backdrop-blur-md"
                         style={{
                           color: 'var(--led-hot-ink)',
                           background: 'var(--badge-bg)',
@@ -455,20 +575,20 @@ export function SpotlightDeck({
                         {num}
                       </span>
                       <span
-                        className="led-dot absolute top-2 right-2"
+                        className="led-dot absolute top-2.5 right-2.5 ring-2 ring-chassis/70"
                         style={{ ['--c' as string]: tok.dot }}
                         aria-hidden="true"
                       />
                     </div>
 
-                    <div className="flex flex-1 flex-col justify-between gap-2 p-2.5">
+                    <div className="flex flex-1 flex-col justify-between gap-2.5 p-2.5">
                       <div className="flex items-start gap-2">
                         <Glyph name={project.glyph} hue={hue} size={24} className="shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-[12.5px] font-bold leading-tight text-ink">
+                          <div className="truncate text-[13px] font-bold leading-tight tracking-[-0.015em] text-ink">
                             {project.displayName}
                           </div>
-                          <div className="mono mt-0.5 truncate text-[9px] tracking-[0.1em] text-mute uppercase">
+                          <div className="mono mt-0.5 truncate text-[9px] tracking-[0.11em] text-mute uppercase">
                             {project.category}
                           </div>
                         </div>

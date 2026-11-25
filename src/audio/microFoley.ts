@@ -1,7 +1,8 @@
 /**
  * Procedural WebAudio micro-foley synthesizer for KRUNKED // FORGE DECK V2.
- * Synthesizes restrained Braun / Teenage Engineering tactile hardware transients
- * purely via Web Audio API with zero external audio assets.
+ * Synthesizes crisp Flash-studio vector UI ticks, silky resonant swooshes,
+ * Braun / Teenage Engineering tactile latches, and sub-harmonic singularity
+ * detonation relays purely via Web Audio API with zero external audio assets.
  * Safe to import and invoke in browser, SSR, jsdom, and Node.js runtimes.
  */
 
@@ -54,6 +55,8 @@ interface NoiseBurstParams {
   decaySec: number;
   peakGain: number;
   filterFreq: number;
+  /** Optional starting frequency for resonant bandpass sweep (ramps cleanly to filterFreq). */
+  filterStartFreq?: number;
   filterQ: number;
 }
 
@@ -65,6 +68,10 @@ interface BodyTransientParams {
   peakGain: number;
   waveType?: OscillatorType;
   attackSec?: number;
+  /** Optional resonant lowpass sweep to sculpt warm, alias-free studio harmonics. */
+  filterStartFreq?: number;
+  filterEndFreq?: number;
+  filterQ?: number;
 }
 
 function clampMasterGain(raw: number | undefined): number {
@@ -121,6 +128,38 @@ function setParamValue(param: AudioParam | undefined | null, value: number, time
   } catch {
     // Ignore read-only param properties
   }
+}
+
+function scheduleFrequencySweep(
+  param: AudioParam | undefined | null,
+  startFreq: number,
+  endFreq: number,
+  t0: number,
+  durationSec: number,
+): void {
+  if (!param) return;
+  const safeStart = Math.max(20, startFreq);
+  const safeEnd = Math.max(20, endFreq);
+
+  if (safeStart === safeEnd) {
+    setParamValue(param, safeEnd, t0);
+    return;
+  }
+
+  if (
+    typeof param.setValueAtTime === 'function' &&
+    typeof param.exponentialRampToValueAtTime === 'function'
+  ) {
+    try {
+      param.setValueAtTime(safeStart, t0);
+      param.exponentialRampToValueAtTime(safeEnd, t0 + Math.max(0.0005, durationSec));
+      return;
+    } catch {
+      // Fall back to static value if mocked param rejects ramp
+    }
+  }
+
+  setParamValue(param, safeEnd, t0);
 }
 
 function scheduleGainEnvelope(
@@ -369,6 +408,7 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     decaySec,
     peakGain,
     filterFreq,
+    filterStartFreq,
     filterQ,
   }: NoiseBurstParams): void {
     if (!ctx || !masterGain) return;
@@ -394,7 +434,13 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
 
     source.buffer = noiseBuffer;
     filter.type = 'bandpass';
-    setParamValue(filter.frequency, filterFreq, t0);
+    scheduleFrequencySweep(
+      filter.frequency,
+      filterStartFreq ?? filterFreq,
+      filterFreq,
+      t0,
+      attackSec + decaySec,
+    );
     setParamValue(filter.Q, filterQ, t0);
 
     const tZero = scheduleGainEnvelope(envGain, t0, attackSec, decaySec, peakGain);
@@ -427,6 +473,9 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     peakGain,
     waveType = 'triangle',
     attackSec = 0.0003,
+    filterStartFreq,
+    filterEndFreq,
+    filterQ = 1.4,
   }: BodyTransientParams): void {
     if (!ctx || !masterGain || typeof ctx.createOscillator !== 'function') return;
 
@@ -438,6 +487,10 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
       safeDisconnect(envGain);
       return;
     }
+
+    const useFilter =
+      typeof filterStartFreq === 'number' && typeof ctx.createBiquadFilter === 'function';
+    const bodyFilter = useFilter ? ctx.createBiquadFilter() : null;
 
     osc.type = waveType;
     const freqParam = osc.frequency;
@@ -452,13 +505,31 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
       }
     }
 
+    if (bodyFilter && typeof filterStartFreq === 'number') {
+      bodyFilter.type = 'lowpass';
+      scheduleFrequencySweep(
+        bodyFilter.frequency,
+        filterStartFreq,
+        filterEndFreq ?? filterStartFreq,
+        t0,
+        durationSec,
+      );
+      setParamValue(bodyFilter.Q, filterQ, t0);
+    }
+
     const decaySec = Math.max(0.001, durationSec - attackSec);
     const tZero = scheduleGainEnvelope(envGain, t0, attackSec, decaySec, peakGain);
     const stopAt = tZero + 0.0005;
-    const voice = bindVoiceLifecycle(osc, [osc, envGain]);
+    const nodes: DisconnectableNode[] = bodyFilter ? [osc, bodyFilter, envGain] : [osc, envGain];
+    const voice = bindVoiceLifecycle(osc, nodes);
 
     try {
-      osc.connect(envGain);
+      if (bodyFilter) {
+        osc.connect(bodyFilter);
+        bodyFilter.connect(envGain);
+      } else {
+        osc.connect(envGain);
+      }
       envGain.connect(destination);
       registerVoice(voice);
       osc.start(t0);
@@ -484,12 +555,14 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     }
     lastTickAudioTime = audioNow;
 
+    // Crisp Flash vector stylus pip: fast downward resonant sweep settling at 3400Hz
     const t0 = audioNow + 0.001;
     spawnNoiseBurst({
       t0,
-      attackSec: 0.0003,
-      decaySec: 0.0018,
-      peakGain: 0.75,
+      attackSec: 0.00025,
+      decaySec: 0.0024,
+      peakGain: 0.76,
+      filterStartFreq: 4600,
       filterFreq: 3400,
       filterQ: 3.2,
     });
@@ -500,22 +573,27 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     const audioCtx = ensureContext();
     if (!audioCtx) return;
 
+    // Precision tactile switch click with silky filtered triangle body
     const t0 = getAudioNow(audioCtx) + 0.001;
     spawnNoiseBurst({
       t0,
-      attackSec: 0.0004,
-      decaySec: 0.0026,
-      peakGain: 0.85,
+      attackSec: 0.00035,
+      decaySec: 0.0032,
+      peakGain: 0.84,
+      filterStartFreq: 3800,
       filterFreq: 2600,
-      filterQ: 2.4,
+      filterQ: 2.7,
     });
     spawnBodyTransient({
       t0,
       startFreq: 520,
       endFreq: 140,
-      durationSec: 0.003,
-      peakGain: 0.55,
+      durationSec: 0.0056,
+      peakGain: 0.58,
       waveType: 'triangle',
+      filterStartFreq: 1850,
+      filterEndFreq: 780,
+      filterQ: 1.4,
     });
   }
 
@@ -525,41 +603,49 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     if (!audioCtx) return;
 
     const t0 = getAudioNow(audioCtx) + 0.001;
-    // Stage 1: pre-catch release
+    // Stage 1: silky upward resonant pre-catch swoosh + tight mechanical catch
     spawnNoiseBurst({
       t0,
       attackSec: 0.0003,
-      decaySec: 0.0022,
-      peakGain: 0.55,
-      filterFreq: 2100,
-      filterQ: 2.8,
+      decaySec: 0.0042,
+      peakGain: 0.56,
+      filterStartFreq: 1600,
+      filterFreq: 2550,
+      filterQ: 3.1,
     });
     spawnBodyTransient({
       t0,
-      startFreq: 380,
-      endFreq: 120,
-      durationSec: 0.0028,
-      peakGain: 0.4,
+      startFreq: 420,
+      endFreq: 145,
+      durationSec: 0.0052,
+      peakGain: 0.44,
       waveType: 'triangle',
+      filterStartFreq: 1900,
+      filterEndFreq: 880,
+      filterQ: 1.7,
     });
 
-    // Stage 2: crisp detent lock at +9ms
+    // Stage 2: crisp Flash vector detent lock at +9ms
     const tLock = t0 + 0.009;
     spawnNoiseBurst({
       t0: tLock,
       attackSec: 0.0003,
-      decaySec: 0.0026,
-      peakGain: 0.85,
+      decaySec: 0.0034,
+      peakGain: 0.86,
+      filterStartFreq: 4900,
       filterFreq: 3200,
-      filterQ: 3.4,
+      filterQ: 3.6,
     });
     spawnBodyTransient({
       t0: tLock,
-      startFreq: 640,
-      endFreq: 180,
-      durationSec: 0.0032,
-      peakGain: 0.55,
+      startFreq: 740,
+      endFreq: 225,
+      durationSec: 0.0068,
+      peakGain: 0.58,
       waveType: 'triangle',
+      filterStartFreq: 2800,
+      filterEndFreq: 1150,
+      filterQ: 2.1,
     });
   }
 
@@ -569,41 +655,47 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     if (!audioCtx) return;
 
     const t0 = getAudioNow(audioCtx) + 0.001;
-    // Stage 1 (t=0): weighted armature energize
+    // Stage 1 (t=0): resonant broadband swoosh + punchy sub-harmonic detonation thump
     spawnNoiseBurst({
       t0,
-      attackSec: 0.0004,
-      decaySec: 0.003,
-      peakGain: 0.65,
-      filterFreq: 1650,
-      filterQ: 2.2,
+      attackSec: 0.0006,
+      decaySec: 0.019,
+      peakGain: 0.72,
+      filterStartFreq: 1100,
+      filterFreq: 2650,
+      filterQ: 1.9,
     });
     spawnBodyTransient({
       t0,
-      startFreq: 290,
-      endFreq: 95,
-      durationSec: 0.0042,
-      peakGain: 0.65,
+      startFreq: 235,
+      endFreq: 54,
+      durationSec: 0.072,
+      peakGain: 0.86,
       waveType: 'sine',
+      attackSec: 0.0008,
     });
 
-    // Stage 2 (t=+14ms): secondary contact snap
+    // Stage 2 (t=+14ms): razor Flash vector ignition contact snap
     const tContact = t0 + 0.014;
     spawnNoiseBurst({
       t0: tContact,
       attackSec: 0.0003,
-      decaySec: 0.0026,
+      decaySec: 0.0085,
       peakGain: 0.9,
-      filterFreq: 3900,
-      filterQ: 3.0,
+      filterStartFreq: 5600,
+      filterFreq: 3800,
+      filterQ: 3.2,
     });
     spawnBodyTransient({
       t0: tContact,
-      startFreq: 780,
-      endFreq: 210,
-      durationSec: 0.0034,
-      peakGain: 0.6,
+      startFreq: 920,
+      endFreq: 250,
+      durationSec: 0.019,
+      peakGain: 0.62,
       waveType: 'triangle',
+      filterStartFreq: 3400,
+      filterEndFreq: 1150,
+      filterQ: 2.3,
     });
   }
 
@@ -624,43 +716,45 @@ export function createMicroFoley(options: MicroFoleyOptions = {}): MicroFoleyEng
     lastSyncAudioTime = audioNow;
 
     const t0 = audioNow + 0.001;
-    // Stage 1 (t=0): crisp telemetry micro-ping
+    // Stage 1 (t=0): silky air-chirp + crisp telemetry harmonic ping
     spawnNoiseBurst({
       t0,
       attackSec: 0.0003,
-      decaySec: 0.0018,
-      peakGain: 0.35,
-      filterFreq: 2800,
-      filterQ: 3.6,
+      decaySec: 0.0036,
+      peakGain: 0.32,
+      filterStartFreq: 2300,
+      filterFreq: 3200,
+      filterQ: 4.0,
     });
     spawnBodyTransient({
       t0,
       startFreq: 880,
       endFreq: 660,
-      durationSec: 0.018,
+      durationSec: 0.026,
       peakGain: 0.42,
       waveType: 'sine',
-      attackSec: 0.0012,
+      attackSec: 0.0014,
     });
 
-    // Stage 2 (t=+26ms): restrained harmonic fifth confirmation
+    // Stage 2 (t=+26ms): crystalline harmonic fifth confirmation
     const tConfirm = t0 + 0.026;
     spawnNoiseBurst({
       t0: tConfirm,
       attackSec: 0.0003,
-      decaySec: 0.0018,
-      peakGain: 0.28,
-      filterFreq: 4200,
-      filterQ: 4.0,
+      decaySec: 0.0044,
+      peakGain: 0.26,
+      filterStartFreq: 3600,
+      filterFreq: 4900,
+      filterQ: 4.4,
     });
     spawnBodyTransient({
       t0: tConfirm,
       startFreq: 1320,
       endFreq: 990,
-      durationSec: 0.022,
+      durationSec: 0.034,
       peakGain: 0.38,
       waveType: 'sine',
-      attackSec: 0.0012,
+      attackSec: 0.0014,
     });
   }
 
