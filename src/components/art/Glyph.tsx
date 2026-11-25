@@ -60,36 +60,33 @@ export interface GlyphProps {
 }
 
 /**
- * Dual-theme machined bezel hardware badge (or deterministic Swiss micro-emblem)
- * with strictly non-purple OKLCH pigment accent and >= 5:1 contrast in Obsidian & Daylight.
+ * Sharp architectural square-chamfer hardware badge (4px radius, crisp 1px structural border,
+ * zero soft bubbly glow) with strictly non-purple OKLCH pigment accent >= 5:1 in both themes.
  */
 export function Glyph({ name, hue, size = 36, slug, variant = 'icon', className = '' }: GlyphProps) {
   const theme: ArtTheme = useDeck((s) => s.vault.prefs.theme) ?? 'obsidian';
   const pal = makePalette(hue, theme);
   const Icon = ICONS[name as GlyphName] ?? Code2;
-  const radius = Math.round(size * 0.27);
-  const iconSize = Math.max(14, Math.round(size * 0.49));
+  const iconSize = Math.max(14, Math.round(size * 0.48));
 
   return (
     <span
-      className={`relative inline-grid shrink-0 place-items-center backdrop-blur-md transition-transform duration-200 ${className}`}
+      className={`relative inline-grid shrink-0 place-items-center backdrop-blur-md ${className}`}
       style={{
         width: size,
         height: size,
-        borderRadius: radius,
+        borderRadius: 4,
         color: pal.key,
-        background: pal.isLight
-          ? `radial-gradient(circle at 26% 16%, ${pal.keyAlpha(0.13)}, rgba(255,255,255,0.93) 72%)`
-          : `radial-gradient(circle at 26% 16%, ${pal.keyAlpha(0.26)}, rgba(10,12,17,0.86) 74%)`,
+        background: pal.isLight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(8, 9, 12, 0.92)',
         boxShadow: pal.isLight
-          ? `inset 0 0 0 1px ${pal.keyAlpha(0.32)}, inset 0 1px 0 rgba(255,255,255,0.96), 0 1px 2px rgba(17,19,24,0.08), 0 6px 14px -6px rgba(17,19,24,0.18)`
-          : `inset 0 0 0 1px ${pal.keyAlpha(0.42)}, inset 0 1px 0 rgba(255,255,255,0.15), 0 6px 18px -6px rgba(0,0,0,0.78), 0 2px 12px -5px ${pal.keyAlpha(0.42)}`,
+          ? `inset 0 0 0 1px rgba(10, 10, 11, 0.16), inset 0 2px 0 ${pal.keyAlpha(0.45)}`
+          : `inset 0 0 0 1px ${pal.keyAlpha(0.42)}, inset 0 1px 0 rgba(245, 243, 236, 0.12)`,
       }}
     >
       {variant === 'emblem' && slug ? (
-        <SwissEmblem slug={slug} size={Math.round(size * 0.76)} hue={pal.hue} framed={false} />
+        <SwissEmblem slug={slug} size={Math.round(size * 0.74)} hue={pal.hue} framed={false} />
       ) : (
-        <Icon size={iconSize} strokeWidth={1.85} />
+        <Icon size={iconSize} strokeWidth={1.8} />
       )}
     </span>
   );

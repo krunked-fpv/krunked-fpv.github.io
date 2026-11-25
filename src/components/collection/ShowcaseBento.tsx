@@ -7,13 +7,36 @@ import { useDeck } from '../../store/deckStore';
 import type { Project } from '../../types/project';
 import { GithubMark } from '../ui/GithubMark';
 import { Kbd, modKey } from '../ui/Kbd';
-import { SpecularSurface } from '../ui/SpecularSurface';
 import { AppCard } from './AppCard';
 
+type ColSpan = 4 | 6 | 8 | 12;
+
 /**
- * Spacious 3-column museum gallery grid (~440px per card at 1400px).
- * Unified exhibition card geometry ensures untruncated display titles and razor alignment,
- * with an architectural Studio Archive closing plate eliminating orphan grid columns on xl+.
+ * Orchestrates asymmetric editorial scale contrast across the 12-column monolith wall:
+ * - >= 10 worlds: panoramic 6+6 opener, 4+4+4, 8+4 spotlight, 4+4+4, 4+8 spotlight, then 4-col plates.
+ * - < 10 worlds (filtered): 12 (1), 6+6 (2 or 4), or 4-col plates.
+ */
+function xlSpanFor(index: number, total: number): ColSpan {
+  if (total === 1) return 12;
+  if (total < 10) {
+    return total === 2 || total === 4 ? 6 : 4;
+  }
+  if (index === 0 || index === 1) return 6;
+  if (index === 5 || index === 11) return 8;
+  return 4;
+}
+
+const XL_SPAN_CLASS: Record<ColSpan, string> = {
+  4: 'xl:col-span-4',
+  6: 'xl:col-span-6',
+  8: 'xl:col-span-8',
+  12: 'xl:col-span-12',
+};
+
+/**
+ * Asymmetric Architectural 12-Column Hairline Exhibition Wall.
+ * Terminates in a razor-sharp 12/12 rectangular museum block with an integrated
+ * Studio Archive monolith plate whenever rows leave an open column.
  */
 export function ShowcaseBento({ projects }: { projects: Project[] }) {
   const setPeek = useDeck((s) => s.setPeek);
@@ -44,40 +67,60 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
     onMove: () => foley.tick(),
   });
 
-  const rem = projects.length % 3;
-  const showArchivePlate = projects.length >= 4 && rem !== 0;
+  const spans = projects.map((_, i) => xlSpanFor(i, projects.length));
+  const totalXlCols = spans.reduce<number>((sum, s) => sum + s, 0);
+  const xlRem = (12 - (totalXlCols % 12)) % 12;
+  const showXlArchive = projects.length >= 4 && (xlRem === 4 || xlRem === 8);
+  const mdOdd = projects.length >= 3 && projects.length % 2 === 1;
+  const showArchivePlate = showXlArchive || mdOdd;
+
   const liveCount = projects.filter((p) => p.kind === 'live').length;
-  const isWidePlate = rem === 1;
+  const isWidePlate = xlRem === 8;
+
+  // Breakpoint-exact visibility so neither md (6-col) nor xl (12-col) ever leaves an exposed bg-hairline gap
+  const archiveResponsiveClass = showXlArchive
+    ? mdOdd
+      ? `hidden md:flex md:col-span-3 ${isWidePlate ? 'xl:col-span-8' : 'xl:col-span-4'}`
+      : `hidden xl:flex ${isWidePlate ? 'xl:col-span-8' : 'xl:col-span-4'}`
+    : 'hidden md:flex md:col-span-3 xl:hidden';
 
   return (
     <motion.div
       ref={containerRef}
       onKeyDown={onKeyDown}
       layout
-      className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+      className="monolith-grid grid grid-cols-1 gap-px overflow-hidden rounded-[8px] border border-hairline bg-hairline md:grid-cols-6 xl:grid-cols-12"
     >
       <AnimatePresence mode="popLayout" initial={false}>
-        {projects.map((p, i) => (
-          <AppCard key={p.id} project={p} index={i} />
-        ))}
+        {projects.map((p, i) => {
+          const span = spans[i] ?? 4;
+          const mdCls = projects.length === 1 ? 'md:col-span-6' : 'md:col-span-3';
+          return (
+            <AppCard
+              key={p.id}
+              project={p}
+              index={i}
+              span={span}
+              className={`${mdCls} ${XL_SPAN_CLASS[span]}`}
+            />
+          );
+        })}
       </AnimatePresence>
 
       {showArchivePlate && (
-        <SpecularSurface
+        <motion.aside
           layout
-          interactive={false}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={SPRING}
-          className={`hero-grid hidden min-w-0 flex-col justify-between overflow-hidden rounded-[16px]! p-6 xl:flex ${
-            isWidePlate ? 'xl:col-span-2' : 'xl:col-span-1'
-          }`}
+          aria-label="Studio Archive"
+          className={`monolith-cell hero-grid relative min-w-0 flex-col justify-between overflow-hidden p-6 ${archiveResponsiveClass}`}
         >
           <div className="relative z-[1] flex items-center justify-between gap-2">
-            <span className="chip">
+            <span className="chip rounded-[4px]!">
               <span
                 className="led-dot"
-                style={{ ['--c' as string]: 'var(--led-online)' }}
+                style={{ ['--c' as string]: 'var(--led-hot)' }}
                 aria-hidden="true"
               />
               STUDIO ARCHIVE
@@ -87,21 +130,19 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
 
           <div
             className={`relative z-[1] my-auto py-8 ${
-              isWidePlate ? 'flex items-end justify-between gap-8' : 'flex flex-col gap-3'
+              isWidePlate ? 'xl:flex xl:items-end xl:justify-between xl:gap-8' : 'flex flex-col gap-3'
             }`}
           >
-            <div className={isWidePlate ? 'max-w-lg' : ''}>
-              <p className="mono text-[10.5px] tracking-[0.16em] text-hot-ink uppercase">
-                @{GITHUB_USER} // CONTINUOUS FORGE
+            <div className={isWidePlate ? 'max-w-xl' : ''}>
+              <p className="mono text-[10.5px] uppercase tracking-[0.16em] text-hot-ink">
+                @{GITHUB_USER} // MONOLITH CATALOG
               </p>
-              <h3 className="display mt-2 text-[26px] leading-[1.1] text-ink">
-                {liveCount > 0
-                  ? `${liveCount} live builds`
-                  : `${projects.length} tracked builds`}{' '}
+              <h3 className="display mt-2 text-[26px] leading-[1.06] text-ink">
+                {liveCount > 0 ? `${liveCount} live worlds` : `${projects.length} tracked builds`}{' '}
                 <span className="serif font-normal text-dim">&amp; open prototypes.</span>
               </h3>
               <p className="mt-2.5 text-[13.5px] leading-relaxed text-dim">
-                Explore source repositories, active experiments, and commit histories across the full studio catalog on GitHub.
+                Inspect source repositories, hardware instruments, and active experimental branches directly on GitHub.
               </p>
             </div>
           </div>
@@ -135,7 +176,7 @@ export function ShowcaseBento({ projects }: { projects: Project[] }) {
               </span>
             </button>
           </div>
-        </SpecularSurface>
+        </motion.aside>
       )}
     </motion.div>
   );

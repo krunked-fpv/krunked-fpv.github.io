@@ -1,3 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, Radio } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   buildChronoWindow,
@@ -10,8 +12,10 @@ import {
 } from '../../art/chronoPulse';
 import { foley } from '../../audio/microFoley';
 import { useDeck } from '../../store/deckStore';
-import { useHeat } from '../../store/selectors';
+import { useChronoPulse, useHeat, useShipLogs } from '../../store/selectors';
 import type { ChronoDay, ChronoWindow } from '../../types/github';
+import type { Project } from '../../types/project';
+import { deduplicateShipLogs, ForgeStream } from '../stream/ForgeStream';
 
 export interface HeatStripProps {
   days?: readonly ChronoDayInput[];
@@ -19,6 +23,8 @@ export interface HeatStripProps {
   onSelectWindow?: (win: ChronoWindow | null) => void;
   onHoverDay?: (day: ChronoDay | null) => void;
   onTick?: () => void;
+  /** Compact inline layout tailored for the full-width TelemetryRibbon strip. */
+  compact?: boolean;
   className?: string;
 }
 
@@ -27,16 +33,16 @@ type RangeMode = '14d' | '30d' | '90d';
 const FULL_DAYS = 90;
 const MONTH_DAYS = 30;
 const SPRINT_DAYS = 14;
-const VB_W = 360;
-const VB_H = 42;
-const BASELINE_Y = 36;
-const MAX_BAR_H = 31;
+const VB_W = 420;
+const VB_H = 40;
+const BASELINE_Y = 34;
+const MAX_BAR_H = 29;
 
 const TIER_FILL = [
-  'var(--heat-0, rgba(255,255,255,0.09))',
-  'var(--heat-1, #10B981)',
-  'var(--heat-2, #F59E0B)',
-  'var(--heat-3, #FF4F00)',
+  'var(--heat-0, rgba(245,243,236,0.08))',
+  'var(--heat-1, #2EE59D)',
+  'var(--heat-2, #D2FF28)',
+  'var(--heat-3, #FF5226)',
 ] as const;
 
 const RANGE_OPTIONS: readonly { id: RangeMode; label: string }[] = [
@@ -47,7 +53,7 @@ const RANGE_OPTIONS: readonly { id: RangeMode; label: string }[] = [
 
 /**
  * Interactive 14D / 30D / 90D Chrono-Pulse Thermal Telemetry Waveform & Sprint-Window Scrubber.
- * Automatically focuses on 14D when trailing sprint activity is concentrated in the last two weeks,
+ * Automatically focuses on 14D when trailing sprint velocity concentrates in the last two weeks,
  * with instant zoom to 30D or full 90D history. Maps visible slice indices back to exact 90-day
  * ChronoDay indices for buildChronoWindow so scrubbing, range lock, and tooltips stay exact.
  */
@@ -57,6 +63,7 @@ export function HeatStrip({
   onSelectWindow,
   onHoverDay,
   onTick,
+  compact = false,
   className = '',
 }: HeatStripProps = {}) {
   const storeDays = useHeat();
@@ -74,7 +81,6 @@ export function HeatStrip({
   const sprint14Days = useMemo(() => allDays.slice(-SPRINT_DAYS), [allDays]);
   const month30Days = useMemo(() => allDays.slice(-MONTH_DAYS), [allDays]);
 
-  // Smart default: focus 14D when recent velocity is concentrated in the trailing 14-day window
   const autoMode: RangeMode = useMemo(() => {
     const recent14Total = sprint14Days.reduce((a, d) => a + d.count, 0);
     const prior16Total = allDays.slice(-MONTH_DAYS, -SPRINT_DAYS).reduce((a, d) => a + d.count, 0);
@@ -83,7 +89,6 @@ export function HeatStrip({
 
   const preferredMode = userRangeMode ?? autoMode;
 
-  // Ensure an active locked ChronoWindow outside the currently selected slice stays visible
   const effectiveMode: RangeMode = useMemo(() => {
     if (!activeWindow) return preferredMode;
     if (preferredMode === '14d') {
@@ -102,9 +107,9 @@ export function HeatStrip({
   const sliceOffset = FULL_DAYS - dayCount;
 
   const slotW = VB_W / dayCount;
-  const barW = effectiveMode === '14d' ? 17.6 : effectiveMode === '30d' ? 8.2 : 2.9;
+  const barW = effectiveMode === '14d' ? 20.5 : effectiveMode === '30d' ? 9.6 : 3.3;
   const barOffset = (slotW - barW) / 2;
-  const barRx = effectiveMode === '14d' ? 3 : effectiveMode === '30d' ? 1.8 : 1.15;
+  const barRx = effectiveMode === '14d' ? 2 : effectiveMode === '30d' ? 1.4 : 0.9;
 
   const lockedRange = useMemo(
     () => resolveChronoWindowRange(activeWindow, days),
@@ -272,7 +277,6 @@ export function HeatStrip({
     }
   };
 
-  // Active inspection readout (drag range > hovered/focused day > locked window > default summary)
   const inspectedIdx = hoverIdx !== null && hoverIdx < dayCount ? hoverIdx : isFocused ? safeFocusIdx : null;
   const tooltipPayload = useMemo(() => {
     if (previewRange) {
@@ -311,7 +315,7 @@ export function HeatStrip({
       : `${totalCount} ships · ${activeDays}d`;
 
   const tooltipLeftPct = tooltipPayload
-    ? Math.max(22, Math.min(78, ((tooltipPayload.anchorIdx + 0.5) / dayCount) * 100))
+    ? Math.max(18, Math.min(82, ((tooltipPayload.anchorIdx + 0.5) / dayCount) * 100))
     : 50;
 
   const vernierTicks =
@@ -325,16 +329,16 @@ export function HeatStrip({
 
   return (
     <div className={`relative w-full min-w-0 max-w-full ${className}`}>
-      <div className="mb-1.5 flex items-center justify-between gap-2">
+      <div className={`flex items-center justify-between gap-2 ${compact ? 'mb-1' : 'mb-1.5'}`}>
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <span className="eyebrow hidden shrink-0 min-[390px]:inline">Chrono-pulse</span>
           <span className="eyebrow shrink-0 min-[390px]:hidden">Pulse</span>
 
-          {/* Crisp 14D | 30D | 90D range switcher */}
+          {/* Crisp sharp-chamfer 14D | 30D | 90D range switcher */}
           <div
             role="group"
             aria-label="Chrono-pulse range"
-            className="mono inline-flex shrink-0 items-center rounded-[6px] border border-hairline bg-chassis/60 p-[1.5px] text-[9.5px] font-medium tracking-[0.07em]"
+            className="mono inline-flex shrink-0 items-center rounded-[var(--radius-sm)] border border-hairline bg-chassis/70 p-[2px] text-[9.5px] font-semibold tracking-[0.08em]"
           >
             {RANGE_OPTIONS.map((opt) => (
               <button
@@ -342,9 +346,9 @@ export function HeatStrip({
                 type="button"
                 onClick={() => switchMode(opt.id)}
                 aria-pressed={effectiveMode === opt.id}
-                className={`cursor-pointer rounded-[4.5px] px-1.5 py-[1px] transition ${
+                className={`cursor-pointer rounded-[2px] px-1.5 py-[1px] transition ${
                   effectiveMode === opt.id
-                    ? 'bg-elevated text-ink shadow-[inset_0_0_0_1px_var(--hairline-strong)]'
+                    ? 'bg-elevated text-hot-ink shadow-[inset_0_0_0_1px_var(--hairline-strong)]'
                     : 'text-mute hover:text-dim'
                 }`}
               >
@@ -360,7 +364,7 @@ export function HeatStrip({
                 playTick();
                 commitWindow(null);
               }}
-              className="mono inline-flex h-[18px] shrink-0 cursor-pointer items-center rounded border border-hairline-strong bg-elevated px-1.5 text-[9.5px] tracking-wider text-hot-ink uppercase transition-colors hover:bg-hover"
+              className="mono inline-flex h-[18px] shrink-0 cursor-pointer items-center rounded-[var(--radius-xs)] border border-hairline-strong bg-elevated px-1.5 text-[9.5px] tracking-wider text-hot-ink uppercase transition-colors hover:bg-hover"
               aria-label="Clear selected chrono window"
             >
               Clear
@@ -376,7 +380,7 @@ export function HeatStrip({
           <div
             role="status"
             aria-live="polite"
-            className="pointer-events-none absolute bottom-[calc(100%+6px)] z-30 max-w-[min(280px,96%)] -translate-x-1/2 rounded-lg border border-hairline-strong bg-elevated px-2.5 py-1.5 shadow-lg"
+            className="pointer-events-none absolute bottom-[calc(100%+6px)] z-30 max-w-[min(280px,96%)] -translate-x-1/2 rounded-[var(--radius-md)] border border-hairline-strong bg-elevated px-2.5 py-1.5 shadow-lg"
             style={{ left: `${tooltipLeftPct.toFixed(1)}%` }}
           >
             <div className="mono flex items-center justify-between gap-3 text-[10px] tracking-wider whitespace-nowrap">
@@ -412,7 +416,9 @@ export function HeatStrip({
               onHoverDay?.(null);
             }
           }}
-          className="block h-[42px] w-full cursor-crosshair touch-none select-none rounded-md text-ink focus-visible:outline-2 focus-visible:outline-offset-2"
+          className={`block w-full cursor-crosshair touch-none select-none rounded-[var(--radius-sm)] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 ${
+            compact ? 'h-9' : 'h-[42px]'
+          }`}
         >
           {/* Midline & baseline guide rails */}
           <line
@@ -461,10 +467,10 @@ export function HeatStrip({
               y={1}
               width={(displayRange[1] - displayRange[0] + 1) * slotW}
               height={BASELINE_Y - 1}
-              rx={2}
-              fill="var(--led-hot, #FF4F00)"
+              rx={1.5}
+              fill="var(--led-hot, #D2FF28)"
               fillOpacity={0.14}
-              stroke="var(--led-hot, #FF4F00)"
+              stroke="var(--led-hot, #D2FF28)"
               strokeOpacity={0.55}
               strokeWidth={0.75}
             />
@@ -475,19 +481,18 @@ export function HeatStrip({
             <path
               d={momentumPath}
               fill="none"
-              stroke="var(--led-online, #10B981)"
+              stroke="var(--led-online, #2EE59D)"
               strokeOpacity={0.28}
-              strokeWidth={1.1}
+              strokeWidth={1.05}
               strokeLinejoin="round"
             />
           )}
 
-          {/* Thermal velocity pill-cap bars */}
+          {/* Thermal velocity bars */}
           <g>
             {days.map((d, i) => {
               const inRange = !displayRange || (i >= displayRange[0] && i <= displayRange[1]);
               const tier = thermalTier(d.count, maxCount);
-              // Perceptual power curve keeps moderate sprint days vibrant alongside massive spike days
               const scaled = d.count > 0 ? Math.pow(d.count / maxCount, 0.54) : 0;
               const barH = d.count > 0 ? Math.max(5, Math.round(scaled * MAX_BAR_H)) : 2.5;
               const y = BASELINE_Y - barH;
@@ -510,7 +515,7 @@ export function HeatStrip({
                   y={y}
                   width={barW}
                   height={barH}
-                  rx={d.count > 0 ? barRx : 1}
+                  rx={d.count > 0 ? barRx : 0.75}
                   fill={TIER_FILL[tier]}
                   fillOpacity={fillOpacity}
                 />
@@ -526,7 +531,7 @@ export function HeatStrip({
                 y={0}
                 width={barW}
                 height={BASELINE_Y}
-                rx={1.5}
+                rx={1}
                 fill="currentColor"
                 fillOpacity={0.11}
               />
@@ -535,20 +540,144 @@ export function HeatStrip({
                 y={0}
                 width={barW}
                 height={2.2}
-                rx={1}
-                fill="var(--led-hot, #FF4F00)"
+                rx={0.8}
+                fill="var(--led-hot, #D2FF28)"
               />
             </g>
           )}
         </svg>
       </div>
 
-      <div className="mono mt-1 flex items-center justify-between text-[9.5px] tracking-wider text-mute">
+      <div className="mono mt-0.5 flex items-center justify-between text-[9px] tracking-[0.12em] text-mute">
         <span>{axisLabels[0]}</span>
         <span className="hidden sm:inline">{axisLabels[1]}</span>
         <span className="hidden sm:inline">{axisLabels[2]}</span>
         <span>{axisLabels[3]}</span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Full-width Architectural Hardware Telemetry & Live Dispatch Ribbon mounted at the base of HeroBand.
+ * Stretches Chrono-Pulse across the studio rack with an inline collapsible Live Dispatch drawer on desktop
+ * and one-tap Ship Log modal trigger on mobile.
+ */
+export function TelemetryRibbon({ projects }: { projects: Project[] }) {
+  const pulseDays = useChronoPulse();
+  const rawLogs = useShipLogs(projects);
+  const setShipSheet = useDeck((s) => s.setShipSheet);
+  const [dispatchOpen, setDispatchOpen] = useState(false);
+
+  const dispatchCount = useMemo(() => deduplicateShipLogs(rawLogs).length, [rawLogs]);
+  const pulse30d = useMemo(
+    () => pulseDays.slice(-30).reduce((sum, d) => sum + d.count, 0),
+    [pulseDays],
+  );
+  const fallback30d = useMemo(
+    () => projects.reduce((sum, p) => sum + (p.commits30dTotal || 0), 0),
+    [projects],
+  );
+  const commits30d = pulse30d > 0 ? pulse30d : fallback30d;
+
+  return (
+    <div id="pulse" className="relative z-[2] w-full border-t border-hairline bg-inset/82 backdrop-blur-md">
+      <div className="mx-auto max-w-[1440px] px-4 py-3.5 sm:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+          {/* Left: Velocity Metric Module */}
+          <div className="flex shrink-0 items-center justify-between gap-4 lg:border-r lg:border-hairline lg:pr-6">
+            <div className="flex items-baseline gap-2.5">
+              <div>
+                <div className="eyebrow text-[9.5px]! tracking-[0.18em]!">Velocity · 30d</div>
+                <div data-tabular className="mono mt-0.5 flex items-baseline gap-1.5">
+                  <span className="text-[22px] font-bold leading-none tracking-[-0.03em] text-ink">
+                    {commits30d}
+                  </span>
+                  <span className="text-[10px] font-medium tracking-[0.12em] text-mute uppercase">
+                    commits
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Ship-Log Trigger (<1024px) */}
+            <button
+              type="button"
+              onClick={() => {
+                foley.click();
+                setShipSheet(true);
+              }}
+              className="mono inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-[var(--radius-sm)] border border-hairline bg-surface px-2.5 text-[10.5px] font-semibold tracking-[0.1em] text-ink transition hover:border-hairline-strong lg:hidden"
+            >
+              <span
+                className="beacon scale-[0.8]"
+                style={{ ['--c' as string]: 'var(--led-online)' }}
+                aria-hidden="true"
+              />
+              <span>DISPATCH</span>
+              <span className="text-mute">({dispatchCount})</span>
+            </button>
+          </div>
+
+          {/* Center: Wide Chrono-Pulse Thermal Waveform */}
+          <div className="min-w-0 flex-1">
+            <HeatStrip compact />
+          </div>
+
+          {/* Right (Desktop): Inline Collapsible Live Dispatch Drawer Toggle */}
+          <div className="hidden shrink-0 items-center lg:flex lg:border-l lg:border-hairline lg:pl-6">
+            <button
+              type="button"
+              onClick={() => {
+                foley.latch();
+                setDispatchOpen((prev) => !prev);
+              }}
+              aria-expanded={dispatchOpen}
+              className={`mono inline-flex h-10 cursor-pointer items-center gap-2.5 rounded-[var(--radius-sm)] border px-3.5 text-[11px] font-semibold tracking-[0.12em] uppercase transition ${
+                dispatchOpen
+                  ? 'border-hot/60 bg-elevated text-ink'
+                  : 'border-hairline bg-surface text-dim hover:border-hairline-strong hover:text-ink'
+              }`}
+            >
+              <span
+                className="beacon scale-[0.82]"
+                style={{ ['--c' as string]: 'var(--led-online)' }}
+                aria-hidden="true"
+              />
+              <Radio size={13} className="text-phosphor-ink" aria-hidden="true" />
+              <span>Live Dispatch</span>
+              <span className="text-mute">({dispatchCount})</span>
+              <ChevronDown
+                size={13}
+                className={`text-mute transition-transform duration-200 ${dispatchOpen ? 'rotate-180 text-hot-ink' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Inline Collapsible Architectural Live Dispatch Drawer (Desktop) */}
+      <AnimatePresence initial={false}>
+        {dispatchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="hidden overflow-hidden border-t border-hairline bg-surface/95 lg:block"
+          >
+            <div className="mx-auto max-w-[1440px] px-6 py-4">
+              <ForgeStream
+                projects={projects}
+                embedded
+                limit={24}
+                className="max-h-[300px] rounded-[var(--radius-md)] border border-hairline bg-chassis/60"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -31,22 +31,22 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
       dragListener={false}
       dragControls={dragControls}
       whileDrag={{ scale: 1.03, zIndex: 10 }}
-      className="group surface relative flex h-[140px] w-[214px] shrink-0 flex-col justify-between overflow-hidden rounded-[14px]! select-none transition-transform duration-200 [transition-timing-function:var(--ease-snap)] hover:-translate-y-0.5"
+      className="group surface relative flex h-[138px] w-[220px] shrink-0 flex-col justify-between overflow-hidden rounded-[6px]! select-none transition-colors hover:border-hairline-strong"
     >
       <div className="pointer-events-none absolute inset-0 z-0">
         <CoverArt project={project} fill scrim="stage" />
       </div>
 
-      {/* Top hardware strip: slot number, LED, tactile glass controls */}
+      {/* Top hardware strip: slot number, LED, sharp tactile controls */}
       <div className="relative z-[4] flex items-center justify-between gap-1.5 px-2.5 pt-2.5">
         <span
-          className="mono inline-flex items-center gap-1.5 rounded-[6px] px-2 py-0.5 text-[10px] font-medium text-ink backdrop-blur-md"
+          className="mono inline-flex items-center gap-1.5 rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium text-ink backdrop-blur-md"
           style={{
             background: 'var(--badge-bg)',
             boxShadow: 'inset 0 0 0 1px var(--badge-border)',
           }}
         >
-          <span className="size-[6px] rounded-full" style={{ background: tok.dot }} aria-hidden="true" />
+          <span className="size-[5px] rounded-full" style={{ background: tok.dot }} aria-hidden="true" />
           {slot}
         </span>
 
@@ -59,7 +59,7 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
               foley.tick();
               dragControls.start(e);
             }}
-            className="grid size-6 cursor-grab touch-none place-items-center rounded-[6px] text-dim backdrop-blur-md transition-colors hover:text-ink active:cursor-grabbing"
+            className="grid size-6 cursor-grab touch-none place-items-center rounded-[4px] text-dim backdrop-blur-md transition-colors hover:text-ink active:cursor-grabbing"
             style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
           >
             <GripVertical size={12} />
@@ -69,7 +69,7 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
             aria-label={`Live Peek ${project.displayName}`}
             title="Live Peek"
             onClick={() => onPeek(project.name, Boolean(project.launchUrl))}
-            className="grid size-6 place-items-center rounded-[6px] text-dim backdrop-blur-md transition-colors hover:text-ink"
+            className="grid size-6 place-items-center rounded-[4px] text-dim backdrop-blur-md transition-colors hover:text-ink"
             style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
           >
             <Eye size={12} />
@@ -79,7 +79,7 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
             aria-label={`Unpin ${project.displayName}`}
             title="Unpin"
             onClick={() => onUnpin(project.name)}
-            className="grid size-6 place-items-center rounded-[6px] text-dim backdrop-blur-md transition-colors hover:text-alarm-ink"
+            className="grid size-6 place-items-center rounded-[4px] text-dim backdrop-blur-md transition-colors hover:text-alarm-ink"
             style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
           >
             <X size={12} />
@@ -98,7 +98,7 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
         aria-label={`Launch ${project.displayName}`}
       >
         <div className="flex items-center gap-2.5">
-          <Glyph name={project.glyph} hue={hue} size={30} />
+          <Glyph name={project.glyph} hue={hue} size={28} />
           <div className="min-w-0 flex-1">
             <span className="block truncate text-[13.5px] font-semibold tracking-[-0.015em] text-ink transition-colors group-hover:text-hot-ink">
               {project.displayName}
@@ -118,7 +118,7 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
             disabled={index === 0}
             onClick={() => onMove(index, index - 1)}
             aria-label={`Move ${project.displayName} left`}
-            className="grid size-5 place-items-center rounded text-dim transition-colors hover:bg-hover hover:text-ink disabled:opacity-30"
+            className="grid size-5 place-items-center rounded-[3px] text-dim transition-colors hover:bg-hover hover:text-ink disabled:opacity-30"
           >
             <ChevronLeft size={12} />
           </button>
@@ -127,7 +127,7 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
             disabled={index === total - 1}
             onClick={() => onMove(index, index + 1)}
             aria-label={`Move ${project.displayName} right`}
-            className="grid size-5 place-items-center rounded text-dim transition-colors hover:bg-hover hover:text-ink disabled:opacity-30"
+            className="grid size-5 place-items-center rounded-[3px] text-dim transition-colors hover:bg-hover hover:text-ink disabled:opacity-30"
           >
             <ChevronRight size={12} />
           </button>
@@ -170,10 +170,10 @@ export function FlagshipDock({ projects }: { projects: Project[] }) {
   };
 
   return (
-    <section aria-label="Pinned Dock" className="mx-auto max-w-[1400px] px-4 pb-5 pt-2 sm:px-6">
+    <section aria-label="Pinned Dock" className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6">
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Star size={12} className="shrink-0 text-solar-ink" fill="currentColor" aria-hidden="true" />
+          <Star size={12} className="shrink-0 text-hot-ink" fill="currentColor" aria-hidden="true" />
           <h2 className="eyebrow text-dim!">Pinned Dock</h2>
           <span className="mono text-[10px] tracking-[0.14em] text-mute">
             · {String(visible.length).padStart(2, '0')} CARTRIDGES
@@ -191,7 +191,7 @@ export function FlagshipDock({ projects }: { projects: Project[] }) {
           foley.tick();
           commitOrder(next);
         }}
-        className="hide-scroll flex max-w-full gap-3.5 overflow-x-auto pb-1.5"
+        className="hide-scroll flex max-w-full gap-3 overflow-x-auto pb-1"
       >
         {visible.map((n, idx) => {
           const p = byName.get(n)!;

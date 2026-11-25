@@ -15,7 +15,7 @@ const PR_LABEL_RE = /^PR\s+#(\d+)\s+([A-Z_-]+)/i;
  * Collapses noisy rapid PR open+merge pairs (e.g. PR #2 OPENED right before PR #2 MERGED)
  * within 60 minutes so the live dispatch highlights diverse ships across repositories.
  */
-function deduplicateShipLogs(logs: ShipLog[]): ShipLog[] {
+export function deduplicateShipLogs(logs: ShipLog[]): ShipLog[] {
   const closedPrTimes = new Map<string, number[]>();
 
   for (const log of logs) {
@@ -51,7 +51,6 @@ function deduplicateShipLogs(logs: ShipLog[]): ShipLog[] {
       }
     }
 
-    // Also skip exact consecutive duplicate event lines within 15 minutes
     const prev = out[out.length - 1];
     if (
       prev &&
@@ -79,7 +78,7 @@ export function ForgeStream({
 }: {
   projects: Project[];
   limit?: number;
-  /** When true, renders flush inside a parent container (such as SpotlightDeck's Ship Log tab). */
+  /** When true, renders flush inside a parent drawer or panel. */
   embedded?: boolean;
   className?: string;
 }) {
@@ -126,7 +125,7 @@ export function ForgeStream({
   if (embedded) {
     return (
       <div className={`flex min-h-0 flex-col overflow-hidden ${className}`}>
-        <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-inset/35 px-4 py-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-inset/45 px-4 py-2">
           <span className="eyebrow text-[10px]!">Live Dispatch</span>
           <span className="mono text-[10px] text-mute">
             {chronoWindow ? `${filtered.length} IN WINDOW` : `${deduped.length} SHIPS`}
@@ -138,11 +137,11 @@ export function ForgeStream({
   }
 
   return (
-    <SpecularSurface className={`flex flex-col overflow-hidden rounded-[14px]! ${className}`}>
+    <SpecularSurface className={`flex flex-col overflow-hidden rounded-[var(--radius-lg)]! ${className}`}>
       <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-inset/60 px-4 py-3">
         <div className="flex items-center gap-2">
           <Radio size={14} className="text-phosphor-ink" aria-hidden="true" />
-          <h3 className="eyebrow text-dim!">Forge Stream</h3>
+          <h3 className="eyebrow text-dim!">Live Dispatch</h3>
         </div>
         <span className="mono text-[10.5px] text-mute">
           {chronoWindow ? `${filtered.length} IN WINDOW` : `${deduped.length} SHIPS`}

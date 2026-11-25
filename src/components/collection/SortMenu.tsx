@@ -72,7 +72,7 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
       <button
         ref={btn}
         type="button"
-        className={`btn min-h-8! gap-1.5 rounded-[9px]! px-2.5 text-[12px] ${
+        className={`btn min-h-8! gap-1.5 rounded-[6px]! px-2.5 text-[12px] ${
           open ? 'bg-elevated text-ink' : ''
         }`}
         aria-haspopup="listbox"
@@ -103,7 +103,7 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={SPRING}
-            className="surface surface-elevated absolute right-0 top-[calc(100%+6px)] z-50 w-56 rounded-[12px]! border border-hairline-strong bg-elevated p-1.5 shadow-xl"
+            className="surface surface-elevated absolute right-0 top-[calc(100%+6px)] z-50 w-56 rounded-[8px]! border border-hairline-strong bg-elevated p-1 shadow-xl"
             style={{ transformOrigin: 'top right' }}
           >
             {OPTIONS.map((o, i) => {
@@ -116,7 +116,7 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
                   aria-selected={selected}
                   onPointerEnter={() => setActive(i)}
                   onClick={() => choose(i)}
-                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-[8px] px-2.5 py-2 text-[12.5px] transition-colors ${
+                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-[4px] px-2.5 py-2 text-[12.5px] transition-colors ${
                     i === active ? 'bg-hover text-ink' : selected ? 'text-ink' : 'text-dim'
                   }`}
                 >

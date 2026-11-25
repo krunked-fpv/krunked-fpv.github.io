@@ -62,7 +62,7 @@
         root.dataset.theme = theme;
         root.style.colorScheme = theme === 'daylight' ? 'light' : 'dark';
         var tc = document.getElementById('meta-theme-color');
-        if (tc) tc.setAttribute('content', theme === 'daylight' ? '#ECEAE4' : '#08090B');
+        if (tc) tc.setAttribute('content', theme === 'daylight' ? '#F5F3EC' : '#030304');
         var cs = document.getElementById('meta-color-scheme');
         if (cs) cs.setAttribute('content', theme === 'daylight' ? 'light' : 'dark');
       })();
@@ -70,13 +70,13 @@
     <style>
       html,
       body {
-        background: #08090b;
-        color: #f3f5f8;
+        background: #030304;
+        color: #f5f3ec;
       }
       html[data-theme='daylight'],
       html[data-theme='daylight'] body {
-        background: #eceae4;
-        color: #14161a;
+        background: #f5f3ec;
+        color: #0a0a0b;
       }
     </style>
   </head>

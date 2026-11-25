@@ -15,7 +15,7 @@ import { ForceSyncButton } from './ForceSyncButton';
 import { LiveClock } from './LiveClock';
 import { phaseColor, phaseInk } from './TopBar';
 
-/** Grounded architectural studio footer (replaces fixed bottom bar for full above-the-fold clarity). */
+/** Monumental grounded Monolith Studio archive footer. */
 export function StatusBar({ projects }: { projects: Project[] }) {
   const sync = useDeck((s) => s.sync);
   const user = useDeck((s) => s.user);
@@ -68,47 +68,53 @@ export function StatusBar({ projects }: { projects: Project[] }) {
 
   return (
     <footer
-      className="mt-16 w-full border-t border-hairline bg-inset/50"
+      className="mt-20 w-full border-t border-hairline bg-inset/45"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-4 py-6 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-        {/* Left Zone: Brand Atelier Identity & Live Sync Telemetry */}
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <BrandEmblem size={20} />
-            <span className="text-[12.5px] font-semibold tracking-[0.13em] text-ink">{BRAND.primary}</span>
-            <span className="mono text-[11px] font-semibold text-hot-ink" aria-hidden="true">
-              {BRAND.separator}
-            </span>
-            <span className="mono text-[11px] font-medium tracking-[0.14em] text-dim">{BRAND.secondary}</span>
-            <span className="text-mute" aria-hidden="true">
-              ·
-            </span>
-            <a
-              href={profileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mono inline-flex items-center gap-0.5 text-[11px] text-dim transition hover:text-ink"
-            >
-              @{profileHandle}
-              <ArrowUpRight size={11} className="text-mute" aria-hidden="true" />
-            </a>
+      {/* Upper Editorial Watermark Band */}
+      <div className="border-b border-hairline">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-7 sm:px-6 md:flex-row md:items-end md:justify-between">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <BrandEmblem size={22} />
+              <span className="masthead-display text-[20px] font-bold tracking-[0.12em] text-ink sm:text-[24px]">
+                {BRAND.primary}
+              </span>
+              <span className="mono text-[11px] font-semibold text-hot-ink" aria-hidden="true">
+                {BRAND.separator}
+              </span>
+              <span className="mono text-[11px] font-medium tracking-[0.2em] text-mute">
+                STUDIO ARCHIVE
+              </span>
+            </div>
+
+            <div className="mono flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10.5px] tracking-[0.08em] text-mute">
+              <a
+                href={profileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-medium text-dim transition hover:text-hot-ink"
+              >
+                @{profileHandle}
+                <ArrowUpRight size={11} aria-hidden="true" />
+              </a>
+              <span aria-hidden="true">·</span>
+              <span>
+                <b className="font-semibold text-ink">{live}</b> LIVE WORLDS
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>
+                LAST SHIP <b className="font-semibold text-ink">{last ? `${formatDelta(now - Date.parse(last))} AGO` : '--'}</b>
+              </span>
+              <span aria-hidden="true">·</span>
+              <span className="inline-flex items-center gap-1.5" style={{ color: inkColor }}>
+                <span className="led-dot" style={{ ['--c' as string]: ledColor }} aria-hidden="true" />
+                <span aria-live="polite">{statusLabel(sync, now)}</span>
+              </span>
+            </div>
           </div>
 
-          <div className="mono flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10.5px] tracking-[0.06em] text-mute">
-            <span>
-              <b className="font-semibold text-ink">{live}</b> live worlds
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>
-              Last ship <b className="font-semibold text-ink">{last ? `${formatDelta(now - Date.parse(last))} ago` : '--'}</b>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span className="inline-flex items-center gap-1.5" style={{ color: inkColor }}>
-              <span className="led-dot" style={{ ['--c' as string]: ledColor }} aria-hidden="true" />
-              <span aria-live="polite">{statusLabel(sync, now)}</span>
-            </span>
-
+          <div className="flex flex-wrap items-center gap-2.5">
             {chronoWindow && (
               <button
                 type="button"
@@ -116,7 +122,7 @@ export function StatusBar({ projects }: { projects: Project[] }) {
                   click();
                   setChronoWindow(null);
                 }}
-                className="inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-hot-soft px-1.5 py-0.5 text-[10px] font-medium text-hot-ink transition hover:opacity-90"
+                className="mono inline-flex h-7 items-center gap-1.5 rounded-[var(--radius-sm)] bg-hot-soft px-2.5 text-[10px] font-semibold tracking-[0.08em] text-hot-ink transition hover:opacity-90"
                 aria-label="Clear Chrono-Pulse date filter"
                 title="Click to clear active Chrono-Pulse date filter"
               >
@@ -128,64 +134,62 @@ export function StatusBar({ projects }: { projects: Project[] }) {
                 <X size={10} aria-hidden="true" />
               </button>
             )}
+            <LiveClock />
           </div>
         </div>
+      </div>
 
-        {/* Center Zone: Keyboard Legend + Live Interactive Clock / Stopwatch */}
-        <div className="flex flex-wrap items-center gap-3 lg:justify-center">
-          <div className="hidden items-center gap-3 text-[11px] text-mute sm:flex">
-            <span className="inline-flex items-center gap-1">
-              <Kbd>{modKey()}</Kbd>
-              <Kbd>K</Kbd>
-              <span>Search</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Kbd>T</Kbd>
-              <span>Theme</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Kbd>M</Kbd>
-              <span>Audio</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Kbd>1</Kbd>
-              <Kbd>2</Kbd>
-              <Kbd>3</Kbd>
-              <span>Views</span>
-            </span>
-          </div>
-          <span className="hidden h-3.5 w-px bg-hairline-strong sm:inline-block" aria-hidden="true" />
-          <LiveClock />
+      {/* Lower Hardware Controls & Shortcut Legend */}
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="hidden flex-wrap items-center gap-4 text-[11px] text-mute sm:flex">
+          <span className="inline-flex items-center gap-1">
+            <Kbd>{modKey()}</Kbd>
+            <Kbd>K</Kbd>
+            <span>Command</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Kbd>T</Kbd>
+            <span>Theme</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Kbd>M</Kbd>
+            <span>Audio</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Kbd>1</Kbd>
+            <Kbd>2</Kbd>
+            <Kbd>3</Kbd>
+            <span>Views</span>
+          </span>
         </div>
 
-        {/* Right Zone: Vault Health, Conditional API Quota & Force Sync */}
-        <div className="mono flex flex-wrap items-center gap-2.5 text-[10.5px] tracking-[0.06em] text-mute lg:justify-end">
+        <div className="mono flex flex-wrap items-center gap-2 text-[10.5px] tracking-[0.08em] text-mute">
           <button
             type="button"
             onClick={() => {
               click();
               setSettings(true, 'vault');
             }}
-            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-hairline bg-surface px-2.5 text-dim transition hover:border-hairline-strong hover:text-ink"
+            className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-[var(--radius-sm)] border border-hairline bg-surface px-2.5 text-dim transition hover:border-hairline-strong hover:text-ink"
             aria-label={`Vault storage mirrors: ${vaultStatus.healthyCount} of 3 healthy`}
             title={`Triple-store Vault rev ${vaultStatus.rev} · ${vaultStatus.healthyCount}/3 mirrors healthy · open Vault Diagnostics`}
           >
             <span className="led-dot" style={{ ['--c' as string]: vaultLed }} aria-hidden="true" />
-            <span>Vault {vaultStatus.healthyCount}/3</span>
+            <span>VAULT {vaultStatus.healthyCount}/3</span>
           </button>
 
           {rate && (
             <span
-              className="inline-flex h-7 items-center gap-2 rounded-full border border-hairline bg-surface px-2.5"
+              className="inline-flex h-7 items-center gap-2 rounded-[var(--radius-sm)] border border-hairline bg-surface px-2.5"
               title={resetSec > 0 ? `GitHub API quota resets in ${mm}:${ss}` : 'GitHub API quota'}
             >
               <span className="text-mute">API</span>
               <b className="font-semibold" style={{ color: qInk }}>
                 {rate.remaining}/{rate.limit}
               </b>
-              <span className="h-1.5 w-11 overflow-hidden rounded-full bg-tint shadow-[inset_0_0_0_1px_var(--hairline)]">
+              <span className="h-1.5 w-11 overflow-hidden rounded-[2px] bg-tint shadow-[inset_0_0_0_1px_var(--hairline)]">
                 <span
-                  className="block h-full rounded-full transition-all duration-300"
+                  className="block h-full transition-all duration-300"
                   style={{ width: `${q * 100}%`, background: qLed }}
                 />
               </span>
@@ -195,7 +199,7 @@ export function StatusBar({ projects }: { projects: Project[] }) {
 
           <ForceSyncButton
             variant="text"
-            className="h-7! rounded-full! border border-hairline bg-surface px-2.5! hover:border-hairline-strong"
+            className="h-7! rounded-[var(--radius-sm)]! border border-hairline bg-surface px-2.5! hover:border-hairline-strong"
           />
         </div>
       </div>

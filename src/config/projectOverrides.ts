@@ -20,9 +20,9 @@ export interface ProjectOverride {
 }
 
 /**
- * Static baseline curation layer for KRUNKED STUDIO. Keys are repository names.
- * User-level overrides saved in `vault.curation[slug]` take precedence over this map.
- * Art styles, glyphs, and non-purple OKLCH accents are curated so zero neighboring builds repeat style or hue.
+ * Static baseline curation layer for KRUNKED // MONOLITH STUDIO.
+ * Keys are repository names; user overrides in `vault.curation[slug]` take precedence.
+ * Non-purple OKLCH accents, bespoke scene identities, and punchy editorial copy across all 18 builds.
  */
 export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   'krunked-fpv.github.io': { hidden: true },
@@ -32,13 +32,13 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
     tagline: 'Hardware vinyl-sniping console with bundle optimizer, haggle desk & 3D crate.',
     category: 'Audio/Vinyl',
     artStyle: 'prism',
-    accent: 28,
+    accent: 72,
     glyph: 'Radar',
     featured: true,
   },
   krunked_skymap: {
     displayName: 'Sky-Map',
-    tagline: '60fps aerospace command deck — live ADS-B traffic, balloons & SGP4 orbits.',
+    tagline: '60fps aerospace command deck tracking live ADS-B traffic, balloons & SGP4 orbits.',
     category: 'Hardware/Sky',
     artStyle: 'orbital',
     accent: 196,
@@ -47,7 +47,7 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   },
   discogs_collection: {
     displayName: 'Vinyl Vault',
-    tagline: 'WebGL2 direct-drive turntable, twin-deck clash arena & tactile 3D crate.',
+    tagline: 'WebGL2 direct-drive turntable, twin-deck clash arena & tactile 3D record crate.',
     category: 'Audio/Vinyl',
     artStyle: 'groove',
     accent: 46,
@@ -65,24 +65,24 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   },
   pokemath: {
     displayName: 'PokeMath',
-    tagline: 'Adaptive Pokemon math workbench with manipulatives & offline PokeNav camp.',
+    tagline: 'Adaptive Pokemon math workbench with tactile manipulatives & offline PokeNav camp.',
     category: 'Game',
     artStyle: 'synthwave',
-    accent: 20,
+    accent: 28,
     glyph: 'Gamepad2',
   },
   learning_languages: {
     displayName: 'Wanderling',
-    tagline: 'Tactile atlas of 16 living languages, 256 cultural units & 9 arcade games.',
+    tagline: 'Tactile world atlas of 16 living languages, 256 cultural units & 9 arcade games.',
     category: 'App',
     artStyle: 'orbital',
-    accent: 218,
+    accent: 214,
     glyph: 'Languages',
     featured: true,
   },
   ozias_laboratory: {
     displayName: "Ozias's Lab",
-    tagline: 'Multi-grade math battle arena & Pokedex quest built for Ozias.',
+    tagline: 'Multi-grade math battle arena & Pokedex quest engineered for Ozias.',
     category: 'App',
     artStyle: 'groove',
     accent: 146,
@@ -93,12 +93,12 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
     tagline: '2.5D Warcraft-style mazing tower defense with hybrid elemental fusions.',
     category: 'Game',
     artStyle: 'topo',
-    accent: 68,
+    accent: 64,
     glyph: 'Hammer',
   },
   dojo: {
     displayName: 'Starlight Island',
-    tagline: 'Cozy retro handheld RPG across 18 biomes and all 1,025 Pokemon.',
+    tagline: 'Cozy retro handheld RPG spanning 18 biomes and all 1,025 Pokemon.',
     category: 'Game',
     artStyle: 'synthwave',
     accent: 184,
@@ -106,7 +106,7 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   },
   taxquest: {
     displayName: 'TaxQuest',
-    tagline: 'Air-gapped W-2/1099 tax sanctuary & audit defense optimizer.',
+    tagline: 'Air-gapped W-2/1099 tax sanctuary & audit-defense optimizer.',
     category: 'App',
     artStyle: 'prism',
     accent: 138,
@@ -114,10 +114,10 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   },
   'bitforge-80': {
     displayName: 'BitForge-80',
-    tagline: 'Tactile 128x128 pixel ASMR console & single-URL cartridge arcade.',
+    tagline: 'Tactile 128x128 pixel ASMR fantasy console & single-URL cartridge arcade.',
     category: 'Game',
     artStyle: 'groove',
-    accent: 192,
+    accent: 112,
     glyph: 'Cpu',
   },
   alchemists_ledger: {
@@ -125,7 +125,7 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
     tagline: 'Zero-HUD apothecary studio, Suminagashi fluid workshop & kinetic cellar.',
     category: 'Game',
     artStyle: 'topo',
-    accent: 38,
+    accent: 42,
     glyph: 'FlaskRound',
   },
   swarm_tycoon: {
@@ -138,7 +138,7 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   },
   'clausehound-ai': {
     displayName: 'ClauseHound',
-    tagline: 'Offline contract trap analyzer, junk-fee scalpel & counter-drafter.',
+    tagline: 'Offline contract trap analyzer, junk-fee scalpel & precision counter-drafter.',
     category: 'Automation',
     artStyle: 'prism',
     accent: 206,
@@ -146,31 +146,31 @@ export const PROJECT_OVERRIDES: Record<string, Partial<ProjectOverride>> = {
   },
   'chaosdeck-sre': {
     displayName: 'ChaosDeck SRE',
-    tagline: 'Tactical cloud outage simulator & incident commander roguelike.',
+    tagline: 'Tactical cloud outage simulator & real-time incident commander roguelike.',
     category: 'Automation',
     artStyle: 'synthwave',
-    accent: 34,
+    accent: 32,
     glyph: 'Activity',
   },
   greg_n_friends: {
     displayName: 'WildPulse',
-    tagline: 'Real-time bio-telemetry & kinetic wildlife command deck.',
+    tagline: 'Real-time bio-telemetry radar & kinetic wildlife command deck.',
     category: 'Hardware/Sky',
-    artStyle: 'orbital',
-    accent: 118,
+    artStyle: 'groove',
+    accent: 128,
     glyph: 'Radar',
   },
   violets_homework: {
     displayName: 'Firefly Sanctuary',
-    tagline: "Violet's interactive twilight firefly learning & study sanctuary.",
+    tagline: "Violet's twilight firefly learning bench & calm study sanctuary.",
     category: 'App',
-    artStyle: 'synthwave',
-    accent: 86,
+    artStyle: 'topo',
+    accent: 92,
     glyph: 'NotebookPen',
   },
   starlight_v2: {
     displayName: 'Starlight v2',
-    tagline: 'Next-gen architecture prototype currently initializing on the bench.',
+    tagline: 'Next-gen architectural prototype currently initializing on the bench.',
     category: 'Engine',
     artStyle: 'orbital',
     accent: 202,

@@ -53,7 +53,7 @@ export function StatCounter({
         {tone !== 'neutral' && (
           <span className="led-dot" style={{ ['--c' as string]: TONE_LED[tone] }} aria-hidden="true" />
         )}
-        <span className="eyebrow whitespace-nowrap text-[9.5px]! tracking-[0.09em]! min-[480px]:text-[10px]! min-[480px]:tracking-[0.14em]!">
+        <span className="eyebrow whitespace-nowrap text-[9.5px]! tracking-[0.12em]! min-[480px]:text-[10px]! min-[480px]:tracking-[0.16em]!">
           {shortLabel ? (
             <>
               <span className="min-[480px]:hidden">{shortLabel}</span>
@@ -66,10 +66,10 @@ export function StatCounter({
       </div>
       <div
         data-tabular
-        className="mono mt-1 flex items-baseline gap-1 text-[22px] font-semibold leading-none tracking-[-0.03em] text-ink sm:text-[24px]"
+        className="mono mt-1 flex items-baseline gap-1 text-[22px] font-bold leading-none tracking-[-0.03em] text-ink sm:text-[24px]"
       >
         {displayText !== undefined ? <span>{displayText}</span> : <motion.span>{text}</motion.span>}
-        {suffix && <span className="text-[11.5px] font-medium tracking-normal text-mute">{suffix}</span>}
+        {suffix && <span className="text-[11px] font-medium tracking-wider text-mute uppercase">{suffix}</span>}
         {detail && (
           <span className="ml-auto hidden truncate text-[10px] font-normal tracking-wider text-mute sm:inline">
             {detail}

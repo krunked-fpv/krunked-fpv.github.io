@@ -5,7 +5,7 @@ import { formatDelta } from '../../domain/freshness';
 import { useNow } from '../../hooks/useNow';
 import type { Project } from '../../types/project';
 
-/** Latest commit telemetry line: branch pill + 7-char SHA + message. Slides cleanly on head update. */
+/** Latest commit telemetry line: sharp branch tag + 7-char SHA + message. */
 export function CommitTicker({ project, showMeta = false }: { project: Project; showMeta?: boolean }) {
   const now = useNow(30_000);
   const c = project.latestCommit;
@@ -29,13 +29,13 @@ export function CommitTicker({ project, showMeta = false }: { project: Project; 
       <AnimatePresence initial={false} mode="popLayout">
         <motion.div
           key={`${project.id}-${c.sha}`}
-          initial={{ y: 16, opacity: 0 }}
+          initial={{ y: 14, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -16, opacity: 0 }}
+          exit={{ y: -14, opacity: 0 }}
           transition={SPRING}
           className="flex min-w-0 items-center gap-2 whitespace-nowrap"
         >
-          <span className="chip h-[20px]! shrink-0 rounded-[5px]! px-1.5! text-[10px]!">
+          <span className="chip h-[20px]! shrink-0 rounded-[var(--radius-xs)]! px-1.5! text-[10px]!">
             <GitBranch size={10} aria-hidden="true" />
             {project.defaultBranch}
           </span>

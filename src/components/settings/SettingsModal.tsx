@@ -234,12 +234,12 @@ export function SettingsModal() {
 
   return (
     <Modal open={open} onClose={close} label="Studio settings" size="lg" mobileSheet>
-      <div className="surface surface-elevated flex max-h-[86dvh] flex-col overflow-hidden rounded-[16px]! bg-elevated">
+      <div className="surface surface-elevated flex max-h-[86dvh] flex-col overflow-hidden rounded-[10px]! bg-elevated">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-hairline px-5 py-4 sm:px-6">
           <div>
-            <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-ink">Studio Console</h2>
-            <p className="mono mt-0.5 text-[10.5px] tracking-[0.12em] text-mute">
+            <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-ink">Monolith Console</h2>
+            <p className="mono mt-0.5 text-[10.5px] tracking-[0.14em] text-mute">
               CHASSIS FINISH · TRIPLE-STORE VAULT · API FIREWALL
             </p>
           </div>
@@ -248,11 +248,11 @@ export function SettingsModal() {
           </IconButton>
         </div>
 
-        {/* 3-Tab Recessed Hardware Switcher */}
+        {/* 3-Tab Recessed Monolith Switcher */}
         <div
           role="tablist"
           aria-label="Settings tabs"
-          className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset/80 px-5 py-2 sm:px-6"
+          className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset/85 px-5 py-2 sm:px-6"
         >
           {TABS.map(({ key, label, Icon }) => {
             const active = tab === key;
@@ -268,7 +268,7 @@ export function SettingsModal() {
                     setTab(key);
                   }
                 }}
-                className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] px-3 text-[12.5px] font-medium whitespace-nowrap transition-colors ${
+                className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[4px] px-3 text-[12.5px] font-medium whitespace-nowrap transition-colors ${
                   active ? 'text-ink' : 'text-mute hover:bg-hover hover:text-dim'
                 }`}
               >
@@ -276,8 +276,13 @@ export function SettingsModal() {
                   <motion.span
                     layoutId="settings-tab-ind"
                     transition={SPRING}
-                    className="absolute inset-0 rounded-[8px] border border-hairline-strong bg-elevated shadow-xs"
-                  />
+                    className="absolute inset-0 rounded-[4px] border border-hairline-strong bg-elevated"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-2 bottom-0 h-[1.5px] rounded-full bg-hot"
+                    />
+                  </motion.span>
                 )}
                 <Icon size={13} className="relative" />
                 <span className="relative">{label}</span>
@@ -290,30 +295,34 @@ export function SettingsModal() {
         <div className="thin-scroll min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
           {tab === 'prefs' && (
             <div className="flex flex-col gap-5">
-              {/* Dual Hardware Theme */}
+              {/* Dual Monolith / Vellum Theme */}
               <section className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="eyebrow text-dim!">Hardware Chassis Finish</h3>
-                  <span className="mono text-[10.5px] uppercase tracking-wider text-mute">{vault.prefs.theme}</span>
+                  <h3 className="eyebrow text-dim!">Exhibition Surface Finish</h3>
+                  <span className="mono text-[10.5px] uppercase tracking-wider text-mute">
+                    {vault.prefs.theme === 'daylight' ? 'VELLUM' : 'MONOLITH'}
+                  </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Hardware theme">
                   {(
                     [
                       {
                         id: 'obsidian' as const,
-                        name: 'Anodized Obsidian',
-                        desc: 'Velvety carbon dark ground with International Orange LEDs.',
+                        name: 'Monolith Cinema',
+                        desc: 'Pure OLED pitch ground (#030304) with Kinetic Acid-Lime (#D2FF28) instrumentation.',
                         Icon: Moon,
-                        swatchBg: '#060709',
-                        swatchCard: '#10131A',
+                        swatchBg: '#030304',
+                        swatchCard: '#0C0D10',
+                        swatchDot: '#D2FF28',
                       },
                       {
                         id: 'daylight' as const,
-                        name: 'Braun Daylight',
-                        desc: 'Architectural ceramic-porcelain light finish tuned to WCAG AA.',
+                        name: 'Kunsthalle Vellum',
+                        desc: 'Archival Swiss vellum ground (#F5F3EC) with deep pitch gallery ink (#0A0A0B).',
                         Icon: Sun,
-                        swatchBg: '#F2F0EA',
+                        swatchBg: '#F5F3EC',
                         swatchCard: '#FFFFFF',
+                        swatchDot: '#0A0A0B',
                       },
                     ] as const
                   ).map((opt) => {
@@ -330,10 +339,10 @@ export function SettingsModal() {
                             applyThemeImmediate(opt.id, setTheme);
                           }
                         }}
-                        className={`flex flex-col gap-2.5 rounded-[12px] border p-4 text-left transition-colors ${
+                        className={`flex flex-col gap-2.5 rounded-[6px] border p-4 text-left transition-colors ${
                           selected
-                            ? 'border-hairline-strong bg-inset ring-1 ring-hot/50'
-                            : 'border-hairline bg-inset/40 hover:border-hairline-strong hover:bg-hover'
+                            ? 'border-hot/70 bg-inset ring-1 ring-hot/40'
+                            : 'border-hairline bg-inset/45 hover:border-hairline-strong hover:bg-hover'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -342,12 +351,12 @@ export function SettingsModal() {
                             {opt.name}
                           </span>
                           <span
-                            className="flex h-5 w-11 items-center justify-end rounded-[5px] border border-hairline p-1"
+                            className="flex h-5 w-11 items-center justify-end rounded-[3px] border border-hairline p-1"
                             style={{ background: opt.swatchBg }}
                             aria-hidden="true"
                           >
-                            <span className="h-full w-4 rounded-[2px]" style={{ background: opt.swatchCard }} />
-                            <span className="ml-1 size-1.5 rounded-full bg-hot" />
+                            <span className="h-full w-4 rounded-[1px]" style={{ background: opt.swatchCard }} />
+                            <span className="ml-1 size-1.5 rounded-full" style={{ background: opt.swatchDot }} />
                           </span>
                         </div>
                         <p className="text-[12.5px] leading-snug text-dim">{opt.desc}</p>
@@ -358,7 +367,7 @@ export function SettingsModal() {
               </section>
 
               {/* Procedural WebAudio Micro-Foley */}
-              <section className="flex flex-col gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4">
+              <section className="flex flex-col gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h3 className="eyebrow flex items-center gap-1.5 text-dim!">
@@ -389,7 +398,7 @@ export function SettingsModal() {
                         key={cue}
                         type="button"
                         onClick={() => handleTestCue(cue)}
-                        className="mono rounded-[6px] border border-hairline bg-surface px-2.5 py-1 text-[10.5px] uppercase tracking-wider text-dim transition-colors hover:border-hairline-strong hover:text-ink"
+                        className="mono rounded-[4px] border border-hairline bg-surface px-2.5 py-1 text-[10.5px] uppercase tracking-wider text-dim transition-colors hover:border-hairline-strong hover:text-ink"
                       >
                         {cue}
                       </button>
@@ -402,7 +411,7 @@ export function SettingsModal() {
               </section>
 
               {/* Local Curation Overview */}
-              <section className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4">
+              <section className="flex flex-wrap items-center justify-between gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4">
                 <div>
                   <h3 className="eyebrow text-dim!">Local Overrides &amp; Dock</h3>
                   <p className="mt-1 text-[12.5px] text-dim">
@@ -419,7 +428,7 @@ export function SettingsModal() {
           {tab === 'vault' && (
             <div className="flex flex-col gap-5">
               {/* Triple-Store Health Mirrors */}
-              <section className="flex flex-col gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4">
+              <section className="flex flex-col gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h3 className="eyebrow flex items-center gap-1.5 text-dim!">
@@ -453,11 +462,11 @@ export function SettingsModal() {
                     return (
                       <div
                         key={key}
-                        className="flex flex-col gap-1 rounded-[10px] border border-hairline bg-surface px-3 py-2.5"
+                        className="flex flex-col gap-1 rounded-[4px] border border-hairline bg-surface px-3 py-2.5"
                       >
                         <div className="flex items-center gap-1.5">
                           <span
-                            className="size-[7px] rounded-full"
+                            className="size-[6px] rounded-full"
                             style={{ background: ok ? 'var(--led-online)' : 'var(--led-alarm)' }}
                             aria-hidden="true"
                           />
@@ -482,9 +491,9 @@ export function SettingsModal() {
                       {vaultStatus.cookieBytes} / {vaultStatus.cookieBudget} B ({cookiePct}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-surface">
+                  <div className="h-2 w-full overflow-hidden rounded-[2px] bg-surface">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full transition-all"
                       style={{
                         width: `${cookiePct}%`,
                         background:
@@ -501,7 +510,7 @@ export function SettingsModal() {
 
               {/* Portable Config I/O */}
               <section className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col justify-between gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4">
+                <div className="flex flex-col justify-between gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4">
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="eyebrow text-dim!">Portable Config V2</h3>
@@ -532,7 +541,7 @@ export function SettingsModal() {
                 </div>
 
                 {/* Safe 2-Step Reset */}
-                <div className="flex flex-col justify-between gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4">
+                <div className="flex flex-col justify-between gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4">
                   <div className="flex flex-col gap-1.5">
                     <h3 className="eyebrow text-dim!">Factory Reset</h3>
                     <p className="text-[12.5px] leading-relaxed text-dim">
@@ -557,7 +566,7 @@ export function SettingsModal() {
           {tab === 'diagnostics' && (
             <div className="flex flex-col gap-5">
               {/* Rate-Limit & ETag Telemetry */}
-              <section className="flex flex-col gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4">
+              <section className="flex flex-col gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h3 className="eyebrow text-dim!">GitHub API Telemetry &amp; ETag Cache</h3>
@@ -594,9 +603,9 @@ export function SettingsModal() {
                         {rate.remaining} / {rate.limit} · RESETS IN {resetCountdown}
                       </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface">
+                    <div className="h-2 w-full overflow-hidden rounded-[2px] bg-surface">
                       <div
-                        className="h-full rounded-full transition-all"
+                        className="h-full transition-all"
                         style={{
                           width: `${ratePct ?? 100}%`,
                           background:
@@ -619,7 +628,7 @@ export function SettingsModal() {
               {/* GitHub PAT & Strict Origin Firewall */}
               <form
                 onSubmit={(e) => void handleSaveAndTest(e)}
-                className="flex flex-col gap-3 rounded-[12px] border border-hairline bg-inset/70 p-4"
+                className="flex flex-col gap-3 rounded-[6px] border border-hairline bg-inset/70 p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <label htmlFor="pat-input" className="eyebrow flex items-center gap-1.5 text-dim!">
@@ -630,7 +639,7 @@ export function SettingsModal() {
                   </Chip>
                 </div>
 
-                <div className="flex items-start gap-2.5 rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5 text-[12px] leading-relaxed text-dim">
+                <div className="flex items-start gap-2.5 rounded-[4px] border border-hairline bg-surface px-3.5 py-2.5 text-[12px] leading-relaxed text-dim">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0 text-solar-ink" />
                   <span>
                     Use a <strong className="font-medium text-ink">fine-grained, read-only public token</strong> with zero write scopes. Origin firewall strictly enforces{' '}
@@ -654,7 +663,7 @@ export function SettingsModal() {
                       placeholder="github_pat_..."
                       autoComplete="off"
                       spellCheck={false}
-                      className="mono h-10 w-full rounded-[10px] border border-hairline bg-surface px-3 pr-10 text-[13px] text-ink outline-none placeholder:text-mute focus:border-hairline-strong"
+                      className="mono h-10 w-full rounded-[6px] border border-hairline bg-surface px-3 pr-10 text-[13px] text-ink outline-none placeholder:text-mute focus:border-hairline-strong"
                     />
                     <button
                       type="button"

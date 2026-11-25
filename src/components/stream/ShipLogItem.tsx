@@ -50,15 +50,15 @@ export function ShipLogItem({
     >
       <span className="absolute left-[5px] top-2 h-full w-px bg-hairline" aria-hidden="true" />
       <span
-        className="absolute left-0 top-[7px] grid size-[11px] place-items-center rounded-full bg-surface"
+        className="absolute left-0 top-[7px] grid size-[11px] place-items-center rounded-[2px] bg-surface"
         style={{ boxShadow: `0 0 0 1px ${tok.dot}` }}
       >
-        <span className="size-[5px] rounded-full" style={{ background: tok.dot }} />
+        <span className="size-[5px] rounded-[1px]" style={{ background: tok.dot }} />
       </span>
 
       <div className="flex min-w-0 items-center justify-between gap-2">
         <span
-          className="mono flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium tracking-[0.08em]"
+          className="mono flex min-w-0 items-center gap-1.5 truncate text-[10px] font-semibold tracking-[0.1em]"
           style={{ color: tok.ink }}
         >
           <Icon size={11} className="shrink-0" aria-hidden="true" />
@@ -79,7 +79,7 @@ export function ShipLogItem({
                 foley.latch();
                 setPeek(log.repo, null, isLive ? 'sandbox' : 'brief');
               }}
-              className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-ink transition-colors hover:text-hot-ink"
+              className="min-w-0 flex-1 cursor-pointer truncate text-left text-[13px] font-medium text-ink transition-colors hover:text-hot-ink"
               title={label}
             >
               {label}

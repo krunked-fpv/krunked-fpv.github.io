@@ -5,9 +5,9 @@ import {
   Eye,
   Filter,
   GitCommitHorizontal,
-  Grid3x3,
   History,
   LayoutGrid,
+  List,
   Moon,
   QrCode,
   RefreshCw,
@@ -133,15 +133,15 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
     const actions: ActionDef[] = [
       {
         id: 'toggle-theme',
-        label: isDaylight ? 'Switch Theme: Anodized Obsidian (Dark)' : 'Switch Theme: Braun Daylight (Light)',
+        label: isDaylight ? 'Switch Theme: Monolith Cinema (Dark)' : 'Switch Theme: Kunsthalle Vellum (Light)',
         hint: 'Theme [T]',
-        keywords: ['theme', 'dark', 'light', 'obsidian', 'daylight', 'braun', 'appearance'],
+        keywords: ['theme', 'dark', 'light', 'obsidian', 'daylight', 'monolith', 'vellum', 'appearance'],
         Icon: isDaylight ? Moon : Sun,
         run: () => {
           const next: ThemeMode = isDaylight ? 'obsidian' : 'daylight';
           foley.click();
           switchThemeWithTransition(next, st.setTheme);
-          st.toast(next === 'daylight' ? 'Switched to Braun Daylight' : 'Switched to Anodized Obsidian', 'info');
+          st.toast(next === 'daylight' ? 'Switched to Kunsthalle Vellum' : 'Switched to Monolith Cinema', 'info');
         },
       },
       {
@@ -183,9 +183,9 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
         : []),
       {
         id: 'v-bento',
-        label: 'Switch View: Gallery View',
+        label: 'Switch View: Exhibition Wall',
         hint: 'View [1]',
-        keywords: ['view', 'bento', 'gallery', 'showcase', 'cards'],
+        keywords: ['view', 'exhibition', 'bento', 'gallery', 'showcase', 'cards'],
         Icon: LayoutGrid,
         run: () => {
           foley.click();
@@ -194,10 +194,10 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
       },
       {
         id: 'v-grid',
-        label: 'Switch View: Telemetry Index',
+        label: 'Switch View: Swiss Catalog Index',
         hint: 'View [2]',
-        keywords: ['view', 'grid', 'telemetry', 'compact', 'table', 'index'],
-        Icon: Grid3x3,
+        keywords: ['view', 'index', 'grid', 'telemetry', 'compact', 'table', 'catalog'],
+        Icon: List,
         run: () => {
           foley.click();
           st.setView('grid');
@@ -205,9 +205,9 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
       },
       {
         id: 'v-matrix',
-        label: 'Switch View: Ship Timeline',
+        label: 'Switch View: Ship Dispatch',
         hint: 'View [3]',
-        keywords: ['view', 'matrix', 'timeline', 'log', 'history'],
+        keywords: ['view', 'dispatch', 'matrix', 'timeline', 'log', 'history'],
         Icon: History,
         run: () => {
           foley.click();
@@ -390,9 +390,9 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
 
   return (
     <Modal open={open} onClose={close} label="Command palette" align="top" size="md" initialFocus={input}>
-      <div className="surface surface-elevated overflow-hidden rounded-[16px]! bg-elevated">
+      <div className="surface surface-elevated overflow-hidden rounded-[10px]! bg-elevated">
         {/* Clean inset search header */}
-        <div className="flex items-center gap-3 border-b border-hairline bg-inset/60 px-4 transition-colors focus-within:border-hot/60 focus-within:bg-inset">
+        <div className="flex items-center gap-3 border-b border-hairline bg-inset/70 px-4 transition-colors focus-within:border-hot/70 focus-within:bg-inset">
           <Search size={16} className="shrink-0 text-hot-ink" aria-hidden="true" />
           <input
             ref={input}
@@ -406,8 +406,8 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
             aria-expanded="true"
             aria-controls="palette-list"
             aria-activedescendant={items[active] ? `pal-${items[active]!.id}` : undefined}
-            aria-label="Search apps, commits, and system commands"
-            placeholder="Search apps, commits, or commands..."
+            aria-label="Search worlds, commits, and studio commands"
+            placeholder="Search worlds, commits, or commands..."
             autoComplete="off"
             spellCheck={false}
             style={{ outline: 'none', boxShadow: 'none' }}
@@ -421,7 +421,7 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
           <Kbd>esc</Kbd>
         </div>
 
-        <ul id="palette-list" ref={list} role="listbox" className="thin-scroll max-h-[min(54vh,460px)] overflow-y-auto p-2">
+        <ul id="palette-list" ref={list} role="listbox" className="thin-scroll max-h-[min(54vh,460px)] overflow-y-auto p-1.5">
           {items.map((it, i) => {
             const on = i === active;
             const firstProject = it.type === 'project' && i === 0;
@@ -431,9 +431,9 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
               <li key={it.id} role="presentation">
                 {firstProject && (
                   <div className="flex items-center justify-between px-3 pb-1.5 pt-1">
-                    <span className="eyebrow">Studio Builds</span>
+                    <span className="eyebrow">Playable Worlds</span>
                     <span className="mono text-[9.5px] tracking-[0.12em] text-mute">
-                      {projectResultCount} AVAILABLE
+                      {projectResultCount} INDEXED
                     </span>
                   </div>
                 )}
@@ -448,14 +448,14 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                   aria-selected={on}
                   onPointerMove={() => !on && setActive(i)}
                   onClick={() => runItem(it)}
-                  className={`relative flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 transition-colors ${
+                  className={`relative flex cursor-pointer items-center gap-3 rounded-[4px] px-3 py-2.5 transition-colors ${
                     on ? 'bg-hover text-ink' : 'text-dim'
                   }`}
                 >
                   {on && (
                     <span
                       aria-hidden="true"
-                      className="absolute left-0 top-2 bottom-2 w-[2.5px] rounded-full bg-hot"
+                      className="absolute inset-y-1.5 left-0 w-[2px] bg-hot"
                     />
                   )}
 
@@ -497,7 +497,7 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                                 e.stopPropagation();
                                 runItem(it, 'peek');
                               }}
-                              className="grid size-7 place-items-center rounded-[7px] border border-hairline bg-surface text-dim transition-colors hover:border-hairline-strong hover:text-ink"
+                              className="grid size-7 place-items-center rounded-[4px] border border-hairline bg-surface text-dim transition-colors hover:border-hairline-strong hover:text-ink"
                               aria-label={`Live Peek ${it.project.displayName}`}
                               title="Live Peek [I]"
                             >
@@ -510,7 +510,7 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                                   e.stopPropagation();
                                   runItem(it, 'qr');
                                 }}
-                                className="grid size-7 place-items-center rounded-[7px] border border-hairline bg-surface text-dim transition-colors hover:border-hairline-strong hover:text-ink"
+                                className="grid size-7 place-items-center rounded-[4px] border border-hairline bg-surface text-dim transition-colors hover:border-hairline-strong hover:text-ink"
                                 aria-label={`QR handoff ${it.project.displayName}`}
                                 title="QR Handoff [Q]"
                               >
@@ -529,7 +529,7 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                     </>
                   ) : (
                     <>
-                      <span className="grid size-8 shrink-0 place-items-center rounded-[8px] border border-hairline bg-inset text-dim">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[4px] border border-hairline bg-inset text-dim">
                         <it.Icon size={14} />
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
@@ -550,7 +550,7 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
           )}
         </ul>
 
-        <div className="mono flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-hairline bg-inset/70 px-4 py-2.5 text-[10.5px] text-mute">
+        <div className="mono flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-hairline bg-inset/75 px-4 py-2.5 text-[10.5px] text-mute">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> nav

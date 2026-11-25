@@ -57,14 +57,14 @@ function HeaderPlate({
 
   return (
     <span
-      className="chip backdrop-blur-md"
+      className="chip rounded-[4px]! backdrop-blur-md"
       style={{
         color,
         background: 'var(--badge-bg)',
         boxShadow: 'inset 0 0 0 1px var(--badge-border)',
       }}
     >
-      {led && <span className="size-[6px] shrink-0 rounded-full" style={{ background: dot }} aria-hidden="true" />}
+      {led && <span className="size-[5px] shrink-0 rounded-full" style={{ background: dot }} aria-hidden="true" />}
       {children}
     </span>
   );
@@ -72,6 +72,7 @@ function HeaderPlate({
 
 export function PeekDrawer({ projects }: { projects: Project[] }) {
   const peek = useDeck((s) => s.peek);
+  const peekOrigin = useDeck((s) => s.peekOrigin);
   const peekTab = useDeck((s) => s.peekTab);
   const repos = useDeck((s) => s.repos);
   const setPeek = useDeck((s) => s.setPeek);
@@ -139,13 +140,13 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
       }
     };
 
-    window.addEventListener('keydown', onKey, true);
+    document.addEventListener('keydown', onKey, true);
     const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
 
     return () => {
       window.clearTimeout(t);
-      window.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('keydown', onKey, true);
       document.documentElement.style.overflow = prevOverflow;
       prevFocus.current?.focus?.();
     };
@@ -187,7 +188,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.45 }}
             onDragEnd={isMobile ? handleDragEnd : undefined}
-            className="surface surface-elevated relative flex h-[94dvh] w-full max-w-full flex-col overflow-hidden rounded-t-[20px]! rounded-b-none! bg-surface md:h-full md:w-[min(1020px,90vw)] md:rounded-l-[20px]! md:rounded-r-none!"
+            className="surface surface-elevated relative flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[10px]! rounded-b-none! bg-surface md:h-full md:w-[min(1080px,92vw)] md:rounded-l-[10px]! md:rounded-r-none!"
           >
             {/* Mobile Drag Grabber ONLY (scroll & iframe touches never trigger drag) */}
             <div
@@ -199,7 +200,10 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
             </div>
 
             {/* Cover Header */}
-            <div className="relative shrink-0 overflow-hidden border-b border-hairline">
+            <motion.div
+              layoutId={peekOrigin ? `cover-${peekOrigin}-${project.id}` : undefined}
+              className="relative shrink-0 overflow-hidden border-b border-hairline"
+            >
               <CoverArt project={project} fill scrim="stage" />
 
               <div className="relative z-10 flex flex-col gap-4 p-4 sm:px-6 sm:py-5">
@@ -229,7 +233,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                           'ok',
                         );
                       }}
-                      className="backdrop-blur-md"
+                      className="rounded-[6px]! backdrop-blur-md"
                       style={
                         project.pinned
                           ? undefined
@@ -244,7 +248,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => foley.click()}
-                      className="icon-btn backdrop-blur-md"
+                      className="icon-btn rounded-[6px]! backdrop-blur-md"
                       style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
                       aria-label={`Source of ${project.displayName} on GitHub`}
                       title="View on GitHub"
@@ -256,7 +260,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                       ref={closeBtn}
                       type="button"
                       onClick={close}
-                      className="icon-btn backdrop-blur-md"
+                      className="icon-btn rounded-[6px]! backdrop-blur-md"
                       style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
                       aria-label="Close inspector"
                     >
@@ -283,18 +287,18 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                       onClick={() => foley.relay()}
                       className="btn btn-primary shrink-0 px-4"
                     >
-                      Launch App <ExternalLink size={14} />
+                      Launch World <ExternalLink size={14} />
                     </a>
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* 4-Tab Recessed Hardware Bar */}
+            {/* 4-Tab Recessed Monolith Bar */}
             <div
               role="tablist"
               aria-label="Inspector sections"
-              className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset/80 px-4 py-2 sm:px-6"
+              className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset/85 px-4 py-2 sm:px-6"
             >
               {TABS.map(({ key, label, shortLabel, Icon }) => {
                 const active = activeTab === key;
@@ -310,7 +314,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                         setPeekTab(key);
                       }
                     }}
-                    className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] px-3 text-[12px] font-medium whitespace-nowrap transition-colors sm:text-[12.5px] ${
+                    className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[4px] px-3 text-[12px] font-medium whitespace-nowrap transition-colors sm:text-[12.5px] ${
                       active ? 'text-ink' : 'text-mute hover:bg-hover hover:text-dim'
                     }`}
                   >
@@ -318,8 +322,13 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                       <motion.span
                         layoutId="peek-tab-ind"
                         transition={SPRING}
-                        className="absolute inset-0 rounded-[8px] border border-hairline-strong bg-elevated shadow-xs"
-                      />
+                        className="absolute inset-0 rounded-[4px] border border-hairline-strong bg-elevated"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-x-2 bottom-0 h-[1.5px] rounded-full bg-hot"
+                        />
+                      </motion.span>
                     )}
                     <Icon size={13} className="relative shrink-0" />
                     <span className="relative sm:hidden">{shortLabel}</span>

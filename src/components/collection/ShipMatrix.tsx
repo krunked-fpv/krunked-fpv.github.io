@@ -82,7 +82,7 @@ function dayLabel(iso: string, now: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-/** Chronological ship timeline: deduplicated events + repo pushes, grouped by editorial day headers. */
+/** Chronological ship dispatch timeline: deduplicated events + repo pushes, grouped by editorial day headers. */
 export function ShipMatrix({ projects }: { projects: Project[] }) {
   const logs = useShipLogs(projects);
   const chronoWindow = useDeck((s) => s.chronoWindow);
@@ -133,25 +133,25 @@ export function ShipMatrix({ projects }: { projects: Project[] }) {
 
   if (!groups.length) {
     return (
-      <div className="surface flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-        <p className="text-[14.5px] font-medium text-ink">No ships recorded in this window</p>
+      <div className="flex flex-col items-center justify-center gap-2 rounded-[8px] border border-hairline bg-surface px-6 py-12 text-center">
+        <p className="text-[14.5px] font-medium text-ink">No dispatches recorded in this window</p>
         <p className="mono text-[11px] text-mute">Adjust your filter or clear the active Chrono-Pulse date window.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-6">
       {groups.map((g) => (
-        <section key={g.day}>
-          <div className="flex w-full items-center justify-between border-b border-hairline bg-chassis/95 px-1 py-2.5 backdrop-blur-md md:sticky md:top-[calc(var(--topbar-h)+var(--filterbar-h))] md:z-10">
+        <section key={g.day} className="overflow-hidden rounded-[8px] border border-hairline bg-surface">
+          <div className="flex w-full items-center justify-between border-b border-hairline bg-inset/90 px-4 py-2.5 backdrop-blur-md md:sticky md:top-[calc(var(--topbar-h)+var(--filterbar-h))] md:z-10">
             <h3 className="eyebrow text-ink!">{g.day}</h3>
             <span className="mono text-[10px] tracking-[0.14em] text-mute">
-              {String(g.items.length).padStart(2, '0')} {g.items.length === 1 ? 'SHIP' : 'SHIPS'}
+              {String(g.items.length).padStart(2, '0')} {g.items.length === 1 ? 'DISPATCH' : 'DISPATCHES'}
             </span>
           </div>
 
-          <ol className="relative ml-2 mt-3 border-l border-hairline pl-5 pt-1">
+          <ol className="divide-y divide-hairline">
             {g.items.map((e) => {
               const p = byName.get(e.repo);
               const age = now - Date.parse(e.at);
@@ -168,74 +168,72 @@ export function ShipMatrix({ projects }: { projects: Project[] }) {
                 <motion.li
                   key={e.id}
                   layout
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={SPRING}
-                  className="relative pb-2.5 last:pb-0"
+                  className="group relative flex items-center justify-between gap-3 px-4 py-2.5 transition-colors before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-[2px] before:bg-hot before:opacity-0 before:transition-opacity hover:bg-hover hover:before:opacity-100"
                 >
-                  <span
-                    className="absolute -left-[25px] top-3.5 size-2 rounded-full ring-2 ring-chassis"
-                    style={{ background: tok.dot }}
-                    aria-hidden="true"
-                  />
-                  <div className="group flex items-center justify-between gap-3 rounded-[11px] border border-transparent px-3 py-2 transition-colors hover:border-hairline hover:bg-surface">
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap">
-                      <time className="mono w-11 shrink-0 text-[11px] text-mute" dateTime={e.at}>
-                        {t}
-                      </time>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          foley.latch();
-                          setPeek(e.repo, 'card', p?.launchUrl ? 'sandbox' : 'brief');
-                        }}
-                        className="min-w-0 max-w-[220px] shrink-0 truncate text-left text-[14px] font-semibold tracking-[-0.015em] text-ink transition-colors hover:text-hot-ink"
-                      >
-                        {label}
-                      </button>
-                      <span
-                        className="mono shrink-0 rounded-[5px] px-1.5 py-0.5 text-[10px] font-medium tracking-[0.08em]"
-                        style={{
-                          color: tok.ink,
-                          background: tok.soft,
-                        }}
-                      >
-                        {e.label}
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap">
+                    <span
+                      className="size-[6px] shrink-0 rounded-full"
+                      style={{ background: tok.dot }}
+                      aria-hidden="true"
+                    />
+                    <time className="mono w-11 shrink-0 text-[11px] text-mute" dateTime={e.at}>
+                      {t}
+                    </time>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        foley.latch();
+                        setPeek(e.repo, 'card', p?.launchUrl ? 'sandbox' : 'brief');
+                      }}
+                      className="min-w-0 max-w-[220px] shrink-0 truncate text-left text-[14px] font-semibold tracking-[-0.015em] text-ink transition-colors hover:text-hot-ink"
+                    >
+                      {label}
+                    </button>
+                    <span
+                      className="mono shrink-0 rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium tracking-[0.08em]"
+                      style={{
+                        color: tok.ink,
+                        background: tok.soft,
+                      }}
+                    >
+                      {e.label}
+                    </span>
+                    {e.detail && (
+                      <span className="mono min-w-0 flex-1 truncate text-[11.5px] text-dim" title={e.detail}>
+                        {e.detail}
                       </span>
-                      {e.detail && (
-                        <span className="mono min-w-0 flex-1 truncate text-[11.5px] text-dim" title={e.detail}>
-                          {e.detail}
-                        </span>
-                      )}
-                    </div>
+                    )}
+                  </div>
 
-                    <div className="flex shrink-0 items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          foley.latch();
-                          setPeek(e.repo, 'card', p?.launchUrl ? 'sandbox' : 'brief');
-                        }}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        foley.latch();
+                        setPeek(e.repo, 'card', p?.launchUrl ? 'sandbox' : 'brief');
+                      }}
+                      className="icon-btn icon-btn-sm"
+                      aria-label={`Inspect ${label}`}
+                      title="Live Peek"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    {p?.launchUrl && (
+                      <a
+                        href={p.launchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => foley.relay()}
                         className="icon-btn icon-btn-sm"
-                        aria-label={`Inspect ${label}`}
-                        title="Live Peek"
+                        aria-label={`Launch ${label}`}
+                        title="Launch app"
                       >
-                        <Eye size={14} />
-                      </button>
-                      {p?.launchUrl && (
-                        <a
-                          href={p.launchUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => foley.relay()}
-                          className="icon-btn icon-btn-sm"
-                          aria-label={`Launch ${label}`}
-                          title="Launch app"
-                        >
-                          <ExternalLink size={14} />
-                        </a>
-                      )}
-                    </div>
+                        <ExternalLink size={14} />
+                      </a>
+                    )}
                   </div>
                 </motion.li>
               );

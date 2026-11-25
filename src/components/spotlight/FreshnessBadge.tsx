@@ -16,7 +16,7 @@ export function PulseBeacon({ project }: { project: Project }) {
   if (!f.pulse) {
     return (
       <span
-        className="inline-block size-[7px] shrink-0 rounded-full"
+        className="inline-block size-[6px] shrink-0 rounded-full"
         style={{ background: tok.dot }}
         aria-hidden="true"
       />
@@ -25,7 +25,7 @@ export function PulseBeacon({ project }: { project: Project }) {
   return <span className="beacon shrink-0" style={{ ['--c' as string]: tok.dot }} aria-hidden="true" />;
 }
 
-/** Live-ticking, dual-theme WCAG-AA freshness pill with dynamic status beacon. */
+/** Live-ticking, dual-theme WCAG-AA freshness plate with sharp Monolith chamfer geometry. */
 export function FreshnessBadge({
   project,
   compact = false,
@@ -33,7 +33,7 @@ export function FreshnessBadge({
 }: {
   project: Project;
   compact?: boolean;
-  /** True when placed over cover-art canvas (uses high-contrast --badge-bg glass plate). */
+  /** True when placed over cover-art canvas (uses high-contrast --badge-bg plate). */
   overlay?: boolean;
 }) {
   const age = project.freshness.ageMs;
@@ -45,7 +45,7 @@ export function FreshnessBadge({
 
   return (
     <span
-      className="chip rounded-full! px-2.5! text-[10px]! font-semibold! tracking-[0.09em]! backdrop-blur-md"
+      className="chip rounded-[var(--radius-sm)]! px-2! text-[10px]! font-semibold! tracking-[0.1em]! backdrop-blur-md"
       style={{
         color: tok.ink,
         background: overlay ? 'var(--badge-bg)' : tok.soft,

@@ -175,34 +175,14 @@ export function App() {
         <TopBar />
 
         <main className="w-full flex-1 overflow-x-clip">
-          <HeroBand projects={projects} activeSpotlight={resolvedSpotlight} />
-
-          {/* FEATURED EXHIBITION STAGE — Fits cleanly above the 900px fold in Obsidian & Daylight */}
-          <section aria-label="Featured Exhibition" className="mx-auto max-w-[1400px] px-4 pb-5 pt-3 sm:px-6">
-            <div className="mb-2.5 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="beacon" style={{ ['--c' as string]: 'var(--led-hot)' }} aria-hidden="true" />
-                <h2 className="eyebrow text-dim!">Featured Exhibition</h2>
-                <span className="mono hidden text-[10.5px] tracking-[0.14em] text-mute sm:inline">
-                  · {String(spotlight.length).padStart(2, '0')} ACTIVE BUILDS
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  foley.click();
-                  setShipSheet(true);
-                }}
-                className="btn min-h-8! shrink-0 gap-1.5 px-3 text-[12px] lg:hidden!"
-              >
-                <Radio size={13} className="text-phosphor-ink" /> Ship Log
-              </button>
-            </div>
-
+          {/* Full-Bleed Cinema Hero + Live WebGL2 Canvas + 5-Blade Accordion + Telemetry Ribbon */}
+          <HeroBand projects={projects} activeSpotlight={resolvedSpotlight}>
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                <div className="skeleton h-[460px] lg:col-span-8" />
-                <div className="skeleton hidden h-[460px] lg:col-span-4 lg:block" />
+              <div className="grid h-[410px] grid-cols-1 gap-px overflow-hidden rounded-[8px] border border-hairline bg-hairline lg:grid-cols-12">
+                <div className="skeleton rounded-none! lg:col-span-6" />
+                <div className="skeleton hidden rounded-none! lg:col-span-2 lg:block" />
+                <div className="skeleton hidden rounded-none! lg:col-span-2 lg:block" />
+                <div className="skeleton hidden rounded-none! lg:col-span-2 lg:block" />
               </div>
             ) : (
               <SpotlightDeck
@@ -211,97 +191,101 @@ export function App() {
                 onActiveChange={setActiveSpotlight}
               />
             )}
-          </section>
+          </HeroBand>
 
           <FlagshipDock projects={projects} />
 
-          <FilterBar projects={projects} hiddenCount={hiddenCount} />
+          {/* Studio Exhibition Wall, Catalog Index & Dispatch Timeline */}
+          <div id="worlds" className="scroll-mt-[var(--topbar-h)]">
+            <FilterBar projects={projects} hiddenCount={hiddenCount} />
 
-          {/* Chrono-Pulse Active Sprint Window Banner */}
-          {chronoWindow && (
-            <div className="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
-              <div
-                role="status"
-                className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-hairline-strong bg-inset px-4 py-2.5 text-[12.5px]"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Calendar size={14} className="shrink-0 text-hot-ink" />
-                  <span className="mono font-medium text-ink">
-                    CHRONO WINDOW:{' '}
-                    {chronoWindow.startDate === chronoWindow.endDate
-                      ? chronoWindow.startDate
-                      : `${chronoWindow.startDate} to ${chronoWindow.endDate}`}
-                  </span>
-                  <span className="mono text-[11px] text-dim">
-                    · {chronoWindow.totalCount} {chronoWindow.totalCount === 1 ? 'commit' : 'commits'} across{' '}
-                    {chronoWindow.repos.length} {chronoWindow.repos.length === 1 ? 'repo' : 'repos'}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    foley.click();
-                    setChronoWindow(null);
-                  }}
-                  className="btn min-h-7! gap-1 px-2.5 text-[11.5px]"
+            {/* Chrono-Pulse Active Sprint Window Banner */}
+            {chronoWindow && (
+              <div className="mx-auto max-w-[1440px] px-4 pt-5 sm:px-6">
+                <div
+                  role="status"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-[6px] border border-hairline-strong bg-inset px-4 py-2.5 text-[12.5px]"
                 >
-                  <X size={12} /> Clear Window
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Studio Collection Gallery / Index / Timeline */}
-          <section aria-label="Applications and repositories" className="mx-auto max-w-[1400px] px-4 py-7 sm:px-6">
-            {loading ? (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="skeleton h-[348px]" />
-                ))}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="surface flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-                <p className="text-[16px] font-semibold tracking-[-0.02em] text-ink">No builds match this filter</p>
-                <p className="max-w-md text-[13.5px] leading-relaxed text-dim">
-                  {chronoWindow
-                    ? 'No visible repositories matched both your active filter and selected Chrono-Pulse date window.'
-                    : prefs.filter === 'pinned'
-                      ? 'Pin apps from any card or press P in the command palette to collect them in your Pinned Dock.'
-                      : 'Try switching back to Live Apps or browsing All Repos.'}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                  {chronoWindow && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        foley.click();
-                        setChronoWindow(null);
-                      }}
-                      className="btn"
-                    >
-                      Clear Date Window
-                    </button>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Calendar size={14} className="shrink-0 text-hot-ink" />
+                    <span className="mono font-medium text-ink">
+                      CHRONO WINDOW:{' '}
+                      {chronoWindow.startDate === chronoWindow.endDate
+                        ? chronoWindow.startDate
+                        : `${chronoWindow.startDate} to ${chronoWindow.endDate}`}
+                    </span>
+                    <span className="mono text-[11px] text-dim">
+                      · {chronoWindow.totalCount} {chronoWindow.totalCount === 1 ? 'commit' : 'commits'} across{' '}
+                      {chronoWindow.repos.length} {chronoWindow.repos.length === 1 ? 'repo' : 'repos'}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       foley.click();
-                      setFilter('live');
+                      setChronoWindow(null);
                     }}
-                    className="btn btn-primary"
+                    className="btn min-h-7! gap-1 rounded-[4px]! px-2.5 text-[11.5px]"
                   >
-                    Show Live Apps
+                    <X size={12} /> Clear Window
                   </button>
                 </div>
               </div>
-            ) : prefs.view === 'bento' ? (
-              <ShowcaseBento projects={filtered} />
-            ) : prefs.view === 'grid' ? (
-              <TelemetryGrid projects={filtered} />
-            ) : (
-              <ShipMatrix projects={filtered} />
             )}
-          </section>
+
+            <section aria-label="Playable worlds and repositories" className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6">
+              {loading ? (
+                <div className="grid grid-cols-1 gap-px overflow-hidden rounded-[8px] border border-hairline bg-hairline md:grid-cols-6 xl:grid-cols-12">
+                  <div className="skeleton h-[380px] rounded-none! md:col-span-3 xl:col-span-6" />
+                  <div className="skeleton h-[380px] rounded-none! md:col-span-3 xl:col-span-6" />
+                  <div className="skeleton h-[340px] rounded-none! md:col-span-3 xl:col-span-4" />
+                  <div className="skeleton h-[340px] rounded-none! md:col-span-3 xl:col-span-4" />
+                  <div className="skeleton h-[340px] rounded-none! md:col-span-3 xl:col-span-4" />
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="monolith-cell flex flex-col items-center justify-center gap-3 rounded-[8px] border border-hairline bg-surface px-6 py-16 text-center">
+                  <p className="text-[16px] font-semibold tracking-[-0.02em] text-ink">No worlds match this filter</p>
+                  <p className="max-w-md text-[13.5px] leading-relaxed text-dim">
+                    {chronoWindow
+                      ? 'No visible repositories matched both your active filter and selected Chrono-Pulse date window.'
+                      : prefs.filter === 'pinned'
+                        ? 'Pin apps from any plate or press P in the command palette to collect them in your Pinned Dock.'
+                        : 'Try switching back to Live Apps or browsing All repositories.'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                    {chronoWindow && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          foley.click();
+                          setChronoWindow(null);
+                        }}
+                        className="btn"
+                      >
+                        Clear Date Window
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        foley.click();
+                        setFilter('live');
+                      }}
+                      className="btn btn-primary"
+                    >
+                      Show Live Apps
+                    </button>
+                  </div>
+                </div>
+              ) : prefs.view === 'bento' ? (
+                <ShowcaseBento projects={filtered} />
+              ) : prefs.view === 'grid' ? (
+                <TelemetryGrid projects={filtered} />
+              ) : (
+                <ShipMatrix projects={filtered} />
+              )}
+            </section>
+          </div>
         </main>
 
         <StatusBar projects={projects} />
@@ -313,11 +297,11 @@ export function App() {
 
         {/* Mobile / Tablet Ship-Log Sheet */}
         <Modal open={shipSheetOpen} onClose={() => setShipSheet(false)} label="Forge Stream" mobileSheet>
-          <div className="surface surface-elevated flex max-h-[82dvh] flex-col overflow-hidden rounded-[16px]! bg-surface">
+          <div className="surface surface-elevated flex max-h-[82dvh] flex-col overflow-hidden rounded-[10px]! bg-surface">
             <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
               <div className="flex items-center gap-2">
                 <Radio size={14} className="text-phosphor-ink" />
-                <span className="eyebrow text-dim!">Live Ship Log</span>
+                <span className="eyebrow text-dim!">Live Dispatch</span>
               </div>
               <IconButton label="Close ship log" onClick={() => setShipSheet(false)}>
                 <X size={17} />

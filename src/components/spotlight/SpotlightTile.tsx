@@ -1,9 +1,7 @@
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowUpRight, Eye, Layers, QrCode, Rocket, Star } from 'lucide-react';
 import { useFoley } from '../../audio/useFoley';
 import { hueOf } from '../../domain/buildProjects';
-import { useReducedMotion } from '../../hooks/useMediaQuery';
-import { useSpecular } from '../../hooks/useSpecular';
 import { useDeck } from '../../store/deckStore';
 import type { Project } from '../../types/project';
 import { CoverArt } from '../art/CoverArt';
@@ -17,7 +15,7 @@ import { FreshnessBadge, TIER_TOKENS } from './FreshnessBadge';
 
 export type TileVariant = 'lead' | 'medium' | 'compact';
 
-interface Props {
+export interface SpotlightTileProps {
   project: Project;
   variant?: TileVariant;
   /** commits landed since the user's last visit (null = unknown) */
@@ -25,10 +23,12 @@ interface Props {
   /** 0-based position in the exhibition deck */
   index?: number;
   total?: number;
+  /** True when rendered as an expanded blade inside the desktop 5-blade accordion. */
+  blade?: boolean;
   className?: string;
 }
 
-function StagePill({
+function StagePlate({
   children,
   tone = 'neutral',
   className = '',
@@ -45,7 +45,7 @@ function StagePill({
         : 'var(--ink-secondary)';
   return (
     <span
-      className={`chip rounded-full! px-2.5! text-[10px]! font-semibold! tracking-[0.09em]! backdrop-blur-md ${className}`}
+      className={`chip rounded-[var(--radius-sm)]! px-2! text-[10px]! font-semibold! tracking-[0.1em]! backdrop-blur-md ${className}`}
       style={{
         color,
         background: 'var(--badge-bg)',
@@ -58,19 +58,18 @@ function StagePill({
 }
 
 /**
- * Centerpiece Exhibition Stage card showcasing the active featured world.
- * Uses CoverArt scrim="stage" for vivid upper-right focal artwork and >= 10:1 bottom-left typography legibility.
+ * Cinema Exhibition Stage Blade:
+ * Full-bleed bespoke animated WorldVisual (via CoverArt scrim="stage"), sharp Monolith chamfer plates,
+ * untruncated poster title, commit telemetry, and solid Kinetic Acid-Lime / Pitch-Black primary CTA.
  */
 export function SpotlightTile({
   project,
-  variant = 'lead',
   newCommits,
   index,
   total,
+  blade = false,
   className = '',
-}: Props) {
-  const reduced = useReducedMotion();
-  const spec = useSpecular<HTMLDivElement>();
+}: SpotlightTileProps) {
   const setPeek = useDeck((s) => s.setPeek);
   const togglePin = useDeck((s) => s.togglePin);
   const toast = useDeck((s) => s.toast);
@@ -78,15 +77,6 @@ export function SpotlightTile({
 
   const hue = hueOf(project);
   const tok = TIER_TOKENS[project.freshness.tier];
-
-  // Subtle machined tilt (<= 1.8deg) on pointer hover
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 360, damping: 32 });
-  const sy = useSpring(my, { stiffness: 360, damping: 32 });
-  const rotY = useTransform(sx, [-0.5, 0.5], [-1.8, 1.8]);
-  const rotX = useTransform(sy, [-0.5, 0.5], [1.8, -1.8]);
-  const tilt = variant === 'lead' && !reduced;
 
   const indexPlate =
     typeof index === 'number' && typeof total === 'number' && total > 0
@@ -97,72 +87,74 @@ export function SpotlightTile({
     project.kind === 'live' ? (project.isPwa ? 'LIVE · PWA' : 'LIVE') : 'CODE';
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-      ref={spec}
-      onPointerMove={
-        tilt
-          ? (e) => {
-              const r = e.currentTarget.getBoundingClientRect();
-              mx.set((e.clientX - r.left) / r.width - 0.5);
-              my.set((e.clientY - r.top) / r.height - 0.5);
-            }
-          : undefined
-      }
-      onPointerLeave={tilt ? () => (mx.set(0), my.set(0)) : undefined}
-      style={tilt ? { rotateX: rotX, rotateY: rotY, transformPerspective: 1400 } : undefined}
-      className={`studio-stage group relative flex min-h-[372px] flex-col justify-between sm:min-h-[440px] lg:h-[490px] ${className}`}
+    <article
+      className={`group relative flex h-full w-full flex-col justify-between overflow-hidden bg-surface ${
+        blade ? '' : 'min-h-[360px] rounded-[var(--radius-lg)] border border-hairline sm:min-h-[420px]'
+      } ${className}`}
     >
-      {/* Full-bleed animated procedural artwork with sculpted dual-theme stage scrim */}
+      {/* Active Acid-Lime Top Accent Hairline */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[2px] bg-hot"
+      />
+
+      {/* Full-bleed Bespoke Animated WorldVisual Artwork */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <CoverArt project={project} animated fill scrim="stage" />
       </div>
 
-      {/* Top Metadata Rail: Single crisp row on mobile, full exhibition index on sm+ */}
-      <div className="relative z-[2] flex items-center justify-between gap-2 p-4 sm:p-6">
-        <div className="flex min-w-0 items-center gap-2">
+      {/* Top Metadata Rail */}
+      <div className="relative z-[2] flex items-center justify-between gap-2 p-4 sm:p-5">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          {indexPlate && (
+            <StagePlate tone="hot" className={blade ? '' : 'hidden! sm:inline-flex!'}>
+              {indexPlate}
+            </StagePlate>
+          )}
           <span className="sm:hidden">
             <FreshnessBadge project={project} compact overlay />
           </span>
           <span className="hidden sm:inline-flex">
             <FreshnessBadge project={project} overlay />
           </span>
-          {indexPlate && <StagePill className="hidden! sm:inline-flex!">{indexPlate}</StagePill>}
         </div>
 
         <div className="flex shrink-0 items-center justify-end gap-1.5">
           {newCommits !== null && newCommits > 0 && (
-            <StagePill tone="hot">
+            <StagePlate tone="hot">
               <Rocket size={10} aria-hidden="true" /> +{newCommits} NEW
-            </StagePill>
+            </StagePlate>
           )}
-          <StagePill className="hidden! sm:inline-flex!">{project.category}</StagePill>
-          <StagePill tone={project.kind === 'live' ? 'online' : 'neutral'}>{statusText}</StagePill>
+          <StagePlate className="hidden! sm:inline-flex!">{project.category}</StagePlate>
+          <StagePlate tone={project.kind === 'live' ? 'online' : 'neutral'}>{statusText}</StagePlate>
         </div>
       </div>
 
-      {/* Bottom Editorial Presentation & Action Deck */}
-      <div className="relative z-[2] flex min-w-0 flex-col gap-2.5 p-4 pt-6 sm:gap-3.5 sm:p-6 sm:pt-10">
-        {/* Identity Lockup: Untruncated Display Title + Crisp Tagline */}
-        <div className="flex items-start gap-3 sm:items-end sm:gap-4">
-          <Glyph name={project.glyph} hue={hue} size={46} className="shrink-0" />
+      {/* Bottom Editorial Presentation & Action Deck (fades cleanly on blade expand to avoid reflow jitter) */}
+      <motion.div
+        key={project.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, delay: blade ? 0.08 : 0, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-[2] flex min-w-0 flex-col gap-2.5 p-4 pt-6 sm:gap-3 sm:p-5 sm:pt-8"
+      >
+        {/* Identity Lockup: Sharp Chamfer Glyph + Untruncated Poster Title */}
+        <div className="flex items-start gap-3 sm:items-end sm:gap-3.5">
+          <Glyph name={project.glyph} hue={hue} size={44} className="shrink-0" />
           <div className="min-w-0 flex-1">
-            <h3 className="display text-[clamp(24px,3.1vw,42px)] leading-[1.03] tracking-[-0.032em] text-ink">
+            <h2 className="masthead-display text-[clamp(24px,3vw,42px)] font-bold leading-[0.98] tracking-[-0.038em] text-ink">
               <LaunchLink project={project} origin="spot">
                 {project.displayName}
               </LaunchLink>
-            </h3>
-            <p className="mt-1 max-w-[620px] line-clamp-2 text-[13px] leading-relaxed text-dim sm:mt-1.5 sm:text-[14.5px]">
+            </h2>
+            <p className="mt-1.5 max-w-[580px] line-clamp-2 text-[13px] leading-[1.48] text-dim sm:text-[14px]">
               {project.tagline}
             </p>
           </div>
         </div>
 
         {/* Commit Telemetry & 30d Sparkline Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-2.5 sm:pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-2.5">
           <div className="min-w-0 flex-1">
             <CommitTicker project={project} showMeta />
           </div>
@@ -170,11 +162,11 @@ export function SpotlightTile({
             <Sparkline
               values={project.sparkline}
               color={tok.dot}
-              width={104}
-              height={24}
+              width={96}
+              height={22}
               showBaseline={false}
             />
-            <span className="mono text-[10.5px] leading-tight text-mute">
+            <span className="mono text-[10px] leading-tight text-mute">
               <span className="font-semibold text-ink">
                 {project.commits30dTotal > 0 ? project.commits30dTotal : project.pushes7d}
               </span>{' '}
@@ -186,8 +178,8 @@ export function SpotlightTile({
           </div>
         </div>
 
-        {/* Primary Action Row: Single sleek row on 375px mobile AND spacious bar on desktop */}
-        <div className="above flex items-center justify-between gap-2 pt-0.5 sm:gap-2.5">
+        {/* Action Row: Single crisp row on 375px mobile AND commanding Cinema bar on desktop */}
+        <div className="above flex items-center justify-between gap-1.5 pt-0.5 sm:gap-2">
           <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             {project.launchUrl ? (
               <a
@@ -195,9 +187,10 @@ export function SpotlightTile({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => foley.relay()}
-                className="btn btn-primary min-h-9! h-9 shrink-0 gap-1 px-2.5 text-[12.5px] font-semibold whitespace-nowrap sm:min-h-10! sm:h-10 sm:gap-1.5 sm:px-4 sm:text-[13px]"
+                className="btn btn-primary min-h-9! h-9 shrink-0 gap-1.5 rounded-[var(--radius-sm)]! px-3 text-[11.5px] font-bold tracking-[0.06em] uppercase whitespace-nowrap sm:min-h-10! sm:h-10 sm:px-4 sm:text-[12px]"
               >
-                Launch App <ArrowUpRight size={14} className="shrink-0" aria-hidden="true" />
+                <span>Launch World</span>
+                <ArrowUpRight size={14} className="shrink-0" aria-hidden="true" />
               </a>
             ) : (
               <button
@@ -206,9 +199,10 @@ export function SpotlightTile({
                   foley.latch();
                   setPeek(project.name, 'spot', 'brief');
                 }}
-                className="btn btn-primary min-h-9! h-9 shrink-0 gap-1 px-2.5 text-[12.5px] font-semibold whitespace-nowrap sm:min-h-10! sm:h-10 sm:gap-1.5 sm:px-4 sm:text-[13px]"
+                className="btn btn-primary min-h-9! h-9 shrink-0 gap-1.5 rounded-[var(--radius-sm)]! px-3 text-[11.5px] font-bold tracking-[0.06em] uppercase whitespace-nowrap sm:min-h-10! sm:h-10 sm:px-4 sm:text-[12px]"
               >
-                Inspect <Eye size={14} className="shrink-0" aria-hidden="true" />
+                <span>Inspect</span>
+                <Eye size={14} className="shrink-0" aria-hidden="true" />
               </button>
             )}
 
@@ -218,7 +212,7 @@ export function SpotlightTile({
                 foley.latch();
                 setPeek(project.name, 'spot', project.launchUrl ? 'sandbox' : 'brief');
               }}
-              className="btn min-h-9! h-9 shrink-0 gap-1.5 bg-elevated/85! px-2.5 text-[12.5px] whitespace-nowrap backdrop-blur-md sm:min-h-10! sm:h-10 sm:px-3.5 sm:text-[13px]"
+              className="btn min-h-9! h-9 shrink-0 gap-1.5 rounded-[var(--radius-sm)]! bg-elevated/88! px-2.5 text-[12px] whitespace-nowrap backdrop-blur-md sm:min-h-10! sm:h-10 sm:px-3.5 sm:text-[12.5px]"
             >
               <Eye size={14} className="shrink-0" aria-hidden="true" />
               <span>
@@ -233,7 +227,7 @@ export function SpotlightTile({
                   foley.click();
                   setPeek(project.name, 'spot', 'qr');
                 }}
-                className="btn min-h-9! h-9 w-9 shrink-0 justify-center bg-elevated/75! px-0 text-[12.5px] backdrop-blur-md min-[420px]:w-auto min-[420px]:gap-1.5 min-[420px]:px-2.5 sm:min-h-10! sm:h-10 sm:px-3"
+                className="btn min-h-9! h-9 w-9 shrink-0 justify-center rounded-[var(--radius-sm)]! bg-elevated/80! px-0 text-[12px] backdrop-blur-md min-[420px]:w-auto min-[420px]:gap-1.5 min-[420px]:px-2.5 sm:min-h-10! sm:h-10 sm:px-3"
                 aria-label={`QR handoff for ${project.displayName}`}
                 title="QR mobile handoff"
               >
@@ -245,7 +239,7 @@ export function SpotlightTile({
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             <a
-              className="icon-btn h-9! w-9! bg-elevated/75! backdrop-blur-md shadow-[inset_0_0_0_1px_var(--hairline)] sm:h-10! sm:w-10!"
+              className="icon-btn h-9! w-9! rounded-[var(--radius-sm)]! bg-elevated/80! backdrop-blur-md shadow-[inset_0_0_0_1px_var(--hairline)] sm:h-10! sm:w-10!"
               href={project.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -259,7 +253,7 @@ export function SpotlightTile({
             <IconButton
               label={project.pinned ? `Unpin ${project.displayName}` : `Pin ${project.displayName}`}
               aria-pressed={project.pinned}
-              className="h-9! w-9! bg-elevated/75! backdrop-blur-md shadow-[inset_0_0_0_1px_var(--hairline)] sm:h-10! sm:w-10!"
+              className="h-9! w-9! rounded-[var(--radius-sm)]! bg-elevated/80! backdrop-blur-md shadow-[inset_0_0_0_1px_var(--hairline)] sm:h-10! sm:w-10!"
               onClick={() => {
                 foley.latch();
                 togglePin(project.name);
@@ -270,7 +264,7 @@ export function SpotlightTile({
             </IconButton>
           </div>
         </div>
-      </div>
-    </motion.article>
+      </motion.div>
+    </article>
   );
 }

@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 /* ==========================================================================
-   KRUNKED STUDIO — Dual-Material Hardware & Editorial Design System
-   Themes: Obsidian Atelier (velvety carbon) + Braun Ceramic Daylight
+   KRUNKED // MONOLITH STUDIO — Architectural Cinema & Kunsthalle Design System
+   Themes: Monolith Cinema (#030304 + #D2FF28) + Kunsthalle Vellum (#F5F3EC)
    ========================================================================== */
 
 @theme inline {
@@ -18,18 +18,19 @@
   --color-hairline: var(--hairline);
   --color-hairline-strong: var(--hairline-strong);
 
-  /* Legacy V1 Surface Aliases (auto-adapt across Obsidian & Daylight) */
+  /* Legacy V1 Surface Aliases (auto-adapt across Monolith & Vellum) */
   --color-ob-950: var(--bg-chassis);
   --color-ob-900: var(--bg-surface);
   --color-ob-800: var(--bg-elevated);
   --color-ob-700: var(--bg-inset);
 
-  /* WCAG AA Ink Hierarchy (>= 4.5:1 in both themes) */
+  /* WCAG AA/AAA Ink Hierarchy (>= 5.0:1 in both themes) */
   --color-ink: var(--ink-primary);
   --color-dim: var(--ink-secondary);
   --color-mute: var(--ink-muted);
 
-  /* Strict 3-LED Hardware Palette + Signal Crimson (zero purple/violet) */
+  /* Kinetic Acid-Lime Signature + Precision Hardware LEDs (zero purple/violet) */
+  --color-lime: var(--accent-lime);
   --color-hot: var(--led-hot);
   --color-hot-ink: var(--led-hot-ink);
   --color-hot-soft: var(--led-hot-soft);
@@ -53,170 +54,165 @@
   --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Theme 1: Obsidian Atelier (Default Dark) ---------- */
+/* ---------- Theme 1: MONOLITH CINEMA (OLED Pitch Black + Kinetic Acid-Lime) ---------- */
 :root,
 [data-theme='obsidian'] {
   color-scheme: dark;
 
-  /* 4-Tier Carbon Elevation Ladder */
-  --bg-chassis: #060709;
-  --bg-inset: #0b0d12;
-  --bg-surface: #10131a;
-  --bg-elevated: #171b24;
-  --bg-bar: rgba(6, 7, 9, 0.82);
-  --bezel-frame: #040507;
+  /* Pure OLED Pitch Black & Basalt Surface Ladder */
+  --bg-chassis: #030304;
+  --bg-inset: #08090b;
+  --bg-surface: #0c0d10;
+  --bg-elevated: #13151a;
+  --bg-bar: rgba(3, 3, 4, 0.78);
+  --bezel-frame: #020203;
 
-  /* Precision Luminous Ink Hierarchy (>= 5.3:1 AA across all levels) */
-  --ink-primary: #f5f7fa;
-  --ink-secondary: #b6bfce;
-  --ink-muted: #8691a2;
+  /* Warm Chalk / Bone White Ink Hierarchy (>= 5.0:1 AA across all levels) */
+  --ink-primary: #f5f3ec;
+  --ink-secondary: #aba89e;
+  --ink-muted: #8a877e;
 
-  /* Machined Hairlines & Pointer-Tracked Specular Rim */
-  --hairline: rgba(255, 255, 255, 0.085);
-  --hairline-strong: rgba(255, 255, 255, 0.17);
-  --inset-highlight: rgba(255, 255, 255, 0.11);
-  --sheen-border: rgba(255, 255, 255, 0.44);
-  --sheen-fill: rgba(255, 255, 255, 0.042);
-  --surface-tint: rgba(255, 255, 255, 0.036);
-  --hover-tint: rgba(255, 255, 255, 0.064);
-  --scrim: rgba(4, 5, 7, 0.8);
-  --grid-line: rgba(255, 255, 255, 0.032);
-  --keycap-shadow: rgba(0, 0, 0, 0.62);
-  --grain-opacity: 0.024;
-  --stage-glow-color: rgba(255, 79, 0, 0.11);
+  /* Structural 1px Architectural Hairlines & Subtle Specular Rim */
+  --hairline: rgba(245, 243, 236, 0.1);
+  --hairline-strong: rgba(245, 243, 236, 0.22);
+  --inset-highlight: rgba(245, 243, 236, 0.08);
+  --sheen-border: rgba(210, 255, 40, 0.42);
+  --sheen-fill: rgba(245, 243, 236, 0.03);
+  --surface-tint: rgba(245, 243, 236, 0.035);
+  --hover-tint: rgba(245, 243, 236, 0.07);
+  --scrim: rgba(2, 2, 3, 0.84);
+  --grid-line: rgba(245, 243, 236, 0.036);
+  --keycap-shadow: rgba(0, 0, 0, 0.78);
+  --grain-opacity: 0.02;
+  --stage-glow-color: rgba(210, 255, 40, 0.085);
 
-  /* Hardware Status LEDs & WCAG-AA Badge Inks */
-  --led-hot: #ff4f00;
-  --led-hot-ink: #ff783d;
-  --led-hot-soft: rgba(255, 79, 0, 0.14);
+  /* Kinetic Acid-Lime Signature Accent + High-Contrast Status LEDs */
+  --accent-lime: #d2ff28;
+  --led-hot: #d2ff28;
+  --led-hot-ink: #d2ff28;
+  --led-hot-soft: rgba(210, 255, 40, 0.12);
 
-  --led-online: #10b981;
-  --led-online-ink: #34d399;
-  --led-online-soft: rgba(16, 185, 129, 0.14);
+  --led-online: #2ee59d;
+  --led-online-ink: #47f0ad;
+  --led-online-soft: rgba(46, 229, 157, 0.12);
 
-  --led-active: #f59e0b;
-  --led-active-ink: #fbbf24;
-  --led-active-soft: rgba(245, 158, 11, 0.14);
+  --led-active: #ffb82e;
+  --led-active-ink: #ffca57;
+  --led-active-soft: rgba(255, 184, 46, 0.13);
 
-  --led-alarm: #ef4444;
-  --led-alarm-ink: #f87171;
-  --led-alarm-soft: rgba(239, 68, 68, 0.14);
+  --led-alarm: #ff4d24;
+  --led-alarm-ink: #ff7657;
+  --led-alarm-soft: rgba(255, 77, 36, 0.14);
 
-  /* 90d Chrono-Pulse Thermal Bars */
-  --heat-0: rgba(255, 255, 255, 0.09);
-  --heat-1: #10b981;
-  --heat-2: #f59e0b;
-  --heat-3: #ff4f00;
+  /* Chrono-Pulse Thermal Bars (Graphite -> Emerald -> Acid-Lime -> Vermilion) */
+  --heat-0: rgba(245, 243, 236, 0.08);
+  --heat-1: #2ee59d;
+  --heat-2: #d2ff28;
+  --heat-3: #ff5226;
 
-  /* Cover Art & Overlay Tokens */
-  --cover-scrim-end: rgba(16, 19, 26, 0.94);
-  --badge-bg: rgba(9, 11, 15, 0.78);
-  --badge-border: rgba(255, 255, 255, 0.16);
+  /* Cover Art & Floating Plate Tokens */
+  --cover-scrim-end: rgba(3, 3, 4, 0.96);
+  --badge-bg: rgba(3, 3, 4, 0.82);
+  --badge-border: rgba(245, 243, 236, 0.18);
 
-  /* Elevation & Physical Shadows */
-  --shadow-surface:
-    inset 0 1px 0 var(--inset-highlight),
-    0 1px 0 rgba(0, 0, 0, 0.45),
-    0 16px 36px -18px rgba(0, 0, 0, 0.92);
-  --shadow-elevated:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 24px 52px -16px rgba(0, 0, 0, 0.96);
-  --shadow-stage:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 32px 72px -24px rgba(0, 0, 0, 0.96);
-  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.52), inset 0 0 0 1px var(--hairline);
-  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 32px 80px -16px rgba(0, 0, 0, 0.94);
-  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(255, 79, 0, 0.24);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+  /* Sharp Monolith Elevation & Physical Shadows */
+  --shadow-surface: inset 0 1px 0 var(--inset-highlight), 0 12px 32px -20px rgba(0, 0, 0, 0.96);
+  --shadow-elevated: inset 0 1px 0 rgba(245, 243, 236, 0.11), 0 20px 48px -18px rgba(0, 0, 0, 0.98);
+  --shadow-stage: inset 0 1px 0 rgba(245, 243, 236, 0.12), 0 28px 68px -22px rgba(0, 0, 0, 0.98);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.65), inset 0 0 0 1px var(--hairline);
+  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 32px 84px -16px rgba(0, 0, 0, 0.98);
+  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(210, 255, 40, 0.24);
+  --scrollbar-thumb: rgba(245, 243, 236, 0.15);
+  --scrollbar-thumb-hover: rgba(245, 243, 236, 0.3);
 
-  /* Layout & Geometry Rhythm */
-  --topbar-h: 56px;
-  --filterbar-h: 52px;
+  /* Sharp Architectural Chamfer Geometry */
+  --topbar-h: 52px;
+  --filterbar-h: 48px;
   --statusbar-h: 36px;
   --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
   --t-snap: 140ms;
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
   --radius-pill: 999px;
 }
 
-/* ---------- Theme 2: Braun Ceramic Daylight (Gallery Porcelain) ---------- */
+/* ---------- Theme 2: KUNSTHALLE VELLUM (Swiss Archival Editorial) ---------- */
 [data-theme='daylight'] {
   color-scheme: light;
 
-  --bg-chassis: #f2f0ea;
-  --bg-inset: #e7e4dc;
+  --bg-chassis: #f5f3ec;
+  --bg-inset: #eae7dd;
   --bg-surface: #ffffff;
   --bg-elevated: #ffffff;
-  --bg-bar: rgba(242, 240, 234, 0.88);
-  --bezel-frame: #111318;
+  --bg-bar: rgba(245, 243, 236, 0.86);
+  --bezel-frame: #0a0a0b;
 
-  /* Crisp Graphite Ink Hierarchy (>= 5.0:1 AA across all ceramic & white surfaces) */
-  --ink-primary: #111318;
-  --ink-secondary: #3a404d;
-  --ink-muted: #565f6f;
+  /* Deep Pitch Gallery Ink Hierarchy (>= 5.7:1 AA across vellum & white) */
+  --ink-primary: #0a0a0b;
+  --ink-secondary: #3a3a3e;
+  --ink-muted: #58585e;
 
-  --hairline: rgba(17, 19, 24, 0.095);
-  --hairline-strong: rgba(17, 19, 24, 0.19);
+  --hairline: rgba(10, 10, 11, 0.11);
+  --hairline-strong: rgba(10, 10, 11, 0.24);
   --inset-highlight: rgba(255, 255, 255, 0.96);
-  --sheen-border: rgba(17, 19, 24, 0.3);
-  --sheen-fill: rgba(17, 19, 24, 0.028);
-  --surface-tint: rgba(17, 19, 24, 0.036);
-  --hover-tint: rgba(17, 19, 24, 0.058);
-  --scrim: rgba(17, 19, 24, 0.42);
-  --grid-line: rgba(17, 19, 24, 0.048);
-  --keycap-shadow: rgba(17, 19, 24, 0.16);
-  --grain-opacity: 0.016;
-  --stage-glow-color: rgba(255, 79, 0, 0.075);
+  --sheen-border: rgba(10, 10, 11, 0.36);
+  --sheen-fill: rgba(10, 10, 11, 0.022);
+  --surface-tint: rgba(10, 10, 11, 0.036);
+  --hover-tint: rgba(10, 10, 11, 0.065);
+  --scrim: rgba(10, 10, 11, 0.44);
+  --grid-line: rgba(10, 10, 11, 0.048);
+  --keycap-shadow: rgba(10, 10, 11, 0.18);
+  --grain-opacity: 0.015;
+  --stage-glow-color: rgba(70, 120, 0, 0.065);
 
-  /* Vibrant High-Contrast Ceramic LED Inks (>= 5:1 on white/porcelain) */
-  --led-hot: #ff4f00;
-  --led-hot-ink: #b83500;
-  --led-hot-soft: rgba(255, 79, 0, 0.1);
+  /* High-Contrast Swiss Print LED Inks (>= 5.2:1 on white/vellum) */
+  --accent-lime: #d2ff28;
+  --led-hot: #467800;
+  --led-hot-ink: #386200;
+  --led-hot-soft: rgba(70, 120, 0, 0.11);
 
-  --led-online: #10b981;
-  --led-online-ink: #046b4d;
-  --led-online-soft: rgba(16, 185, 129, 0.11);
+  --led-online: #0e9f6e;
+  --led-online-ink: #046b49;
+  --led-online-soft: rgba(14, 159, 110, 0.11);
 
-  --led-active: #f59e0b;
-  --led-active-ink: #925400;
-  --led-active-soft: rgba(245, 158, 11, 0.13);
+  --led-active: #d97706;
+  --led-active-ink: #8c4e00;
+  --led-active-soft: rgba(217, 119, 6, 0.12);
 
-  --led-alarm: #ef4444;
+  --led-alarm: #dc2626;
   --led-alarm-ink: #b91c1c;
-  --led-alarm-soft: rgba(239, 68, 68, 0.1);
+  --led-alarm-soft: rgba(220, 38, 38, 0.1);
 
-  --heat-0: rgba(17, 19, 24, 0.12);
-  --heat-1: #047857;
-  --heat-2: #b45309;
-  --heat-3: #d94100;
+  --heat-0: rgba(10, 10, 11, 0.12);
+  --heat-1: #046b49;
+  --heat-2: #467800;
+  --heat-3: #c23914;
 
-  --cover-scrim-end: rgba(255, 255, 255, 0.95);
-  --badge-bg: rgba(255, 255, 255, 0.9);
-  --badge-border: rgba(17, 19, 24, 0.14);
+  --cover-scrim-end: rgba(255, 255, 255, 0.96);
+  --badge-bg: rgba(255, 255, 255, 0.92);
+  --badge-border: rgba(10, 10, 11, 0.16);
 
-  /* Tactile Warm Ceramic Shadows — pure white cards float cleanly off studio table */
+  /* Crisp Architectural Gallery Shadows */
   --shadow-surface:
     inset 0 1px 0 var(--inset-highlight),
-    0 1px 2px rgba(17, 19, 24, 0.045),
-    0 10px 26px -14px rgba(17, 19, 24, 0.13);
+    0 1px 2px rgba(10, 10, 11, 0.04),
+    0 10px 24px -16px rgba(10, 10, 11, 0.12);
   --shadow-elevated:
     inset 0 1px 0 var(--inset-highlight),
-    0 2px 6px rgba(17, 19, 24, 0.055),
-    0 18px 38px -14px rgba(17, 19, 24, 0.18);
+    0 2px 6px rgba(10, 10, 11, 0.05),
+    0 16px 34px -16px rgba(10, 10, 11, 0.16);
   --shadow-stage:
     inset 0 1px 0 var(--inset-highlight),
-    0 4px 12px rgba(17, 19, 24, 0.05),
-    0 26px 56px -20px rgba(17, 19, 24, 0.19);
-  --shadow-inset: inset 0 1px 2px rgba(17, 19, 24, 0.075), inset 0 0 0 1px var(--hairline);
-  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 28px 64px -16px rgba(17, 19, 24, 0.24);
-  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(255, 79, 0, 0.2);
-  --scrollbar-thumb: rgba(17, 19, 24, 0.18);
-  --scrollbar-thumb-hover: rgba(17, 19, 24, 0.34);
+    0 4px 12px rgba(10, 10, 11, 0.05),
+    0 24px 52px -20px rgba(10, 10, 11, 0.16);
+  --shadow-inset: inset 0 1px 2px rgba(10, 10, 11, 0.07), inset 0 0 0 1px var(--hairline);
+  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 28px 64px -16px rgba(10, 10, 11, 0.24);
+  --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(70, 120, 0, 0.22);
+  --scrollbar-thumb: rgba(10, 10, 11, 0.2);
+  --scrollbar-thumb-hover: rgba(10, 10, 11, 0.36);
 }
 
 /* ---------- Document Base & Global Precision Scrollbars ---------- */
@@ -233,7 +229,7 @@
 }
 *::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 999px;
+  border-radius: 3px;
 }
 *::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
@@ -271,7 +267,7 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Subtle Monochrome Film Grain Overlay */
+/* Subtle Archival Monochrome Film Grain */
 body::before {
   content: '';
   position: fixed;
@@ -288,8 +284,12 @@ body::before {
 }
 
 ::selection {
-  background-color: rgba(255, 79, 0, 0.24);
+  background-color: rgba(210, 255, 40, 0.28);
   color: var(--ink-primary);
+}
+[data-theme='daylight'] ::selection {
+  background-color: rgba(210, 255, 40, 0.55);
+  color: #0a0a0b;
 }
 
 /* 140ms View Transitions Hardware Theme Morph */
@@ -310,7 +310,7 @@ kbd,
   font-feature-settings: 'tnum' 1;
 }
 
-/* Strictly keyboard-only focus rings (never sticky orange rings after mouse clicks) */
+/* Strictly keyboard-only focus rings (zero sticky outlines after pointer clicks) */
 :focus:not(:focus-visible) {
   outline: none;
 }
@@ -318,10 +318,10 @@ kbd,
 :focus-visible {
   outline: 2px solid var(--led-hot);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
 }
 
-/* ---------- Precision Component Primitives ---------- */
+/* ---------- Architectural Component Primitives ---------- */
 @layer components {
   .mono {
     font-family: var(--font-mono);
@@ -336,9 +336,16 @@ kbd,
   }
 
   .display {
-    letter-spacing: -0.032em;
-    line-height: 1.02;
+    letter-spacing: -0.034em;
+    line-height: 1.0;
     font-weight: 600;
+  }
+
+  /* Monumental Poster Masthead Typography */
+  .masthead-display {
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 0.9;
   }
 
   .eyebrow {
@@ -350,7 +357,7 @@ kbd,
     color: var(--ink-muted);
   }
 
-  /* Architectural Hero Micro-Grid (masked, razor-clean) */
+  /* Architectural Hero Micro-Grid */
   .hero-grid {
     position: relative;
   }
@@ -364,8 +371,8 @@ kbd,
       linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
       linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
     background-size: 28px 28px;
-    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.48) 68%, transparent 100%);
-    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.48) 68%, transparent 100%);
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.45) 68%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.45) 68%, transparent 100%);
   }
 
   /* Ambient Studio Stage Aura keyed to --stage-glow-color */
@@ -397,7 +404,31 @@ kbd,
     );
   }
 
-  /* ---------- Hardware Surfaces & Specular Border ---------- */
+  /* ---------- Monolith Hairline Exhibition Wall & Frameless Plates ---------- */
+  .monolith-grid {
+    background-color: var(--hairline);
+    gap: 1px;
+    border: 1px solid var(--hairline);
+  }
+
+  .monolith-cell {
+    position: relative;
+    background-color: var(--bg-surface);
+    border-radius: 0;
+    box-shadow: none;
+    isolation: isolate;
+    transition: background-color 180ms var(--ease-snap);
+  }
+  @media (hover: hover) {
+    .monolith-cell:hover {
+      background-color: var(--bg-elevated);
+    }
+    [data-theme='daylight'] .monolith-cell:hover {
+      background-color: #faf9f5;
+    }
+  }
+
+  /* ---------- Machined Hardware Surfaces (NO transform transition -> Framer Motion safe) ---------- */
   .surface {
     position: relative;
     border-radius: var(--radius-lg);
@@ -464,10 +495,10 @@ kbd,
     box-shadow: var(--shadow-inset);
   }
 
-  /* Hero Featured Exhibition Frame */
+  /* Sharp Monolith Exhibition Frame */
   .studio-stage {
     position: relative;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
     background: var(--bg-surface);
     box-shadow: var(--shadow-stage);
     isolation: isolate;
@@ -489,12 +520,7 @@ kbd,
     mask-composite: exclude;
   }
   .studio-stage::before {
-    background: linear-gradient(
-      180deg,
-      var(--hairline-strong) 0%,
-      var(--hairline) 42%,
-      var(--hairline) 100%
-    );
+    background: var(--hairline-strong);
   }
   .studio-stage::after {
     background: radial-gradient(
@@ -511,7 +537,7 @@ kbd,
     }
   }
 
-  /* Gallery Exhibition Card with Tactile Lift (individual `translate` composes cleanly with Framer Motion) */
+  /* Legacy Gallery Exhibition Card helper (sharp chamfer + motion-safe hover) */
   .card-exhibit {
     position: relative;
     border-radius: var(--radius-lg);
@@ -519,8 +545,8 @@ kbd,
     box-shadow: var(--shadow-surface);
     isolation: isolate;
     transition:
-      translate 240ms var(--ease-snap),
-      box-shadow 240ms var(--ease-snap),
+      translate 220ms var(--ease-snap),
+      box-shadow 220ms var(--ease-snap),
       background-color var(--t-snap) var(--ease-snap);
   }
   .card-exhibit::before {
@@ -532,7 +558,7 @@ kbd,
     pointer-events: none;
     z-index: 3;
     background: var(--hairline);
-    transition: background 220ms var(--ease-snap);
+    transition: background 200ms var(--ease-snap);
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -555,12 +581,12 @@ kbd,
     height: 36px;
     border-radius: 50%;
     filter: blur(24px);
-    opacity: 0.2;
+    opacity: 0.16;
     z-index: -1;
     pointer-events: none;
   }
   [data-theme='daylight'] .glow-under {
-    opacity: 0.08;
+    opacity: 0.06;
   }
 
   /* ---------- Hardware Telemetry Chips ---------- */
@@ -569,12 +595,12 @@ kbd,
     align-items: center;
     gap: 5px;
     height: 22px;
-    padding: 0 7.5px;
+    padding: 0 7px;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 500;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-secondary);
     background: var(--surface-tint);
@@ -584,22 +610,22 @@ kbd,
   .chip-hot {
     color: var(--led-hot-ink);
     background: var(--led-hot-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-hot) 32%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-hot) 36%, transparent);
   }
   .chip-online {
     color: var(--led-online-ink);
     background: var(--led-online-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-online) 32%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-online) 34%, transparent);
   }
   .chip-active {
     color: var(--led-active-ink);
     background: var(--led-active-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-active) 34%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-active) 36%, transparent);
   }
   .chip-alarm {
     color: var(--led-alarm-ink);
     background: var(--led-alarm-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-alarm) 34%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-alarm) 36%, transparent);
   }
 
   /* ---------- Recessed Sync Telemetry Pill ---------- */
@@ -608,18 +634,18 @@ kbd,
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    height: 28px;
+    height: 26px;
     min-width: 0;
     max-width: 100%;
-    padding: 0 10px;
-    border-radius: var(--radius-pill);
+    padding: 0 9px;
+    border-radius: var(--radius-sm);
     background: var(--bg-inset);
     box-shadow: var(--shadow-inset);
     color: var(--ink-secondary);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
     white-space: nowrap;
     cursor: pointer;
@@ -642,7 +668,7 @@ kbd,
     cursor: default;
   }
 
-  /* ---------- Tactile Mechanical Buttons ---------- */
+  /* ---------- Sharp Tactile Mechanical Buttons ---------- */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -676,54 +702,79 @@ kbd,
     transform: translateY(1px) scale(0.985);
   }
   .btn:disabled {
-    opacity: 0.55;
+    opacity: 0.52;
     cursor: not-allowed;
   }
 
-  /* Primary International Orange Hardware Switch (#060709 on #FF5500 = 6.3:1 AA) */
+  /*
+   * Primary Monolith Switch:
+   * - Obsidian: SOLID Kinetic Acid-Lime (#D2FF28) + Pitch Black (#040503) ink (17.6:1 AAA)
+   * - Daylight: SOLID Pitch Black (#0A0A0B) + Electric Acid-Lime (#D2FF28) ink (17.0:1 AAA)
+   */
   .btn-primary,
-  .btn-hot {
-    color: #060709;
-    background: #ff5500;
+  .btn-acid {
+    color: #040503;
+    background: #d2ff28;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.36),
-      inset 0 0 0 1px rgba(6, 7, 9, 0.14),
-      0 6px 18px -8px rgba(255, 79, 0, 0.52);
-    font-weight: 600;
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 0 0 1px rgba(4, 5, 3, 0.16);
+    font-weight: 650;
+    letter-spacing: -0.01em;
   }
   .btn-primary:hover:not(:disabled),
-  .btn-hot:hover:not(:disabled) {
-    background: #ff6418;
+  .btn-acid:hover:not(:disabled) {
+    background: #e1ff66;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.44),
-      inset 0 0 0 1px rgba(6, 7, 9, 0.18),
-      0 8px 22px -8px rgba(255, 79, 0, 0.62);
-  }
-  [data-theme='daylight'] .btn-primary,
-  [data-theme='daylight'] .btn-hot {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.38),
-      inset 0 0 0 1px rgba(17, 19, 24, 0.12),
-      0 4px 14px -6px rgba(255, 79, 0, 0.42);
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      inset 0 0 0 1px rgba(4, 5, 3, 0.22);
   }
 
-  /* Phosphor Emerald Action (#04150E on #10B981 = 8.1:1 AA) */
+  [data-theme='daylight'] .btn-primary,
+  [data-theme='daylight'] .btn-acid {
+    color: #d2ff28;
+    background: #0a0a0b;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 0 0 1px rgba(10, 10, 11, 0.9);
+  }
+  [data-theme='daylight'] .btn-primary:hover:not(:disabled),
+  [data-theme='daylight'] .btn-acid:hover:not(:disabled) {
+    color: #e1ff66;
+    background: #1a1c19;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 0 0 1px #0a0a0b;
+  }
+
+  /* Secondary Signal Vermilion Hardware Switch */
+  .btn-hot {
+    color: #040503;
+    background: #ff4d24;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 0 0 1px rgba(4, 5, 3, 0.16);
+    font-weight: 600;
+  }
+  .btn-hot:hover:not(:disabled) {
+    background: #ff623d;
+  }
+
+  /* Phosphor Emerald Action (#03120B on #2EE59D = 12.1:1 AAA) */
   .btn-online,
   .btn-volt {
-    color: #04150e;
-    background: #10b981;
+    color: #03120b;
+    background: #2ee59d;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.35),
-      inset 0 0 0 1px rgba(4, 21, 14, 0.12),
-      0 6px 18px -8px rgba(16, 185, 129, 0.48);
+      inset 0 0 0 1px rgba(3, 18, 11, 0.14);
     font-weight: 600;
   }
   .btn-online:hover:not(:disabled),
   .btn-volt:hover:not(:disabled) {
-    background: #22c78e;
+    background: #47f0ad;
   }
 
-  /* Tactile Icon Switch */
+  /* Sharp Tactile Icon Switch */
   .icon-btn {
     display: inline-grid;
     place-items: center;
@@ -761,19 +812,19 @@ kbd,
   .icon-btn[data-active='true'] {
     color: var(--led-hot-ink);
     background: var(--led-hot-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-hot) 32%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-hot) 36%, transparent);
   }
   .icon-btn[data-tone='online'][aria-pressed='true'],
   .icon-btn[data-tone='online'][data-active='true'] {
     color: var(--led-online-ink);
     background: var(--led-online-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-online) 32%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-online) 34%, transparent);
   }
   .icon-btn[data-tone='active'][aria-pressed='true'],
   .icon-btn[data-tone='active'][data-active='true'] {
     color: var(--led-active-ink);
     background: var(--led-active-soft);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-active) 34%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-active) 36%, transparent);
   }
 
   @media (pointer: coarse) {
@@ -799,7 +850,7 @@ kbd,
     padding: 0 5px;
     border-radius: var(--radius-xs);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 500;
     line-height: 1;
     color: var(--ink-secondary);
@@ -828,7 +879,7 @@ kbd,
   box-shadow: 0 0 6px color-mix(in srgb, var(--c, var(--led-online)) 55%, transparent);
 }
 [data-theme='daylight'] .led-dot {
-  box-shadow: 0 0 0 1px rgba(17, 19, 24, 0.08);
+  box-shadow: 0 0 0 1px rgba(10, 10, 11, 0.1);
 }
 
 .beacon {
@@ -871,10 +922,10 @@ kbd,
 
 @keyframes ring-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
+    box-shadow: 0 0 0 0 rgba(46, 229, 157, 0.55);
   }
   100% {
-    box-shadow: 0 0 0 11px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 11px rgba(46, 229, 157, 0);
   }
 }
 .ring-pulse {
@@ -947,7 +998,7 @@ kbd,
 }
 .thin-scroll::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 999px;
+  border-radius: 3px;
 }
 .thin-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
@@ -1012,7 +1063,7 @@ kbd,
 .readme a {
   color: var(--led-hot-ink);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--led-hot) 40%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--led-hot) 45%, transparent);
   text-underline-offset: 3px;
 }
 .readme a:hover {
