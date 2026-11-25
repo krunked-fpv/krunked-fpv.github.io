@@ -7,16 +7,23 @@ export interface Palette {
   isLight: boolean;
   hue: number;
   counterHue: number;
+  analogHue: number;
   key: string;
+  mid: string;
   deep: string;
+  highlight: string;
   counter: string;
+  analog: string;
   ground: string;
   groundDeep: string;
   surface: string;
   ink: string;
   glow: (a: number) => string;
   keyAlpha: (a: number) => string;
+  midAlpha: (a: number) => string;
+  deepAlpha: (a: number) => string;
   counterAlpha: (a: number) => string;
+  analogAlpha: (a: number) => string;
   inkAlpha: (a: number) => string;
   reticle: (a: number) => string;
 }
@@ -88,56 +95,84 @@ export function nonPurpleRgb(L: number, C: number, rawHue: number): [number, num
 const css = (c: [number, number, number], a = 1) =>
   a >= 1 ? `rgb(${c[0]} ${c[1]} ${c[2]})` : `rgb(${c[0]} ${c[1]} ${c[2]} / ${Number(a.toFixed(4))})`;
 
-/** Dual-theme hardware palette with strict non-purple guard across key & counter hues. */
+/**
+ * Dual-theme Swiss / Bauhaus exhibition palette with strict non-purple guard.
+ * Preserves canonical ground tokens (#090B0F obsidian, #ECEAE4 daylight).
+ */
 export function makePalette(rawHue: number, theme: ArtTheme = 'obsidian'): Palette {
   const hue = remapHue(rawHue);
   const counterHue = remapHue(hue + 148);
+  const analogHue = remapHue(hue + 24);
   const isLight = theme === 'daylight';
 
   if (isLight) {
-    const key = oklchToRgb(0.50, 0.145, hue);
-    const deep = oklchToRgb(0.84, 0.048, hue);
-    const counter = oklchToRgb(0.56, 0.14, counterHue);
-    const ink: [number, number, number] = [20, 22, 26];
+    // Rich gallery print pigments on warm sunlit museum rag paper (never muddy grey-tan)
+    const key = oklchToRgb(0.46, 0.165, hue);
+    const mid = oklchToRgb(0.64, 0.125, hue);
+    const deep = oklchToRgb(0.91, 0.042, hue);
+    const highlight = oklchToRgb(0.97, 0.018, analogHue);
+    const counter = oklchToRgb(0.50, 0.155, counterHue);
+    const analog = oklchToRgb(0.54, 0.145, analogHue);
+    const ink: [number, number, number] = [17, 19, 24];
+
     return {
       theme,
       isLight: true,
       hue,
       counterHue,
+      analogHue,
       key: css(key),
+      mid: css(mid),
       deep: css(deep),
+      highlight: css(highlight),
       counter: css(counter),
+      analog: css(analog),
       ground: '#ECEAE4',
-      groundDeep: '#DDDAD0',
-      surface: '#F7F6F2',
-      ink: '#14161A',
+      groundDeep: '#E4E0D6',
+      surface: '#FFFFFF',
+      ink: '#111318',
       glow: (a) => css(key, a),
       keyAlpha: (a) => css(key, a),
+      midAlpha: (a) => css(mid, a),
+      deepAlpha: (a) => css(deep, a),
       counterAlpha: (a) => css(counter, a),
+      analogAlpha: (a) => css(analog, a),
       inkAlpha: (a) => css(ink, a),
       reticle: (a) => css(ink, a),
     };
   }
 
-  const key = oklchToRgb(0.74, 0.15, hue);
-  const deep = oklchToRgb(0.24, 0.075, hue);
-  const counter = oklchToRgb(0.80, 0.13, counterHue);
-  const ink: [number, number, number] = [243, 245, 248];
+  // Luminous anodized studio pigments on velvety carbon ground
+  const key = oklchToRgb(0.76, 0.168, hue);
+  const mid = oklchToRgb(0.48, 0.138, hue);
+  const deep = oklchToRgb(0.24, 0.088, hue);
+  const highlight = oklchToRgb(0.90, 0.085, analogHue);
+  const counter = oklchToRgb(0.82, 0.148, counterHue);
+  const analog = oklchToRgb(0.72, 0.152, analogHue);
+  const ink: [number, number, number] = [245, 247, 250];
+
   return {
     theme: 'obsidian',
     isLight: false,
     hue,
     counterHue,
+    analogHue,
     key: css(key),
+    mid: css(mid),
     deep: css(deep),
+    highlight: css(highlight),
     counter: css(counter),
+    analog: css(analog),
     ground: '#090B0F',
-    groundDeep: '#050608',
-    surface: '#111419',
-    ink: '#F3F5F8',
+    groundDeep: '#050609',
+    surface: '#10131A',
+    ink: '#F5F7FA',
     glow: (a) => css(key, a),
     keyAlpha: (a) => css(key, a),
+    midAlpha: (a) => css(mid, a),
+    deepAlpha: (a) => css(deep, a),
     counterAlpha: (a) => css(counter, a),
+    analogAlpha: (a) => css(analog, a),
     inkAlpha: (a) => css(ink, a),
     reticle: (a) => css(ink, a),
   };

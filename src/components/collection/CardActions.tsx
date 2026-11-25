@@ -18,7 +18,7 @@ export const launch = (url: string) => {
 
 /**
  * Persistent hardware micro-actions: [Peek] [QR] [Source] [Pin].
- * Always visible at subtle rest contrast (never hover-hidden opacity-0).
+ * Always visible at refined rest contrast (never hover-hidden opacity-0).
  */
 export function CardActions({
   project,
@@ -40,6 +40,7 @@ export function CardActions({
   return (
     <div className="above flex shrink-0 items-center gap-0.5">
       <IconButton
+        size={size}
         label={`Live Peek ${project.displayName}`}
         onClick={() => {
           foley.latch();
@@ -51,6 +52,7 @@ export function CardActions({
 
       {showQr && project.launchUrl && (
         <IconButton
+          size={size}
           label={`QR mobile handoff for ${project.displayName}`}
           onClick={() => {
             foley.click();
@@ -62,7 +64,7 @@ export function CardActions({
       )}
 
       <a
-        className="icon-btn"
+        className={`icon-btn ${size === 'sm' ? 'icon-btn-sm' : ''}`}
         href={project.sourceUrl}
         target="_blank"
         rel="noopener noreferrer"
@@ -74,6 +76,8 @@ export function CardActions({
       </a>
 
       <IconButton
+        size={size}
+        tone="active"
         label={project.pinned ? `Unpin ${project.displayName}` : `Pin ${project.displayName}`}
         aria-pressed={project.pinned}
         onClick={() => {

@@ -284,7 +284,7 @@ export function SandboxFrame({
       >
         <div
           className="relative overflow-hidden rounded-[10px] border border-hairline-strong bg-chassis shadow-2xl"
-          style={{ width: scaledW, height: scaledH }}
+          style={{ width: scaledW, height: scaledH, contain: 'strict', clipPath: 'inset(0 round 10px)' }}
         >
           <iframe
             key={`${project.id}-${reloadKey}`}
@@ -298,6 +298,9 @@ export function SandboxFrame({
               setTimedOut(false);
             }}
             style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
               width: target.w,
               height: target.h,
               transform: `scale(${scale})`,

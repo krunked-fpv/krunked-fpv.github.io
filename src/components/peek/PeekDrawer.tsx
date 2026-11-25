@@ -10,7 +10,6 @@ import type { PeekTab, Project } from '../../types/project';
 import { CoverArt } from '../art/CoverArt';
 import { Glyph } from '../art/Glyph';
 import { FreshnessBadge } from '../spotlight/FreshnessBadge';
-import { Chip } from '../ui/Chip';
 import { GithubMark } from '../ui/GithubMark';
 import { IconButton } from '../ui/IconButton';
 import { CuratePanel } from './CuratePanel';
@@ -28,15 +27,51 @@ const FOCUSABLE_SELECTOR = [
 ].join(',');
 
 const TABS: { key: PeekTab; label: string; shortLabel: string; Icon: typeof MonitorPlay }[] = [
-  { key: 'sandbox', label: 'Sandbox', shortLabel: 'Sandbox', Icon: MonitorPlay },
+  { key: 'sandbox', label: 'Live Sandbox', shortLabel: 'Sandbox', Icon: MonitorPlay },
   { key: 'brief', label: 'Brief & README', shortLabel: 'Brief', Icon: FileText },
   { key: 'qr', label: 'QR Handoff', shortLabel: 'QR', Icon: QrCode },
   { key: 'curate', label: 'Curate', shortLabel: 'Curate', Icon: SlidersHorizontal },
 ];
 
+function HeaderPlate({
+  children,
+  tone = 'neutral',
+  led = false,
+}: {
+  children: React.ReactNode;
+  tone?: 'neutral' | 'online' | 'hot';
+  led?: boolean;
+}) {
+  const color =
+    tone === 'online'
+      ? 'var(--led-online-ink)'
+      : tone === 'hot'
+        ? 'var(--led-hot-ink)'
+        : 'var(--ink-secondary)';
+  const dot =
+    tone === 'online'
+      ? 'var(--led-online)'
+      : tone === 'hot'
+        ? 'var(--led-hot)'
+        : 'var(--ink-muted)';
+
+  return (
+    <span
+      className="chip backdrop-blur-md"
+      style={{
+        color,
+        background: 'var(--badge-bg)',
+        boxShadow: 'inset 0 0 0 1px var(--badge-border)',
+      }}
+    >
+      {led && <span className="size-[6px] shrink-0 rounded-full" style={{ background: dot }} aria-hidden="true" />}
+      {children}
+    </span>
+  );
+}
+
 export function PeekDrawer({ projects }: { projects: Project[] }) {
   const peek = useDeck((s) => s.peek);
-  const peekOrigin = useDeck((s) => s.peekOrigin);
   const peekTab = useDeck((s) => s.peekTab);
   const repos = useDeck((s) => s.repos);
   const setPeek = useDeck((s) => s.setPeek);
@@ -104,13 +139,13 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
       }
     };
 
-    document.addEventListener('keydown', onKey, true);
+    window.addEventListener('keydown', onKey, true);
     const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
 
     return () => {
       window.clearTimeout(t);
-      document.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('keydown', onKey, true);
       document.documentElement.style.overflow = prevOverflow;
       prevFocus.current?.focus?.();
     };
@@ -152,44 +187,38 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.45 }}
             onDragEnd={isMobile ? handleDragEnd : undefined}
-            className="surface relative flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[20px]! rounded-b-none! bg-surface md:h-full md:w-[min(1080px,92vw)] md:rounded-l-[20px]! md:rounded-r-none!"
+            className="surface surface-elevated relative flex h-[94dvh] w-full max-w-full flex-col overflow-hidden rounded-t-[20px]! rounded-b-none! bg-surface md:h-full md:w-[min(1020px,90vw)] md:rounded-l-[20px]! md:rounded-r-none!"
           >
             {/* Mobile Drag Grabber ONLY (scroll & iframe touches never trigger drag) */}
             <div
               onPointerDown={isMobile ? (e) => dragControls.start(e) : undefined}
-              className="flex touch-none justify-center pb-1.5 pt-2.5 md:hidden"
+              className="flex touch-none justify-center bg-surface pb-1.5 pt-2.5 md:hidden"
               aria-hidden="true"
             >
               <span className="h-1 w-10 rounded-full bg-hairline-strong" />
             </div>
 
             {/* Cover Header */}
-            <motion.div
-              layoutId={peekOrigin ? `cover-${peekOrigin}-${project.id}` : undefined}
-              className="relative shrink-0 overflow-hidden border-b border-hairline"
-            >
-              <CoverArt project={project} fill />
-              <div className="relative z-10 flex flex-col gap-3 p-4 sm:p-5">
+            <div className="relative shrink-0 overflow-hidden border-b border-hairline">
+              <CoverArt project={project} fill scrim="stage" />
+
+              <div className="relative z-10 flex flex-col gap-4 p-4 sm:px-6 sm:py-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <FreshnessBadge project={project} overlay />
-                    {project.isPwa && (
-                      <Chip tone="online" led>
-                        PWA
-                      </Chip>
-                    )}
                     {project.kind === 'live' ? (
-                      <Chip tone="online" led>
-                        LIVE
-                      </Chip>
+                      <HeaderPlate tone="online" led>
+                        {project.isPwa ? 'LIVE · PWA' : 'LIVE'}
+                      </HeaderPlate>
                     ) : (
-                      <Chip>CODE</Chip>
+                      <HeaderPlate>CODE</HeaderPlate>
                     )}
-                    <Chip>{project.category}</Chip>
+                    <HeaderPlate>{project.category}</HeaderPlate>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <IconButton
+                      tone="active"
                       label={project.pinned ? `Unpin ${project.displayName}` : `Pin ${project.displayName}`}
                       aria-pressed={project.pinned}
                       onClick={() => {
@@ -200,38 +229,50 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                           'ok',
                         );
                       }}
+                      className="backdrop-blur-md"
+                      style={
+                        project.pinned
+                          ? undefined
+                          : { background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }
+                      }
                     >
-                      <Star size={16} fill={project.pinned ? 'currentColor' : 'none'} />
+                      <Star size={15} fill={project.pinned ? 'currentColor' : 'none'} />
                     </IconButton>
+
                     <a
                       href={project.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => foley.click()}
-                      className="icon-btn"
+                      className="icon-btn backdrop-blur-md"
+                      style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
                       aria-label={`Source of ${project.displayName} on GitHub`}
                       title="View on GitHub"
                     >
-                      <GithubMark size={16} />
+                      <GithubMark size={15} />
                     </a>
+
                     <button
                       ref={closeBtn}
                       type="button"
                       onClick={close}
-                      className="icon-btn"
+                      className="icon-btn backdrop-blur-md"
+                      style={{ background: 'var(--badge-bg)', boxShadow: 'inset 0 0 0 1px var(--badge-border)' }}
                       aria-label="Close inspector"
                     >
-                      <X size={18} />
+                      <X size={17} />
                     </button>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Glyph name={project.glyph} hue={hueOf(project)} size={44} />
+                <div className="flex flex-wrap items-end justify-between gap-4 pt-1">
+                  <div className="flex min-w-0 items-center gap-3.5">
+                    <Glyph name={project.glyph} hue={hueOf(project)} size={46} />
                     <div className="min-w-0">
-                      <h2 className="display truncate text-[26px] text-ink sm:text-[34px]">{project.displayName}</h2>
-                      <p className="mt-1 line-clamp-2 text-[13px] text-dim">{project.tagline}</p>
+                      <h2 className="display text-[24px] text-ink sm:text-[32px]">{project.displayName}</h2>
+                      <p className="mt-1 line-clamp-2 max-w-2xl text-[13.5px] leading-snug text-dim">
+                        {project.tagline}
+                      </p>
                     </div>
                   </div>
                   {project.launchUrl && (
@@ -240,20 +281,20 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => foley.relay()}
-                      className="btn btn-primary shrink-0"
+                      className="btn btn-primary shrink-0 px-4"
                     >
                       Launch App <ExternalLink size={14} />
                     </a>
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* 4-Tab Hardware Bar */}
+            {/* 4-Tab Recessed Hardware Bar */}
             <div
               role="tablist"
               aria-label="Inspector sections"
-              className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset px-3 py-2 sm:px-5"
+              className="hide-scroll flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline bg-inset/80 px-4 py-2 sm:px-6"
             >
               {TABS.map(({ key, label, shortLabel, Icon }) => {
                 const active = activeTab === key;
@@ -269,7 +310,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                         setPeekTab(key);
                       }
                     }}
-                    className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] px-2.5 text-[11.5px] font-medium whitespace-nowrap transition-colors sm:px-3 sm:text-[12.5px] ${
+                    className={`relative flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] px-3 text-[12px] font-medium whitespace-nowrap transition-colors sm:text-[12.5px] ${
                       active ? 'text-ink' : 'text-mute hover:bg-hover hover:text-dim'
                     }`}
                   >
@@ -277,7 +318,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
                       <motion.span
                         layoutId="peek-tab-ind"
                         transition={SPRING}
-                        className="absolute inset-0 rounded-[8px] border border-hairline-strong bg-elevated"
+                        className="absolute inset-0 rounded-[8px] border border-hairline-strong bg-elevated shadow-xs"
                       />
                     )}
                     <Icon size={13} className="relative shrink-0" />
@@ -289,7 +330,7 @@ export function PeekDrawer({ projects }: { projects: Project[] }) {
             </div>
 
             {/* Scrollable Inspector Body */}
-            <div className="thin-scroll min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="thin-scroll min-h-0 flex-1 overflow-y-auto bg-surface p-4 sm:p-6">
               {activeTab === 'sandbox' && (
                 <SandboxFrame project={project} onOpenBrief={() => setPeekTab('brief')} />
               )}

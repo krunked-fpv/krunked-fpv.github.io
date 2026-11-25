@@ -8,7 +8,6 @@ import type { Project } from '../../types/project';
 import { CoverArt } from '../art/CoverArt';
 import { Glyph } from '../art/Glyph';
 import { TIER_TOKENS } from '../spotlight/FreshnessBadge';
-import { Kbd, modKey } from '../ui/Kbd';
 
 interface CartridgeProps {
   project: Project;
@@ -31,27 +30,27 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
       value={project.name}
       dragListener={false}
       dragControls={dragControls}
-      whileDrag={{ scale: 1.04, zIndex: 10 }}
-      className="group surface relative flex h-[134px] w-[166px] shrink-0 flex-col justify-between overflow-hidden rounded-[14px]! select-none"
+      whileDrag={{ scale: 1.03, zIndex: 10 }}
+      className="group surface relative flex h-[140px] w-[214px] shrink-0 flex-col justify-between overflow-hidden rounded-[14px]! select-none transition-transform duration-200 [transition-timing-function:var(--ease-snap)] hover:-translate-y-0.5"
     >
       <div className="pointer-events-none absolute inset-0 z-0">
-        <CoverArt project={project} fill />
+        <CoverArt project={project} fill scrim="stage" />
       </div>
 
-      {/* Top hardware strip: slot number, LED, drag handle */}
-      <div className="relative z-[4] flex items-center justify-between gap-1 px-2.5 pt-2">
+      {/* Top hardware strip: slot number, LED, tactile glass controls */}
+      <div className="relative z-[4] flex items-center justify-between gap-1.5 px-2.5 pt-2.5">
         <span
-          className="mono inline-flex items-center gap-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-medium text-ink backdrop-blur-md"
+          className="mono inline-flex items-center gap-1.5 rounded-[6px] px-2 py-0.5 text-[10px] font-medium text-ink backdrop-blur-md"
           style={{
             background: 'var(--badge-bg)',
             boxShadow: 'inset 0 0 0 1px var(--badge-border)',
           }}
         >
-          <span className="size-[6px] rounded-full" style={{ background: tok.dot }} />
+          <span className="size-[6px] rounded-full" style={{ background: tok.dot }} aria-hidden="true" />
           {slot}
         </span>
 
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             aria-label={`Drag to reorder ${project.displayName}`}
@@ -95,21 +94,25 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
         rel="noopener noreferrer"
         draggable={false}
         onClick={() => foley.relay()}
-        className="relative z-[2] flex flex-1 flex-col justify-end px-2.5 pb-1.5"
+        className="relative z-[2] flex flex-1 flex-col justify-end px-2.5 pb-2"
         aria-label={`Launch ${project.displayName}`}
       >
-        <div className="flex items-center gap-2">
-          <Glyph name={project.glyph} hue={hue} size={28} />
-          <span className="truncate text-[13px] font-semibold tracking-tight text-ink">{project.displayName}</span>
+        <div className="flex items-center gap-2.5">
+          <Glyph name={project.glyph} hue={hue} size={30} />
+          <div className="min-w-0 flex-1">
+            <span className="block truncate text-[13.5px] font-semibold tracking-[-0.015em] text-ink transition-colors group-hover:text-hot-ink">
+              {project.displayName}
+            </span>
+          </div>
         </div>
       </a>
 
       {/* Accessible keyboard & touch reorder bar */}
-      <div className="relative z-[4] flex items-center justify-between border-t border-hairline bg-bar/80 px-2 py-1 backdrop-blur-md">
-        <span className="mono truncate text-[9.5px] uppercase tracking-wider text-mute">
-          {project.kind === 'live' ? 'LIVE' : 'CODE'}
+      <div className="relative z-[4] flex items-center justify-between border-t border-hairline bg-bar/85 px-2.5 py-1 backdrop-blur-md">
+        <span className="mono truncate text-[9.5px] uppercase tracking-[0.12em] text-mute">
+          {project.kind === 'live' ? 'LIVE' : 'CODE'} · {project.category}
         </span>
-        <div className="flex items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5">
           <button
             type="button"
             disabled={index === 0}
@@ -134,7 +137,10 @@ function DockCartridge({ project, index, total, onMove, onPeek, onUnpin }: Cartr
   );
 }
 
-/** Pinned hardware cartridges. Persisted & synced across triple-store vault. */
+/**
+ * Pinned hardware cartridges. Persisted & synced across triple-store vault.
+ * Gracefully renders nothing when 0 apps are pinned (zero dead standby clutter).
+ */
 export function FlagshipDock({ projects }: { projects: Project[] }) {
   const pins = useDeck((s) => s.vault.pins);
   const reorder = useDeck((s) => s.reorderPins);
@@ -145,6 +151,8 @@ export function FlagshipDock({ projects }: { projects: Project[] }) {
 
   const byName = useMemo(() => new Map(projects.map((p) => [p.name, p])), [projects]);
   const visible = useMemo(() => pins.filter((n) => byName.has(n)), [pins, byName]);
+
+  if (visible.length === 0) return null;
 
   const commitOrder = (nextVisible: string[]) => {
     const rest = pins.filter((n) => !byName.has(n));
@@ -162,63 +170,51 @@ export function FlagshipDock({ projects }: { projects: Project[] }) {
   };
 
   return (
-    <section aria-label="Flagship Dock" className="mx-auto max-w-[1480px] px-4 py-5 sm:px-6">
+    <section aria-label="Pinned Dock" className="mx-auto max-w-[1400px] px-4 pb-5 pt-2 sm:px-6">
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="eyebrow text-dim!">Flagship Dock</h2>
-          {visible.length > 0 && (
-            <span className="mono text-[10px] tracking-wider text-mute">{visible.length} PINNED</span>
-          )}
+          <Star size={12} className="shrink-0 text-solar-ink" fill="currentColor" aria-hidden="true" />
+          <h2 className="eyebrow text-dim!">Pinned Dock</h2>
+          <span className="mono text-[10px] tracking-[0.14em] text-mute">
+            · {String(visible.length).padStart(2, '0')} CARTRIDGES
+          </span>
         </div>
-        <span className="mono text-[10px] tracking-wider text-mute">
-          {visible.length ? 'GRIP OR ARROWS TO REORDER' : 'STANDBY'}
+        <span className="mono hidden text-[10px] tracking-[0.14em] text-mute sm:inline">
+          DRAG OR ARROWS TO REORDER
         </span>
       </div>
 
-      {visible.length ? (
-        <Reorder.Group
-          axis="x"
-          values={visible}
-          onReorder={(next) => {
-            foley.tick();
-            commitOrder(next);
-          }}
-          className="hide-scroll flex max-w-full gap-3 overflow-x-auto pb-1.5"
-        >
-          {visible.map((n, idx) => {
-            const p = byName.get(n)!;
-            return (
-              <DockCartridge
-                key={n}
-                project={p}
-                index={idx}
-                total={visible.length}
-                onMove={handleMove}
-                onPeek={(name, isLive) => {
-                  foley.latch();
-                  setPeek(name, null, isLive ? 'sandbox' : 'brief');
-                }}
-                onUnpin={(name) => {
-                  foley.latch();
-                  togglePin(name);
-                  toast(`Unpinned ${p.displayName}`, 'info');
-                }}
-              />
-            );
-          })}
-        </Reorder.Group>
-      ) : (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-hairline bg-inset/70 px-4 py-3 text-[12.5px] text-dim">
-          <div className="flex items-center gap-2.5">
-            <Star size={14} className="shrink-0 text-solar-ink" />
-            <span>
-              Pin builds with the star button on any card, or press <Kbd>P</Kbd> in the <Kbd>{modKey()}</Kbd>{' '}
-              <Kbd>K</Kbd> launcher.
-            </span>
-          </div>
-          <span className="mono text-[10px] tracking-wider text-mute">VAULT SYNCED</span>
-        </div>
-      )}
+      <Reorder.Group
+        axis="x"
+        values={visible}
+        onReorder={(next) => {
+          foley.tick();
+          commitOrder(next);
+        }}
+        className="hide-scroll flex max-w-full gap-3.5 overflow-x-auto pb-1.5"
+      >
+        {visible.map((n, idx) => {
+          const p = byName.get(n)!;
+          return (
+            <DockCartridge
+              key={n}
+              project={p}
+              index={idx}
+              total={visible.length}
+              onMove={handleMove}
+              onPeek={(name, isLive) => {
+                foley.latch();
+                setPeek(name, null, isLive ? 'sandbox' : 'brief');
+              }}
+              onUnpin={(name) => {
+                foley.latch();
+                togglePin(name);
+                toast(`Unpinned ${p.displayName}`, 'info');
+              }}
+            />
+          );
+        })}
+      </Reorder.Group>
     </section>
   );
 }

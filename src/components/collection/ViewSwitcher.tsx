@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion';
-import { Grid3x3, History, LayoutDashboard } from 'lucide-react';
+import { Grid3x3, History, LayoutGrid } from 'lucide-react';
 import { useFoley } from '../../audio/useFoley';
 import { SPRING } from '../../config/site';
 import type { ViewMode } from '../../types/project';
 
-const VIEWS: { key: ViewMode; label: string; short: string; shortcut: string; Icon: typeof Grid3x3 }[] = [
-  { key: 'bento', label: 'Showcase Bento', short: 'Bento', shortcut: '1', Icon: LayoutDashboard },
-  { key: 'grid', label: 'Telemetry Grid', short: 'Grid', shortcut: '2', Icon: Grid3x3 },
-  { key: 'matrix', label: 'Ship Matrix', short: 'Matrix', shortcut: '3', Icon: History },
+const VIEWS: { key: ViewMode; label: string; shortcut: string; Icon: typeof Grid3x3 }[] = [
+  { key: 'bento', label: 'Gallery View', shortcut: '1', Icon: LayoutGrid },
+  { key: 'grid', label: 'Telemetry Index', shortcut: '2', Icon: Grid3x3 },
+  { key: 'matrix', label: 'Ship Timeline', shortcut: '3', Icon: History },
 ];
 
 export function ViewSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
@@ -35,7 +35,7 @@ export function ViewSwitcher({ view, onChange }: { view: ViewMode; onChange: (v:
                 onChange(key);
               }
             }}
-            className={`relative grid size-8 place-items-center rounded-[7px] transition-colors max-md:size-10 ${
+            className={`relative grid size-7.5 place-items-center rounded-[7px] transition-colors max-md:size-9 ${
               on ? 'text-ink' : 'text-mute hover:text-dim'
             }`}
           >
@@ -46,7 +46,7 @@ export function ViewSwitcher({ view, onChange }: { view: ViewMode; onChange: (v:
                 className="absolute inset-0 rounded-[7px] border border-hairline-strong bg-elevated shadow-xs"
               />
             )}
-            <Icon size={15} className="relative" />
+            <Icon size={14} className="relative" />
           </button>
         );
       })}

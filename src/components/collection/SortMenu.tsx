@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronDown } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useFoley } from '../../audio/useFoley';
 import { SPRING } from '../../config/site';
@@ -12,7 +12,7 @@ const OPTIONS: { key: SortMode; label: string; tag: string }[] = [
   { key: 'alpha', label: 'Alphabetical', tag: 'A-Z' },
 ];
 
-/** Accessible hardware listbox for collection sorting. */
+/** Accessible tactile listbox for collection sorting. */
 export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: SortMode) => void }) {
   const foley = useFoley();
   const [open, setOpen] = useState(false);
@@ -72,7 +72,9 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
       <button
         ref={btn}
         type="button"
-        className="btn min-h-9! gap-2 px-3 text-[12.5px]"
+        className={`btn min-h-8! gap-1.5 rounded-[9px]! px-2.5 text-[12px] ${
+          open ? 'bg-elevated text-ink' : ''
+        }`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Sort: ${current.label}`}
@@ -81,10 +83,15 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
           setOpen((o) => !o);
         }}
       >
-        <span className="mono hidden text-[10px] tracking-[0.14em] text-mute sm:inline">SORT</span>
-        <span className="truncate">{current.label}</span>
-        <ChevronDown size={14} className={`shrink-0 text-mute transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ArrowUpDown size={12} className="shrink-0 text-mute" aria-hidden="true" />
+        <span className="truncate font-medium">{current.label}</span>
+        <ChevronDown
+          size={13}
+          className={`shrink-0 text-mute transition-transform duration-150 ${open ? 'rotate-180 text-ink' : ''}`}
+          aria-hidden="true"
+        />
       </button>
+
       <AnimatePresence>
         {open && (
           <motion.ul
@@ -96,7 +103,7 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={SPRING}
-            className="surface absolute right-0 top-[calc(100%+6px)] z-50 w-56 rounded-[12px]! border border-hairline-strong bg-elevated p-1.5 shadow-xl"
+            className="surface surface-elevated absolute right-0 top-[calc(100%+6px)] z-50 w-56 rounded-[12px]! border border-hairline-strong bg-elevated p-1.5 shadow-xl"
             style={{ transformOrigin: 'top right' }}
           >
             {OPTIONS.map((o, i) => {
@@ -109,15 +116,21 @@ export function SortMenu({ sort, onChange }: { sort: SortMode; onChange: (s: Sor
                   aria-selected={selected}
                   onPointerEnter={() => setActive(i)}
                   onClick={() => choose(i)}
-                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-[8px] px-2.5 py-2 text-[13px] transition-colors ${
-                    i === active ? 'bg-hover text-ink' : 'text-dim'
+                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-[8px] px-2.5 py-2 text-[12.5px] transition-colors ${
+                    i === active ? 'bg-hover text-ink' : selected ? 'text-ink' : 'text-dim'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="mono w-8 text-[9.5px] tracking-wider text-mute">{o.tag}</span>
-                    <span>{o.label}</span>
+                  <span className="flex items-center gap-2.5">
+                    <span
+                      className={`mono w-8 text-[9.5px] font-medium tracking-[0.12em] ${
+                        selected ? 'text-hot-ink' : 'text-mute'
+                      }`}
+                    >
+                      {o.tag}
+                    </span>
+                    <span className={selected ? 'font-medium' : ''}>{o.label}</span>
                   </span>
-                  {selected && <Check size={14} className="text-hot-ink" />}
+                  {selected && <Check size={13} className="shrink-0 text-hot-ink" />}
                 </li>
               );
             })}

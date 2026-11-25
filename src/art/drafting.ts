@@ -4,7 +4,7 @@ import type { Ctx2D } from './styles/types';
 
 const grainTiles = new Map<ArtTheme, HTMLCanvasElement>();
 
-/** Builds a tiny 64x64 deterministic monochrome grain tile once per theme (zero GPU readbacks). */
+/** Builds a tiny 64x64 deterministic monochrome print-grain tile once per theme (zero GPU readbacks). */
 function getGrainTile(theme: ArtTheme): HTMLCanvasElement | null {
   if (typeof document === 'undefined') return null;
   const hit = grainTiles.get(theme);
@@ -21,12 +21,12 @@ function getGrainTile(theme: ArtTheme): HTMLCanvasElement | null {
   for (let y = 0; y < size; y += 2) {
     for (let x = 0; x < size; x += 2) {
       const v = rng();
-      if (v > 0.62) {
-        const a = (v - 0.62) * (theme === 'daylight' ? 0.08 : 0.075);
-        gctx.fillStyle = theme === 'daylight' ? `rgba(20,22,26,${a.toFixed(3)})` : `rgba(255,255,255,${a.toFixed(3)})`;
+      if (v > 0.64) {
+        const a = (v - 0.64) * (theme === 'daylight' ? 0.065 : 0.072);
+        gctx.fillStyle = theme === 'daylight' ? `rgba(17,19,24,${a.toFixed(3)})` : `rgba(255,255,255,${a.toFixed(3)})`;
         gctx.fillRect(x, y, 1, 1);
-      } else if (v < 0.22) {
-        const a = (0.22 - v) * (theme === 'daylight' ? 0.09 : 0.08);
+      } else if (v < 0.2) {
+        const a = (0.2 - v) * (theme === 'daylight' ? 0.08 : 0.07);
         gctx.fillStyle = theme === 'daylight' ? `rgba(255,255,255,${a.toFixed(3)})` : `rgba(0,0,0,${a.toFixed(3)})`;
         gctx.fillRect(x + 1, y + 1, 1, 1);
       }
@@ -45,7 +45,7 @@ export function drawDraftingGrid(
   opts: { pitch?: number; opacity?: number; vernier?: boolean } = {},
 ) {
   const pitch = opts.pitch ?? (Math.min(w, h) > 320 ? 32 : 24);
-  const alpha = opts.opacity ?? (pal.isLight ? 0.055 : 0.04);
+  const alpha = opts.opacity ?? (pal.isLight ? 0.055 : 0.042);
 
   ctx.save();
   ctx.strokeStyle = pal.reticle(alpha);
@@ -61,8 +61,8 @@ export function drawDraftingGrid(
   }
   ctx.stroke();
 
-  // Subtle registration crosshairs every 2nd grid intersection
-  ctx.strokeStyle = pal.reticle(alpha * 2.2);
+  // Registration crosshairs every 2nd grid intersection
+  ctx.strokeStyle = pal.reticle(alpha * 2.1);
   ctx.beginPath();
   for (let y = pitch * 2; y < h - pitch * 0.5; y += pitch * 2) {
     for (let x = pitch * 2; x < w - pitch * 0.5; x += pitch * 2) {
@@ -74,14 +74,14 @@ export function drawDraftingGrid(
   }
   ctx.stroke();
 
-  // Optional right-margin vernier ruler ticks
+  // Right-margin Swiss vernier scale
   if (opts.vernier && w >= 180 && h >= 120) {
-    ctx.strokeStyle = pal.reticle(pal.isLight ? 0.14 : 0.12);
+    ctx.strokeStyle = pal.reticle(pal.isLight ? 0.16 : 0.14);
     ctx.beginPath();
     const step = 10;
     const rx = w - 6;
     for (let y = 16, i = 0; y < h - 18; y += step, i++) {
-      const len = i % 5 === 0 ? 6 : 3;
+      const len = i % 5 === 0 ? 7 : 3;
       ctx.moveTo(rx - len, y + 0.5);
       ctx.lineTo(rx, y + 0.5);
     }
@@ -97,7 +97,7 @@ export function drawCornerFiducials(ctx: Ctx2D, w: number, h: number, pal: Palet
   const arm = Math.min(10, Math.round(Math.min(w, h) * 0.055));
 
   ctx.save();
-  ctx.strokeStyle = pal.reticle(pal.isLight ? 0.2 : 0.17);
+  ctx.strokeStyle = pal.reticle(pal.isLight ? 0.22 : 0.18);
   ctx.lineWidth = 0.85;
   ctx.beginPath();
   // Top-left
@@ -130,27 +130,27 @@ export function drawSurveyMarker(
 ) {
   ctx.save();
   if (variant === 'triangle') {
-    const r = 6.5;
+    const r = 7;
     ctx.beginPath();
     ctx.moveTo(x, y - r);
     ctx.lineTo(x + r * 0.88, y + r * 0.62);
     ctx.lineTo(x - r * 0.88, y + r * 0.62);
     ctx.closePath();
-    ctx.fillStyle = pal.isLight ? 'rgba(247,246,242,0.75)' : 'rgba(8,9,11,0.72)';
+    ctx.fillStyle = pal.isLight ? 'rgba(255,255,255,0.88)' : 'rgba(6,7,9,0.78)';
     ctx.fill();
     ctx.strokeStyle = pal.key;
-    ctx.lineWidth = 1.1;
+    ctx.lineWidth = 1.25;
     ctx.stroke();
 
     ctx.fillStyle = pal.counter;
     ctx.beginPath();
-    ctx.arc(x, y + 0.5, 1.7, 0, Math.PI * 2);
+    ctx.arc(x, y + 0.6, 1.9, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    const s = 8;
-    const c = 3.5;
-    ctx.strokeStyle = pal.keyAlpha(0.75);
-    ctx.lineWidth = 1;
+    const s = 8.5;
+    const c = 3.8;
+    ctx.strokeStyle = pal.keyAlpha(pal.isLight ? 0.88 : 0.82);
+    ctx.lineWidth = 1.1;
     ctx.beginPath();
     ctx.moveTo(x - s, y - s + c); ctx.lineTo(x - s, y - s); ctx.lineTo(x - s + c, y - s);
     ctx.moveTo(x + s - c, y - s); ctx.lineTo(x + s, y - s); ctx.lineTo(x + s, y - s + c);
@@ -159,33 +159,42 @@ export function drawSurveyMarker(
     ctx.stroke();
 
     ctx.fillStyle = pal.counter;
-    ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
+    ctx.fillRect(x - 1.6, y - 1.6, 3.2, 3.2);
   }
   ctx.restore();
 }
 
-/** Theme-aware optical vignette, subtle procedural film grain, and bottom AA readability feather. */
+/**
+ * Museum-grade optical finish:
+ * Clean directional depth vignette (zero muddy wash) + cached tactile print grain.
+ * Contextual scrimming is handled cleanly by CoverArt's `scrim` prop so the artwork itself stays luminous.
+ */
 export function finishCover(ctx: Ctx2D, w: number, h: number, pal: Palette) {
   ctx.save();
+
+  // Whisper-clean optical framing vignette centered slightly toward the upper-right focal zone
   const vig = ctx.createRadialGradient(
+    w * 0.58,
+    h * 0.4,
+    Math.min(w, h) * 0.34,
     w * 0.52,
-    h * 0.44,
-    Math.min(w, h) * 0.28,
-    w * 0.5,
-    h * 0.5,
-    Math.max(w, h) * 0.82,
+    h * 0.48,
+    Math.max(w, h) * 0.9,
   );
   if (pal.isLight) {
-    vig.addColorStop(0, 'rgba(236,234,228,0)');
-    vig.addColorStop(1, 'rgba(182,177,164,0.34)');
+    // Crisp architectural gallery illumination — never muddy brown-grey
+    vig.addColorStop(0, 'rgba(255,255,255,0.06)');
+    vig.addColorStop(0.68, 'rgba(236,234,228,0)');
+    vig.addColorStop(1, 'rgba(17,19,24,0.075)');
   } else {
-    vig.addColorStop(0, 'rgba(6,7,10,0)');
-    vig.addColorStop(1, 'rgba(5,6,9,0.52)');
+    vig.addColorStop(0, 'rgba(255,255,255,0.02)');
+    vig.addColorStop(0.62, 'rgba(6,7,10,0)');
+    vig.addColorStop(1, 'rgba(4,5,8,0.44)');
   }
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, w, h);
 
-  // Subtle cached tactile grain overlay
+  // Subtle cached tactile print grain overlay
   const tile = getGrainTile(pal.theme);
   if (tile && typeof ctx.createPattern === 'function') {
     try {
@@ -199,22 +208,9 @@ export function finishCover(ctx: Ctx2D, w: number, h: number, pal: Palette) {
     }
   }
 
-  // Bottom legibility feather into card surface token (generous ramp for >= 7:1 Daylight & Obsidian AA contrast)
-  if (pal.isLight) {
-    const fade = ctx.createLinearGradient(0, h * 0.34, 0, h);
-    fade.addColorStop(0, 'rgba(247,246,242,0)');
-    fade.addColorStop(0.45, 'rgba(247,246,242,0.52)');
-    fade.addColorStop(0.8, 'rgba(247,246,242,0.88)');
-    fade.addColorStop(1, 'rgba(247,246,242,0.96)');
-    ctx.fillStyle = fade;
-    ctx.fillRect(0, h * 0.34, w, h * 0.66);
-  } else {
-    const fade = ctx.createLinearGradient(0, h * 0.48, 0, h);
-    fade.addColorStop(0, 'rgba(11,13,18,0)');
-    fade.addColorStop(0.65, 'rgba(11,13,18,0.56)');
-    fade.addColorStop(1, 'rgba(11,13,18,0.9)');
-    ctx.fillStyle = fade;
-    ctx.fillRect(0, h * 0.48, w, h * 0.52);
-  }
+  // Subtle inner optical plate edge catchlight along top border
+  ctx.fillStyle = pal.isLight ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.06)';
+  ctx.fillRect(0, 0, w, 1);
+
   ctx.restore();
 }

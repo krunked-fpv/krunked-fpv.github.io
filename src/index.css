@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 /* ==========================================================================
-   KRUNKED // FORGE DECK V2 — Dual Hardware Theme & Tactile Design System
-   Themes: Anodized Obsidian (default dark) + Braun Daylight (warm ceramic)
+   KRUNKED STUDIO — Dual-Material Hardware & Editorial Design System
+   Themes: Obsidian Atelier (velvety carbon) + Braun Ceramic Daylight
    ========================================================================== */
 
 @theme inline {
@@ -53,53 +53,54 @@
   --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Theme 1: Anodized Obsidian (Default Dark) ---------- */
+/* ---------- Theme 1: Obsidian Atelier (Default Dark) ---------- */
 :root,
 [data-theme='obsidian'] {
   color-scheme: dark;
 
-  /* 4-Tier Surface Elevation Ladder */
-  --bg-chassis: #08090b;
-  --bg-inset: #0c0e12;
-  --bg-surface: #111419;
-  --bg-elevated: #181c24;
-  --bg-bar: rgba(8, 9, 11, 0.84);
-  --bezel-frame: #06070a;
+  /* 4-Tier Carbon Elevation Ladder */
+  --bg-chassis: #060709;
+  --bg-inset: #0b0d12;
+  --bg-surface: #10131a;
+  --bg-elevated: #171b24;
+  --bg-bar: rgba(6, 7, 9, 0.82);
+  --bezel-frame: #040507;
 
-  /* Precision Ink Hierarchy (5.4:1+ AA across all levels) */
-  --ink-primary: #f3f5f8;
-  --ink-secondary: #b4bcc9;
-  --ink-muted: #848f9e;
+  /* Precision Luminous Ink Hierarchy (>= 5.3:1 AA across all levels) */
+  --ink-primary: #f5f7fa;
+  --ink-secondary: #b6bfce;
+  --ink-muted: #8691a2;
 
-  /* Machined Hairlines & Pointer-Tracked Specular Sheen */
-  --hairline: rgba(255, 255, 255, 0.08);
-  --hairline-strong: rgba(255, 255, 255, 0.16);
-  --inset-highlight: rgba(255, 255, 255, 0.12);
-  --sheen-border: rgba(255, 255, 255, 0.42);
-  --sheen-fill: rgba(255, 255, 255, 0.045);
-  --surface-tint: rgba(255, 255, 255, 0.035);
-  --hover-tint: rgba(255, 255, 255, 0.055);
-  --scrim: rgba(5, 6, 8, 0.78);
-  --grid-line: rgba(255, 255, 255, 0.035);
-  --keycap-shadow: rgba(0, 0, 0, 0.55);
-  --grain-opacity: 0.028;
+  /* Machined Hairlines & Pointer-Tracked Specular Rim */
+  --hairline: rgba(255, 255, 255, 0.085);
+  --hairline-strong: rgba(255, 255, 255, 0.17);
+  --inset-highlight: rgba(255, 255, 255, 0.11);
+  --sheen-border: rgba(255, 255, 255, 0.44);
+  --sheen-fill: rgba(255, 255, 255, 0.042);
+  --surface-tint: rgba(255, 255, 255, 0.036);
+  --hover-tint: rgba(255, 255, 255, 0.064);
+  --scrim: rgba(4, 5, 7, 0.8);
+  --grid-line: rgba(255, 255, 255, 0.032);
+  --keycap-shadow: rgba(0, 0, 0, 0.62);
+  --grain-opacity: 0.024;
+  --stage-glow-color: rgba(255, 79, 0, 0.11);
 
   /* Hardware Status LEDs & WCAG-AA Badge Inks */
   --led-hot: #ff4f00;
-  --led-hot-ink: #ff6e2e;
-  --led-hot-soft: rgba(255, 79, 0, 0.13);
+  --led-hot-ink: #ff783d;
+  --led-hot-soft: rgba(255, 79, 0, 0.14);
 
   --led-online: #10b981;
   --led-online-ink: #34d399;
-  --led-online-soft: rgba(16, 185, 129, 0.13);
+  --led-online-soft: rgba(16, 185, 129, 0.14);
 
   --led-active: #f59e0b;
   --led-active-ink: #fbbf24;
-  --led-active-soft: rgba(245, 158, 11, 0.13);
+  --led-active-soft: rgba(245, 158, 11, 0.14);
 
   --led-alarm: #ef4444;
   --led-alarm-ink: #f87171;
-  --led-alarm-soft: rgba(239, 68, 68, 0.13);
+  --led-alarm-soft: rgba(239, 68, 68, 0.14);
 
   /* 90d Chrono-Pulse Thermal Bars */
   --heat-0: rgba(255, 255, 255, 0.09);
@@ -108,17 +109,25 @@
   --heat-3: #ff4f00;
 
   /* Cover Art & Overlay Tokens */
-  --cover-scrim-end: rgba(8, 9, 11, 0.92);
-  --badge-bg: rgba(8, 9, 11, 0.74);
-  --badge-border: rgba(255, 255, 255, 0.14);
+  --cover-scrim-end: rgba(16, 19, 26, 0.94);
+  --badge-bg: rgba(9, 11, 15, 0.78);
+  --badge-border: rgba(255, 255, 255, 0.16);
 
   /* Elevation & Physical Shadows */
-  --shadow-surface: inset 0 1px 0 var(--inset-highlight), 0 14px 32px -18px rgba(0, 0, 0, 0.85);
-  --shadow-elevated: inset 0 1px 0 var(--inset-highlight), 0 20px 44px -16px rgba(0, 0, 0, 0.9);
-  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.48), inset 0 0 0 1px var(--hairline);
-  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 28px 72px -16px rgba(0, 0, 0, 0.92);
+  --shadow-surface:
+    inset 0 1px 0 var(--inset-highlight),
+    0 1px 0 rgba(0, 0, 0, 0.45),
+    0 16px 36px -18px rgba(0, 0, 0, 0.92);
+  --shadow-elevated:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 24px 52px -16px rgba(0, 0, 0, 0.96);
+  --shadow-stage:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 32px 72px -24px rgba(0, 0, 0, 0.96);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.52), inset 0 0 0 1px var(--hairline);
+  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 32px 80px -16px rgba(0, 0, 0, 0.94);
   --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(255, 79, 0, 0.24);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
 
   /* Layout & Geometry Rhythm */
@@ -131,71 +140,108 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-pill: 999px;
 }
 
-/* ---------- Theme 2: Braun Daylight (Warm Matte Ceramic / Aluminum) ---------- */
+/* ---------- Theme 2: Braun Ceramic Daylight (Gallery Porcelain) ---------- */
 [data-theme='daylight'] {
   color-scheme: light;
 
-  --bg-chassis: #eceae4;
-  --bg-inset: #e1ded6;
-  --bg-surface: #f7f6f2;
+  --bg-chassis: #f2f0ea;
+  --bg-inset: #e7e4dc;
+  --bg-surface: #ffffff;
   --bg-elevated: #ffffff;
-  --bg-bar: rgba(236, 234, 228, 0.86);
-  --bezel-frame: #111419;
+  --bg-bar: rgba(242, 240, 234, 0.88);
+  --bezel-frame: #111318;
 
-  --ink-primary: #14161a;
-  --ink-secondary: #3b414d;
-  --ink-muted: #596170;
+  /* Crisp Graphite Ink Hierarchy (>= 5.0:1 AA across all ceramic & white surfaces) */
+  --ink-primary: #111318;
+  --ink-secondary: #3a404d;
+  --ink-muted: #565f6f;
 
-  --hairline: rgba(20, 22, 26, 0.11);
-  --hairline-strong: rgba(20, 22, 26, 0.22);
-  --inset-highlight: rgba(255, 255, 255, 0.85);
-  --sheen-border: rgba(20, 22, 26, 0.34);
-  --sheen-fill: rgba(20, 22, 26, 0.035);
-  --surface-tint: rgba(20, 22, 26, 0.035);
-  --hover-tint: rgba(20, 22, 26, 0.05);
-  --scrim: rgba(20, 22, 26, 0.42);
-  --grid-line: rgba(20, 22, 26, 0.055);
-  --keycap-shadow: rgba(20, 22, 26, 0.18);
-  --grain-opacity: 0.02;
+  --hairline: rgba(17, 19, 24, 0.095);
+  --hairline-strong: rgba(17, 19, 24, 0.19);
+  --inset-highlight: rgba(255, 255, 255, 0.96);
+  --sheen-border: rgba(17, 19, 24, 0.3);
+  --sheen-fill: rgba(17, 19, 24, 0.028);
+  --surface-tint: rgba(17, 19, 24, 0.036);
+  --hover-tint: rgba(17, 19, 24, 0.058);
+  --scrim: rgba(17, 19, 24, 0.42);
+  --grid-line: rgba(17, 19, 24, 0.048);
+  --keycap-shadow: rgba(17, 19, 24, 0.16);
+  --grain-opacity: 0.016;
+  --stage-glow-color: rgba(255, 79, 0, 0.075);
 
+  /* Vibrant High-Contrast Ceramic LED Inks (>= 5:1 on white/porcelain) */
   --led-hot: #ff4f00;
-  --led-hot-ink: #a83000;
-  --led-hot-soft: rgba(255, 79, 0, 0.11);
+  --led-hot-ink: #b83500;
+  --led-hot-soft: rgba(255, 79, 0, 0.1);
 
   --led-online: #10b981;
-  --led-online-ink: #04684b;
-  --led-online-soft: rgba(16, 185, 129, 0.12);
+  --led-online-ink: #046b4d;
+  --led-online-soft: rgba(16, 185, 129, 0.11);
 
   --led-active: #f59e0b;
-  --led-active-ink: #874e00;
-  --led-active-soft: rgba(245, 158, 11, 0.14);
+  --led-active-ink: #925400;
+  --led-active-soft: rgba(245, 158, 11, 0.13);
 
   --led-alarm: #ef4444;
-  --led-alarm-ink: #a81818;
-  --led-alarm-soft: rgba(239, 68, 68, 0.11);
+  --led-alarm-ink: #b91c1c;
+  --led-alarm-soft: rgba(239, 68, 68, 0.1);
 
-  --heat-0: rgba(20, 22, 26, 0.13);
+  --heat-0: rgba(17, 19, 24, 0.12);
   --heat-1: #047857;
   --heat-2: #b45309;
   --heat-3: #d94100;
 
-  --cover-scrim-end: rgba(247, 246, 242, 0.94);
-  --badge-bg: rgba(247, 246, 242, 0.86);
-  --badge-border: rgba(20, 22, 26, 0.16);
+  --cover-scrim-end: rgba(255, 255, 255, 0.95);
+  --badge-bg: rgba(255, 255, 255, 0.9);
+  --badge-border: rgba(17, 19, 24, 0.14);
 
-  --shadow-surface: inset 0 1px 0 var(--inset-highlight), 0 8px 22px -14px rgba(20, 22, 26, 0.14);
-  --shadow-elevated: inset 0 1px 0 var(--inset-highlight), 0 14px 30px -14px rgba(20, 22, 26, 0.18);
-  --shadow-inset: inset 0 1px 2px rgba(20, 22, 26, 0.08), inset 0 0 0 1px var(--hairline);
-  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 24px 56px -16px rgba(20, 22, 26, 0.24);
+  /* Tactile Warm Ceramic Shadows — pure white cards float cleanly off studio table */
+  --shadow-surface:
+    inset 0 1px 0 var(--inset-highlight),
+    0 1px 2px rgba(17, 19, 24, 0.045),
+    0 10px 26px -14px rgba(17, 19, 24, 0.13);
+  --shadow-elevated:
+    inset 0 1px 0 var(--inset-highlight),
+    0 2px 6px rgba(17, 19, 24, 0.055),
+    0 18px 38px -14px rgba(17, 19, 24, 0.18);
+  --shadow-stage:
+    inset 0 1px 0 var(--inset-highlight),
+    0 4px 12px rgba(17, 19, 24, 0.05),
+    0 26px 56px -20px rgba(17, 19, 24, 0.19);
+  --shadow-inset: inset 0 1px 2px rgba(17, 19, 24, 0.075), inset 0 0 0 1px var(--hairline);
+  --shadow-modal: inset 0 1px 0 var(--inset-highlight), 0 28px 64px -16px rgba(17, 19, 24, 0.24);
   --focus-ring: 0 0 0 1px var(--led-hot), 0 0 0 3px rgba(255, 79, 0, 0.2);
-  --scrollbar-thumb: rgba(20, 22, 26, 0.2);
-  --scrollbar-thumb-hover: rgba(20, 22, 26, 0.36);
+  --scrollbar-thumb: rgba(17, 19, 24, 0.18);
+  --scrollbar-thumb-hover: rgba(17, 19, 24, 0.34);
 }
 
-/* ---------- Document Base ---------- */
+/* ---------- Document Base & Global Precision Scrollbars ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html,
 body,
 #root {
@@ -222,7 +268,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
-  padding-bottom: calc(var(--statusbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Subtle Monochrome Film Grain Overlay */
@@ -242,7 +288,7 @@ body::before {
 }
 
 ::selection {
-  background-color: rgba(255, 79, 0, 0.26);
+  background-color: rgba(255, 79, 0, 0.24);
   color: var(--ink-primary);
 }
 
@@ -262,6 +308,11 @@ kbd,
 [data-tabular] {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
+}
+
+/* Strictly keyboard-only focus rings (never sticky orange rings after mouse clicks) */
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 :focus-visible {
@@ -285,8 +336,8 @@ kbd,
   }
 
   .display {
-    letter-spacing: -0.035em;
-    line-height: 0.98;
+    letter-spacing: -0.032em;
+    line-height: 1.02;
     font-weight: 600;
   }
 
@@ -299,7 +350,7 @@ kbd,
     color: var(--ink-muted);
   }
 
-  /* Architectural Hero Micro-Grid (masked, zero colored blobs) */
+  /* Architectural Hero Micro-Grid (masked, razor-clean) */
   .hero-grid {
     position: relative;
   }
@@ -313,8 +364,37 @@ kbd,
       linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
       linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
     background-size: 28px 28px;
-    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
-    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.48) 68%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.48) 68%, transparent 100%);
+  }
+
+  /* Ambient Studio Stage Aura keyed to --stage-glow-color */
+  .stage-glow {
+    position: absolute;
+    inset: -40px -10% auto -10%;
+    height: 360px;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(
+      ellipse 56% 72% at 50% 18%,
+      var(--stage-glow-color),
+      transparent 72%
+    );
+    transition:
+      background 500ms var(--ease-snap),
+      opacity 500ms var(--ease-snap);
+  }
+
+  /* Architectural Editorial Section Divider */
+  .section-rule {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(
+      90deg,
+      var(--hairline-strong) 0%,
+      var(--hairline) 55%,
+      transparent 100%
+    );
   }
 
   /* ---------- Hardware Surfaces & Specular Border ---------- */
@@ -348,7 +428,7 @@ kbd,
   }
   .surface::after {
     background: radial-gradient(
-      220px circle at var(--mx, 50%) var(--my, 0%),
+      240px circle at var(--mx, 50%) var(--my, 0%),
       var(--sheen-border),
       transparent 65%
     );
@@ -384,6 +464,91 @@ kbd,
     box-shadow: var(--shadow-inset);
   }
 
+  /* Hero Featured Exhibition Frame */
+  .studio-stage {
+    position: relative;
+    border-radius: var(--radius-xl);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-stage);
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .studio-stage::before,
+  .studio-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    z-index: 5;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .studio-stage::before {
+    background: linear-gradient(
+      180deg,
+      var(--hairline-strong) 0%,
+      var(--hairline) 42%,
+      var(--hairline) 100%
+    );
+  }
+  .studio-stage::after {
+    background: radial-gradient(
+      320px circle at var(--mx, 50%) var(--my, 0%),
+      var(--sheen-border),
+      transparent 65%
+    );
+    opacity: 0;
+    transition: opacity 240ms var(--ease-snap);
+  }
+  @media (hover: hover) {
+    .studio-stage:hover::after {
+      opacity: 0.9;
+    }
+  }
+
+  /* Gallery Exhibition Card with Tactile Lift (individual `translate` composes cleanly with Framer Motion) */
+  .card-exhibit {
+    position: relative;
+    border-radius: var(--radius-lg);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-surface);
+    isolation: isolate;
+    transition:
+      translate 240ms var(--ease-snap),
+      box-shadow 240ms var(--ease-snap),
+      background-color var(--t-snap) var(--ease-snap);
+  }
+  .card-exhibit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    z-index: 3;
+    background: var(--hairline);
+    transition: background 220ms var(--ease-snap);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  @media (hover: hover) {
+    .card-exhibit:hover {
+      translate: 0 -2px;
+      box-shadow: var(--shadow-elevated);
+    }
+    .card-exhibit:hover::before {
+      background: var(--hairline-strong);
+    }
+  }
+
   .glow-under {
     position: absolute;
     inset: auto 10% -14px 10%;
@@ -404,7 +569,7 @@ kbd,
     align-items: center;
     gap: 5px;
     height: 22px;
-    padding: 0 7px;
+    padding: 0 7.5px;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
     font-size: 10.5px;
@@ -515,24 +680,31 @@ kbd,
     cursor: not-allowed;
   }
 
-  /* Primary International Orange Hardware Switch (#08090B on #FF5500 = 6.2:1 AA) */
+  /* Primary International Orange Hardware Switch (#060709 on #FF5500 = 6.3:1 AA) */
   .btn-primary,
   .btn-hot {
-    color: #08090b;
+    color: #060709;
     background: #ff5500;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.34),
-      inset 0 0 0 1px rgba(8, 9, 11, 0.14),
-      0 6px 18px -8px rgba(255, 79, 0, 0.55);
+      inset 0 1px 0 rgba(255, 255, 255, 0.36),
+      inset 0 0 0 1px rgba(6, 7, 9, 0.14),
+      0 6px 18px -8px rgba(255, 79, 0, 0.52);
     font-weight: 600;
   }
   .btn-primary:hover:not(:disabled),
   .btn-hot:hover:not(:disabled) {
     background: #ff6418;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.42),
-      inset 0 0 0 1px rgba(8, 9, 11, 0.18),
-      0 8px 20px -8px rgba(255, 79, 0, 0.65);
+      inset 0 1px 0 rgba(255, 255, 255, 0.44),
+      inset 0 0 0 1px rgba(6, 7, 9, 0.18),
+      0 8px 22px -8px rgba(255, 79, 0, 0.62);
+  }
+  [data-theme='daylight'] .btn-primary,
+  [data-theme='daylight'] .btn-hot {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.38),
+      inset 0 0 0 1px rgba(17, 19, 24, 0.12),
+      0 4px 14px -6px rgba(255, 79, 0, 0.42);
   }
 
   /* Phosphor Emerald Action (#04150E on #10B981 = 8.1:1 AA) */
@@ -543,7 +715,7 @@ kbd,
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.35),
       inset 0 0 0 1px rgba(4, 21, 14, 0.12),
-      0 6px 18px -8px rgba(16, 185, 129, 0.5);
+      0 6px 18px -8px rgba(16, 185, 129, 0.48);
     font-weight: 600;
   }
   .btn-online:hover:not(:disabled),
@@ -638,7 +810,7 @@ kbd,
       0 1.5px 0 var(--keycap-shadow);
   }
 
-  /* Scroll-fade helper for mobile horizontal pill rails */
+  /* Scroll-fade helper for horizontal pill rails */
   .pill-rail-fade {
     mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
@@ -656,7 +828,7 @@ kbd,
   box-shadow: 0 0 6px color-mix(in srgb, var(--c, var(--led-online)) 55%, transparent);
 }
 [data-theme='daylight'] .led-dot {
-  box-shadow: 0 0 0 1px rgba(20, 22, 26, 0.08);
+  box-shadow: 0 0 0 1px rgba(17, 19, 24, 0.08);
 }
 
 .beacon {
@@ -775,7 +947,7 @@ kbd,
 }
 .thin-scroll::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 3px;
+  border-radius: 999px;
 }
 .thin-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);

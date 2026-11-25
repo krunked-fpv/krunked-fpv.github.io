@@ -4,28 +4,56 @@ import { mulberry32, range } from '../prng';
 import type { StyleArgs } from './types';
 
 /**
- * Cartographic Elevation Survey:
- * Hypsometric altitude wash, architectural graticule, saddle-disambiguated marching-squares
- * iso-contours (dual index/intermediate weights), and geodetic summit triangulation markers.
+ * Swiss Hypsometric Cartography & Geodetic Relief Print:
+ * Sunlit mineral paper / velvety carbon field, elevation-ramped marching-squares iso-contours
+ * (saddle-disambiguated with index halos), summit relief plateaus, geodesic transect line,
+ * and triangulation datum markers.
  */
 export function drawTopo({ ctx, w, h, seed, pal, t }: StyleArgs) {
   const rng = mulberry32(seed);
   const noise = makeNoise(seed);
-  const scale = (range(rng, 1.65, 3.0) / Math.max(w, h)) * 2.15;
-  const ox = rng() * 100 + t * 0.12;
-  const oy = rng() * 100 + Math.sin(t * 0.25) * 0.06;
+  const scale = (range(rng, 1.6, 2.85) / Math.max(w, h)) * 2.1;
+  const ox = rng() * 100 + t * 0.1;
+  const oy = rng() * 100 + Math.sin(t * 0.22) * 0.05;
 
-  // Base mineral wash
-  const g = ctx.createRadialGradient(w * 0.72, h * 0.28, 0, w * 0.65, h * 0.35, Math.max(w, h) * 0.95);
-  g.addColorStop(0, pal.deep);
-  g.addColorStop(1, pal.ground);
-  ctx.fillStyle = g;
+  // Multi-stop atmospheric mineral ground
+  if (pal.isLight) {
+    const base = ctx.createLinearGradient(0, 0, w, h);
+    base.addColorStop(0, '#F7F5EF');
+    base.addColorStop(0.55, pal.ground);
+    base.addColorStop(1, pal.groundDeep);
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    ctx.fillStyle = pal.ground;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Directional hypsometric atmospheric wash centered upper-right
+  const wash = ctx.createRadialGradient(
+    w * 0.72,
+    h * 0.28,
+    0,
+    w * 0.66,
+    h * 0.34,
+    Math.max(w, h) * 0.92,
+  );
+  if (pal.isLight) {
+    wash.addColorStop(0, pal.keyAlpha(0.14));
+    wash.addColorStop(0.45, pal.analogAlpha(0.065));
+    wash.addColorStop(1, 'rgba(236,234,228,0)');
+  } else {
+    wash.addColorStop(0, pal.midAlpha(0.28));
+    wash.addColorStop(0.48, pal.deepAlpha(0.48));
+    wash.addColorStop(1, 'rgba(9,11,15,0)');
+  }
+  ctx.fillStyle = wash;
   ctx.fillRect(0, 0, w, h);
 
-  // Subtle architectural survey grid
-  drawDraftingGrid(ctx, w, h, pal, { pitch: 32, opacity: pal.isLight ? 0.05 : 0.035, vernier: true });
+  // Architectural cartographic graticule
+  drawDraftingGrid(ctx, w, h, pal, { pitch: 32, opacity: pal.isLight ? 0.055 : 0.038, vernier: true });
 
-  const cell = Math.max(5, Math.min(14, Math.round(Math.min(w, h) / 48)));
+  const cell = Math.max(5, Math.min(13, Math.round(Math.min(w, h) / 50)));
   const cols = Math.ceil(w / cell) + 1;
   const rows = Math.ceil(h / cell) + 1;
   const field = new Float32Array(cols * rows);
@@ -38,7 +66,7 @@ export function drawTopo({ ctx, w, h, seed, pal, t }: StyleArgs) {
     }
   }
 
-  // Locate top 3 separated elevation summits for hypsometric blooms & geodetic markers
+  // Locate top 3 separated summits biased cleanly away from bottom-left title breathing room
   const peaks: { x: number; y: number; v: number }[] = [];
   for (let y = 2; y < rows - 3; y++) {
     for (let x = 2; x < cols - 3; x++) {
@@ -55,35 +83,37 @@ export function drawTopo({ ctx, w, h, seed, pal, t }: StyleArgs) {
   }
   peaks.sort((a, b) => b.v - a.v);
   const chosenPeaks: { x: number; y: number; v: number }[] = [];
-  const minDist = Math.min(w, h) * 0.22;
+  const minDist = Math.min(w, h) * 0.24;
   for (const p of peaks) {
-    if (p.y > h * 0.78 && p.x < w * 0.55) continue; // keep bottom-left title zone clean
+    if (p.y > h * 0.68 && p.x < w * 0.48) continue;
     if (chosenPeaks.every((q) => Math.hypot(p.x - q.x, p.y - q.y) > minDist)) {
       chosenPeaks.push(p);
       if (chosenPeaks.length >= 3) break;
     }
   }
 
-  // Soft hypsometric elevation glows around summits
+  // Multi-layered hypsometric relief halos around top summits
   for (let i = 0; i < chosenPeaks.length; i++) {
     const pk = chosenPeaks[i]!;
-    const rad = Math.min(w, h) * (0.28 - i * 0.04);
+    const rad = Math.min(w, h) * (0.34 - i * 0.055);
     const bloom = ctx.createRadialGradient(pk.x, pk.y, 0, pk.x, pk.y, rad);
-    bloom.addColorStop(0, pal.keyAlpha(pal.isLight ? 0.16 : 0.18));
-    bloom.addColorStop(0.55, pal.keyAlpha(pal.isLight ? 0.05 : 0.06));
+    const colorFn = i === 1 ? pal.analogAlpha : pal.keyAlpha;
+    bloom.addColorStop(0, colorFn(pal.isLight ? 0.22 : 0.28));
+    bloom.addColorStop(0.45, colorFn(pal.isLight ? 0.085 : 0.11));
     bloom.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = bloom;
     ctx.fillRect(pk.x - rad, pk.y - rad, rad * 2, rad * 2);
   }
 
-  // Marching squares with saddle-point disambiguation (cases 5 & 10)
-  const levels = 22 + Math.floor(rng() * 6);
-  const emph = 5 + Math.floor(rng() * 3);
+  // Marching squares with saddle-point disambiguation and elevation-ramped Swiss pigment inks
+  const levels = 24 + Math.floor(rng() * 5);
+  const emph = 5 + Math.floor(rng() * 2);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
   for (let li = 1; li < levels; li++) {
-    const lv = 0.21 + (li / levels) * 0.58;
+    const norm = li / levels;
+    const lv = 0.22 + norm * 0.57;
     const strong = li % emph === 0;
     const midWeight = li % 2 === 0;
 
@@ -164,30 +194,85 @@ export function drawTopo({ ctx, w, h, seed, pal, t }: StyleArgs) {
     }
 
     if (strong) {
-      // Soft halo under major index contour
-      ctx.strokeStyle = pal.keyAlpha(pal.isLight ? 0.18 : 0.26);
-      ctx.lineWidth = 3.2;
+      const highAlt = norm > 0.62;
+      ctx.strokeStyle = highAlt
+        ? pal.analogAlpha(pal.isLight ? 0.22 : 0.34)
+        : pal.keyAlpha(pal.isLight ? 0.2 : 0.32);
+      ctx.lineWidth = 3.8;
       ctx.stroke();
-      ctx.strokeStyle = pal.key;
-      ctx.lineWidth = 1.45;
+
+      ctx.strokeStyle = highAlt ? pal.analog : pal.key;
+      ctx.lineWidth = 1.6;
       ctx.stroke();
+
+      if (!pal.isLight) {
+        ctx.strokeStyle = pal.highlight;
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
     } else {
-      ctx.strokeStyle = pal.isLight
-        ? pal.inkAlpha(midWeight ? 0.24 : 0.13)
-        : pal.keyAlpha(midWeight ? 0.34 : 0.18);
-      ctx.lineWidth = midWeight ? 0.9 : 0.65;
+      const elevBoost = 0.55 + norm * 0.7;
+      if (pal.isLight) {
+        ctx.strokeStyle =
+          norm > 0.58
+            ? pal.keyAlpha((midWeight ? 0.38 : 0.2) * elevBoost)
+            : pal.inkAlpha((midWeight ? 0.24 : 0.12) * elevBoost);
+      } else {
+        ctx.strokeStyle =
+          norm > 0.62
+            ? pal.analogAlpha((midWeight ? 0.42 : 0.22) * elevBoost)
+            : pal.keyAlpha((midWeight ? 0.34 : 0.17) * elevBoost);
+      }
+      ctx.lineWidth = midWeight ? 0.95 : 0.65;
       ctx.stroke();
     }
   }
 
-  // Geodetic triangulation markers on summits (or seeded fallback)
+  // Geodetic triangulation markers + crisp transect vector linking primary summits
   const markers =
     chosenPeaks.length > 0
       ? chosenPeaks
       : [
-          { x: w * range(rng, 0.56, 0.84), y: h * range(rng, 0.2, 0.45), v: 0.7 },
-          { x: w * range(rng, 0.24, 0.5), y: h * range(rng, 0.18, 0.42), v: 0.65 },
+          { x: w * range(rng, 0.58, 0.84), y: h * range(rng, 0.22, 0.44), v: 0.72 },
+          { x: w * range(rng, 0.28, 0.52), y: h * range(rng, 0.18, 0.38), v: 0.65 },
         ];
+
+  if (markers.length >= 2) {
+    const p0 = markers[0]!;
+    const p1 = markers[1]!;
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const nx = -dy / dist;
+    const ny = dx / dist;
+
+    ctx.save();
+    ctx.strokeStyle = pal.counterAlpha(pal.isLight ? 0.62 : 0.58);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Perpendicular range calibration ticks along geodesic transect
+    const ticks = 5;
+    ctx.strokeStyle = pal.counterAlpha(pal.isLight ? 0.7 : 0.65);
+    ctx.beginPath();
+    for (let k = 1; k < ticks; k++) {
+      const f = k / ticks;
+      const tx = p0.x + dx * f;
+      const ty = p0.y + dy * f;
+      const tl = k === Math.floor(ticks / 2) ? 4.5 : 2.5;
+      ctx.moveTo(tx - nx * tl, ty - ny * tl);
+      ctx.lineTo(tx + nx * tl, ty + ny * tl);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
 
   for (let i = 0; i < markers.length; i++) {
     const m = markers[i]!;

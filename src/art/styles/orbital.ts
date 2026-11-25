@@ -3,47 +3,116 @@ import { mulberry32, range } from '../prng';
 import type { StyleArgs } from './types';
 
 /**
- * Precision Telemetry Astrolabe / Radar:
- * Off-center instrument dial, 72-step azimuth vernier compass, inclined Keplerian orbital arcs,
- * 32-slice logarithmic phosphor decay sweep, and bracket-locked target blips with velocity vectors.
+ * Aerospace Astrolabe & Precision Telemetry Instrument:
+ * Off-center Braun/Swiss instrument dial, quadrant telemetry arcs, 72-step azimuth vernier,
+ * inclined Keplerian orbits with motion wakes, 36-slice phosphor radar sweep, and lock brackets.
  */
 export function drawOrbital({ ctx, w, h, seed, pal, t }: StyleArgs) {
   const rng = mulberry32(seed);
-  ctx.fillStyle = pal.ground;
+
+  // Base gallery field
+  if (pal.isLight) {
+    const bgBase = ctx.createLinearGradient(0, 0, w, h);
+    bgBase.addColorStop(0, '#F6F4EE');
+    bgBase.addColorStop(0.6, pal.ground);
+    bgBase.addColorStop(1, pal.groundDeep);
+    ctx.fillStyle = bgBase;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    ctx.fillStyle = pal.ground;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  const cx = w * range(rng, 0.58, 0.72);
+  const cy = h * range(rng, 0.35, 0.46);
+  const R = Math.min(w * 0.52, h * 0.68);
+
+  // Radial atmospheric instrument aura
+  const aura = ctx.createRadialGradient(cx, cy, R * 0.08, cx, cy, R * 1.35);
+  if (pal.isLight) {
+    aura.addColorStop(0, pal.keyAlpha(0.14));
+    aura.addColorStop(0.55, pal.analogAlpha(0.055));
+    aura.addColorStop(1, 'rgba(236,234,228,0)');
+  } else {
+    aura.addColorStop(0, pal.midAlpha(0.32));
+    aura.addColorStop(0.52, pal.deepAlpha(0.45));
+    aura.addColorStop(1, 'rgba(9,11,15,0)');
+  }
+  ctx.fillStyle = aura;
   ctx.fillRect(0, 0, w, h);
 
-  const cx = w * range(rng, 0.58, 0.74);
-  const cy = h * range(rng, 0.34, 0.48);
-  const R = Math.max(w, h) * 0.58;
+  // Precision drafting coordinate grid
+  drawDraftingGrid(ctx, w, h, pal, { pitch: 28, opacity: pal.isLight ? 0.052 : 0.036, vernier: true });
 
-  // Radial focal atmosphere
-  const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.1);
-  bg.addColorStop(0, pal.deep);
-  bg.addColorStop(0.65, pal.isLight ? 'rgba(236,234,228,0.12)' : 'rgba(9,11,15,0.2)');
-  bg.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, w, h);
+  // Recessed machined dial face plate
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.99, 0, Math.PI * 2);
+  const dialFace = ctx.createRadialGradient(cx - R * 0.2, cy - R * 0.2, R * 0.05, cx, cy, R);
+  if (pal.isLight) {
+    dialFace.addColorStop(0, 'rgba(255,255,255,0.62)');
+    dialFace.addColorStop(0.75, 'rgba(247,245,239,0.42)');
+    dialFace.addColorStop(1, pal.keyAlpha(0.08));
+  } else {
+    dialFace.addColorStop(0, 'rgba(18,24,34,0.68)');
+    dialFace.addColorStop(0.7, 'rgba(9,12,18,0.54)');
+    dialFace.addColorStop(1, pal.deepAlpha(0.38));
+  }
+  ctx.fillStyle = dialFace;
+  ctx.fill();
+  ctx.restore();
 
-  // Architectural coordinate grid
-  drawDraftingGrid(ctx, w, h, pal, { pitch: 28, opacity: pal.isLight ? 0.05 : 0.032, vernier: true });
+  // Radial 30-degree azimuth sector lines inside dial
+  ctx.save();
+  ctx.strokeStyle = pal.reticle(pal.isLight ? 0.075 : 0.065);
+  ctx.lineWidth = 0.65;
+  ctx.beginPath();
+  for (let d = 0; d < 12; d++) {
+    const ang = (d * Math.PI) / 6;
+    ctx.moveTo(cx + Math.cos(ang) * (R * 0.16), cy + Math.sin(ang) * (R * 0.16));
+    ctx.lineTo(cx + Math.cos(ang) * (R * 0.98), cy + Math.sin(ang) * (R * 0.98));
+  }
+  ctx.stroke();
+  ctx.restore();
 
   // Concentric range rings
-  const rings = 6 + Math.floor(rng() * 3);
+  const rings = 5 + Math.floor(rng() * 3);
   for (let i = 1; i <= rings; i++) {
     const r = (R / rings) * i;
-    const major = i === rings || i % 3 === 0;
+    const major = i === rings || i % 2 === 0;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.strokeStyle = major
       ? pal.isLight
-        ? pal.inkAlpha(0.26)
-        : pal.keyAlpha(0.38)
-      : pal.reticle(pal.isLight ? 0.14 : 0.11);
-    ctx.lineWidth = major ? 1.15 : 0.7;
-    if (!major && i % 2 === 0) ctx.setLineDash([2, 5]);
+        ? pal.inkAlpha(i === rings ? 0.3 : 0.18)
+        : pal.keyAlpha(i === rings ? 0.52 : 0.3)
+      : pal.reticle(pal.isLight ? 0.13 : 0.11);
+    ctx.lineWidth = i === rings ? 1.35 : major ? 0.95 : 0.7;
+    if (!major) ctx.setLineDash([2.5, 4.5]);
     ctx.stroke();
     ctx.setLineDash([]);
   }
+
+  // Bold Bauhaus instrument quadrant arc bands along outer perimeter
+  const arcStart1 = range(rng, -Math.PI * 0.85, -Math.PI * 0.25);
+  const arcSpan1 = range(rng, Math.PI * 0.35, Math.PI * 0.65);
+  const arcStart2 = arcStart1 + arcSpan1 + range(rng, 0.28, 0.65);
+  const arcSpan2 = range(rng, Math.PI * 0.22, Math.PI * 0.42);
+
+  ctx.save();
+  ctx.lineCap = 'butt';
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 1.045, arcStart1, arcStart1 + arcSpan1);
+  ctx.strokeStyle = pal.key;
+  ctx.lineWidth = 3.2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 1.045, arcStart2, arcStart2 + arcSpan2);
+  ctx.strokeStyle = pal.counter;
+  ctx.lineWidth = 2.6;
+  ctx.stroke();
+  ctx.restore();
 
   // 72-step azimuth vernier compass bezel
   for (let a = 0; a < 72; a++) {
@@ -59,48 +128,84 @@ export function drawOrbital({ ctx, w, h, seed, pal, t }: StyleArgs) {
     ctx.strokeStyle = cardinal
       ? pal.key
       : major
-        ? pal.reticle(pal.isLight ? 0.36 : 0.32)
-        : pal.reticle(pal.isLight ? 0.16 : 0.14);
-    ctx.lineWidth = cardinal ? 1.4 : 0.8;
+        ? pal.reticle(pal.isLight ? 0.38 : 0.35)
+        : pal.reticle(pal.isLight ? 0.16 : 0.15);
+    ctx.lineWidth = cardinal ? 1.6 : 0.85;
     ctx.stroke();
   }
 
-  // Inclined Keplerian orbital trajectories
-  const orbitCount = 2 + Math.floor(rng() * 2);
+  // Inclined Keplerian orbital trajectories with fading directional satellite wakes
+  const orbitCount = 3;
   for (let i = 0; i < orbitCount; i++) {
-    const rx = R * range(rng, 0.38, 0.86);
-    const ry = rx * range(rng, 0.28, 0.56);
-    const tilt = range(rng, -0.75, 0.75) + i * 0.55;
+    const rx = R * range(rng, 0.42, 0.88);
+    const ry = rx * range(rng, 0.28, 0.54);
+    const tilt = range(rng, -0.78, 0.78) + i * 0.62;
+    const dir = i % 2 === 0 ? 1 : -1;
+    const satAng = rng() * Math.PI * 2 + t * (0.42 + i * 0.16) * dir;
+
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(tilt);
+
+    // Base elliptical trajectory
     ctx.beginPath();
     if (typeof ctx.ellipse === 'function') {
       ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
     } else {
       ctx.arc(0, 0, (rx + ry) * 0.5, 0, Math.PI * 2);
     }
-    ctx.strokeStyle = i === 0 ? pal.counterAlpha(pal.isLight ? 0.45 : 0.36) : pal.keyAlpha(0.24);
-    ctx.lineWidth = i === 0 ? 1.1 : 0.85;
-    ctx.setLineDash(i === 0 ? [6, 4] : [2, 4]);
+    ctx.strokeStyle =
+      i === 0
+        ? pal.counterAlpha(pal.isLight ? 0.52 : 0.44)
+        : i === 1
+          ? pal.keyAlpha(pal.isLight ? 0.42 : 0.36)
+          : pal.analogAlpha(pal.isLight ? 0.36 : 0.3);
+    ctx.lineWidth = i === 0 ? 1.25 : 0.9;
+    ctx.setLineDash(i === 0 ? [7, 4] : [2.5, 4.5]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Moving orbital satellite beacon along the primary ellipse
-    const satAng = rng() * Math.PI * 2 + t * (0.42 + i * 0.18) * (i % 2 === 0 ? 1 : -1);
+    // Tapered 12-segment orbital wake behind satellite
+    const wakeSteps = 12;
+    for (let s = 0; s < wakeSteps; s++) {
+      const a0 = satAng - dir * (s * 0.065);
+      const a1 = satAng - dir * ((s + 1) * 0.065);
+      const alpha = (1 - s / wakeSteps) * (pal.isLight ? 0.65 : 0.72);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a0) * rx, Math.sin(a0) * ry);
+      ctx.lineTo(Math.cos(a1) * rx, Math.sin(a1) * ry);
+      ctx.strokeStyle = i === 0 ? pal.counterAlpha(alpha) : pal.keyAlpha(alpha);
+      ctx.lineWidth = 2.4 * (1 - s / wakeSteps) + 0.5;
+      ctx.stroke();
+    }
+
+    // Satellite beacon core + halo
     const sx = Math.cos(satAng) * rx;
     const sy = Math.sin(satAng) * ry;
+    if (!pal.isLight) {
+      const halo = ctx.createRadialGradient(sx, sy, 0, sx, sy, 10);
+      halo.addColorStop(0, i === 0 ? pal.counter : pal.key);
+      halo.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.fillStyle = i === 0 ? pal.counter : pal.key;
     ctx.beginPath();
-    ctx.arc(sx, sy, 2.4, 0, Math.PI * 2);
+    ctx.arc(sx, sy, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = pal.isLight ? '#FFFFFF' : '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1.1, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  // Crosshair axes with central break
-  const gap = 12;
-  ctx.strokeStyle = pal.reticle(pal.isLight ? 0.2 : 0.16);
-  ctx.lineWidth = 0.8;
+  // Primary crosshair axes with central aperture gap
+  const gap = 14;
+  ctx.strokeStyle = pal.reticle(pal.isLight ? 0.22 : 0.18);
+  ctx.lineWidth = 0.85;
   ctx.beginPath();
   ctx.moveTo(cx - R, cy); ctx.lineTo(cx - gap, cy);
   ctx.moveTo(cx + gap, cy); ctx.lineTo(cx + R, cy);
@@ -108,80 +213,97 @@ export function drawOrbital({ ctx, w, h, seed, pal, t }: StyleArgs) {
   ctx.moveTo(cx, cy + gap); ctx.lineTo(cx, cy + R);
   ctx.stroke();
 
-  // 32-slice logarithmic decay sweep wedge
+  // 36-slice logarithmic phosphor sweep wedge
   const sweep = rng() * Math.PI * 2 + t * 0.72;
-  const wedge = Math.PI * 0.46;
-  const slices = 32;
+  const wedge = Math.PI * 0.44;
+  const slices = 36;
   for (let i = 0; i < slices; i++) {
     const a0 = sweep - (wedge * (i + 1)) / slices;
     const a1 = sweep - (wedge * i) / slices;
-    const falloff = Math.pow(1 - i / slices, 1.85);
+    const falloff = Math.pow(1 - i / slices, 1.9);
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R * 0.98, a0, a1);
+    ctx.arc(cx, cy, R * 0.985, a0, a1);
     ctx.closePath();
-    ctx.fillStyle = pal.keyAlpha(falloff * (pal.isLight ? 0.19 : 0.24));
+    ctx.fillStyle = pal.keyAlpha(falloff * (pal.isLight ? 0.24 : 0.3));
     ctx.fill();
   }
 
-  // Leading radar sweep hairline
+  // Dual-layer glowing radar sweep needle
+  const ex = cx + Math.cos(sweep) * R * 0.99;
+  const ey = cy + Math.sin(sweep) * R * 0.99;
   ctx.beginPath();
   ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(sweep) * R * 0.99, cy + Math.sin(sweep) * R * 0.99);
-  ctx.strokeStyle = pal.key;
+  ctx.lineTo(ex, ey);
+  ctx.strokeStyle = pal.keyAlpha(pal.isLight ? 0.26 : 0.42);
+  ctx.lineWidth = 4.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(ex, ey);
+  ctx.strokeStyle = pal.isLight ? pal.key : pal.highlight;
   ctx.lineWidth = 1.6;
   ctx.stroke();
 
-  // Gimbal center ring
+  // Precision gimbal center assembly
   ctx.beginPath();
-  ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = pal.isLight ? '#FFFFFF' : '#090B0F';
+  ctx.fill();
   ctx.strokeStyle = pal.key;
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.4;
   ctx.stroke();
   ctx.fillStyle = pal.counter;
   ctx.beginPath();
-  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
   ctx.fill();
 
   // Seeded blips with velocity vectors + priority target lock reticles
-  const blips = 6 + Math.floor(rng() * 5);
+  const blips = 7 + Math.floor(rng() * 4);
   for (let i = 0; i < blips; i++) {
     const ang = rng() * Math.PI * 2;
-    const rad = range(rng, 0.18, 0.92) * R;
+    const rad = range(rng, 0.2, 0.9) * R;
     const x = cx + Math.cos(ang) * rad;
     const y = cy + Math.sin(ang) * rad;
     const velAng = rng() * Math.PI * 2;
-    const velLen = range(rng, 7, 16);
+    const velLen = range(rng, 8, 17);
 
     let diff = (sweep - ang) % (Math.PI * 2);
     if (diff < 0) diff += Math.PI * 2;
-    const lit = t === 0 ? 0.72 : Math.max(0.28, 1 - diff / (wedge * 1.4));
+    const lit = t === 0 ? 0.78 : Math.max(0.32, 1 - diff / (wedge * 1.4));
 
     if (!pal.isLight) {
-      const gl = ctx.createRadialGradient(x, y, 0, x, y, 15);
+      const gl = ctx.createRadialGradient(x, y, 0, x, y, 16);
       gl.addColorStop(0, i % 3 === 0 ? pal.counter : pal.key);
       gl.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.globalAlpha = Math.min(1, lit);
       ctx.fillStyle = gl;
-      ctx.fillRect(x - 15, y - 15, 30, 30);
+      ctx.fillRect(x - 16, y - 16, 32, 32);
       ctx.globalAlpha = 1;
+    } else {
+      ctx.strokeStyle = i % 3 === 0 ? pal.counterAlpha(0.38) : pal.keyAlpha(0.38);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, 5.2, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     // Velocity vector tail
-    ctx.strokeStyle = i % 3 === 0 ? pal.counterAlpha(0.55 * lit) : pal.keyAlpha(0.55 * lit);
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = i % 3 === 0 ? pal.counterAlpha(0.65 * lit) : pal.keyAlpha(0.65 * lit);
+    ctx.lineWidth = 1.1;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x + Math.cos(velAng) * velLen, y + Math.sin(velAng) * velLen);
     ctx.stroke();
 
     // Target core
-    ctx.fillStyle = pal.isLight ? pal.key : '#FFFFFF';
+    ctx.fillStyle = pal.isLight ? (i % 3 === 0 ? pal.counter : pal.key) : '#FFFFFF';
     ctx.beginPath();
-    ctx.arc(x, y, i < 2 ? 2.2 : 1.5, 0, Math.PI * 2);
+    ctx.arc(x, y, i < 2 ? 2.4 : 1.7, 0, Math.PI * 2);
     ctx.fill();
 
-    // Lock bracket on top 2 priority blips
+    // Priority target lock bracket
     if (i < 2) {
       drawSurveyMarker(ctx, x, y, pal, 'reticle');
     }

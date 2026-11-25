@@ -1,8 +1,9 @@
 import { Download, Moon, Search, Settings, Sun, Volume2, VolumeX } from 'lucide-react';
+import type { MouseEvent } from 'react';
 import { useFoley } from '../../audio/useFoley';
 import { BRAND, THEME_COLORS } from '../../config/site';
 import { forceSync } from '../../data/syncEngine';
-import { statusLabel } from '../../data/syncReducer';
+import { statusLabel, type SyncState } from '../../data/syncReducer';
 import { useNow } from '../../hooks/useNow';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { useDeck } from '../../store/deckStore';
@@ -10,8 +11,6 @@ import type { ThemeMode } from '../../types/project';
 import { BrandEmblem } from '../ui/BrandEmblem';
 import { IconButton } from '../ui/IconButton';
 import { Kbd, modKey } from '../ui/Kbd';
-import { ForceSyncButton } from './ForceSyncButton';
-import { LiveClock } from './LiveClock';
 
 /** Semantic LED color CSS variable for sync phases (safe across Obsidian & Daylight). */
 export const phaseColor = (phase: string): string =>
@@ -33,6 +32,25 @@ export const phaseInk = (phase: string): string =>
         ? 'var(--led-alarm-ink)'
         : 'var(--ink-muted)';
 
+function compactSyncLabel(sync: SyncState): string {
+  switch (sync.phase) {
+    case 'BOOT':
+      return 'BOOT';
+    case 'HYDRATED':
+      return sync.hydrateSource === 'snapshot' ? 'SNAPSHOT' : sync.hydrateSource === 'cache' ? 'CACHED' : 'STANDBY';
+    case 'REVALIDATING':
+      return 'SYNCING';
+    case 'LIVE':
+      return 'LIVE';
+    case 'OFFLINE':
+      return 'OFFLINE';
+    case 'RATE_LIMITED':
+      return 'LIMITED';
+    case 'ERROR':
+      return 'RETRY';
+  }
+}
+
 function applyThemeToDocument(next: ThemeMode) {
   if (typeof document === 'undefined') return;
   document.documentElement.dataset.theme = next;
@@ -40,6 +58,11 @@ function applyThemeToDocument(next: ThemeMode) {
   const meta =
     document.getElementById('meta-theme-color') ?? document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', THEME_COLORS[next]);
+}
+
+/** Releases lingering focus ring on pointer click while keeping keyboard :focus-visible intact. */
+function blurOnPointerClick(e: MouseEvent<HTMLButtonElement>) {
+  if (e.detail > 0) e.currentTarget.blur();
 }
 
 export function TopBar() {
@@ -56,8 +79,11 @@ export function TopBar() {
   const inkColor = phaseInk(sync.phase);
   const isDaylight = theme === 'daylight';
   const syncing = sync.phase === 'REVALIDATING';
+  const fullStatus = statusLabel(sync, now);
+  const shortStatus = compactSyncLabel(sync);
 
-  const handleToggleTheme = () => {
+  const handleToggleTheme = (e: MouseEvent<HTMLButtonElement>) => {
+    blurOnPointerClick(e);
     const next: ThemeMode = isDaylight ? 'obsidian' : 'daylight';
     foley.click();
     const commit = () => {
@@ -78,121 +104,135 @@ export function TopBar() {
       className="sticky top-0 z-40 w-full max-w-full overflow-hidden border-b border-hairline bg-bar backdrop-blur-xl"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="mx-auto flex h-14 max-w-[1480px] items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
-        {/* Left: Machined Brand Module (never trailing "KRUNKED //" on narrow phones) */}
+      <div className="mx-auto grid h-14 max-w-[1400px] grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
+        {/* Left: Crisp Studio Brand Wordmark (clean at 375px, zero trailing separator) */}
         <a
           href="./"
-          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-sm)] py-1 transition hover:opacity-90 sm:gap-2"
-          aria-label={`${BRAND.primary} ${BRAND.secondary}`}
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] py-1 transition hover:opacity-90"
+          aria-label={`${BRAND.primary} Studio — ${BRAND.secondary}`}
         >
-          <BrandEmblem size={24} />
-          <span className="flex items-baseline gap-1 sm:gap-1.5">
-            <span className="text-[13px] font-semibold tracking-[0.12em] text-ink sm:text-[14.5px] sm:tracking-[0.13em]">
+          <BrandEmblem size={25} />
+          <span className="flex items-center gap-2">
+            <span className="text-[14px] font-semibold tracking-[0.13em] text-ink sm:text-[14.5px]">
               {BRAND.primary}
             </span>
-            <span className="mono text-[12px] font-semibold text-hot-ink" aria-hidden="true">
-              {BRAND.separator}
-            </span>
-            <span className="mono text-[11px] font-medium tracking-[0.12em] text-dim min-[440px]:hidden">
-              {BRAND.mobileShort}
-            </span>
-            <span className="mono hidden text-[11.5px] font-medium tracking-[0.16em] text-dim min-[440px]:inline">
-              {BRAND.secondary}
+            <span className="hidden h-3.5 w-px bg-hairline-strong sm:inline-block" aria-hidden="true" />
+            <span className="mono hidden text-[10.5px] font-medium tracking-[0.18em] text-mute sm:inline">
+              STUDIO
             </span>
           </span>
         </a>
 
-        {/* Center: Live Clock / Stopwatch + Clickable Telemetry Sync Pill */}
-        <div className="hidden items-center gap-2.5 md:flex">
-          <LiveClock />
-          <span className="h-3.5 w-px bg-hairline-strong" aria-hidden="true" />
+        {/* Center (md+): Balanced Linear/Raycast Command Trigger Pill */}
+        <div className="flex min-w-0 items-center justify-center">
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              blurOnPointerClick(e);
+              foley.relay();
+              setPalette(true);
+            }}
+            className="hidden h-9 w-[min(360px,34vw)] items-center justify-between gap-2.5 rounded-full border border-hairline bg-inset/90 px-3.5 text-left shadow-[var(--shadow-inset)] transition hover:border-hairline-strong hover:bg-surface active:scale-[0.99] md:flex"
+            aria-label="Open command palette"
+            title={`Command palette (${modKey()}K)`}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <Search size={13.5} className="shrink-0 text-mute" aria-hidden="true" />
+              <span className="truncate text-[12.5px] text-dim">Search builds, commits, commands...</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-0.5">
+              <Kbd>{modKey()}</Kbd>
+              <Kbd>K</Kbd>
+            </span>
+          </button>
+        </div>
+
+        {/* Right: Sync Pill + Compact Studio Control Rack */}
+        <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-1.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              blurOnPointerClick(e);
               foley.click();
               void forceSync();
             }}
             disabled={syncing}
-            className="sync-pill"
-            aria-label={`Sync status: ${statusLabel(sync, now)}. Click to force sync`}
-            title="Click to revalidate GitHub telemetry"
+            className="sync-pill hidden! h-8! px-2.5! text-[10px]! sm:inline-flex!"
+            aria-label={`Sync status: ${fullStatus}. Click to force sync`}
+            title={`${fullStatus} · Click to revalidate GitHub telemetry`}
           >
             <span
               className={sync.phase === 'LIVE' || sync.phase === 'REVALIDATING' ? 'beacon' : 'led-dot'}
               style={{ ['--c' as string]: ledColor }}
               aria-hidden="true"
             />
-            <span className="truncate" style={{ color: inkColor }} aria-live="polite">
-              {statusLabel(sync, now)}
+            <span style={{ color: inkColor }} aria-live="polite">
+              {shortStatus}
             </span>
           </button>
-        </div>
 
-        {/* Right: Hardware Control Rack */}
-        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           {canInstall && (
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                blurOnPointerClick(e);
                 foley.latch();
                 void promptInstall();
               }}
-              className="mono mr-0.5 inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-md)] bg-hot-soft px-2 text-[10.5px] font-semibold tracking-[0.1em] text-hot-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--led-hot)_34%,transparent)] transition hover:bg-hover active:scale-95 sm:mr-1 sm:px-2.5"
-              aria-label="Install Forge Deck app"
-              title="Install Forge Deck as standalone app"
+              className="mono inline-flex h-8 items-center gap-1.5 rounded-full bg-hot-soft px-2.5 text-[10.5px] font-semibold tracking-[0.1em] text-hot-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--led-hot)_32%,transparent)] transition hover:bg-hover active:scale-95"
+              aria-label="Install Studio app"
+              title="Install KRUNKED Studio as a standalone app"
             >
               <Download size={13} aria-hidden="true" />
-              <span className="hidden sm:inline">INSTALL</span>
+              <span className="hidden lg:inline">INSTALL</span>
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
+          {/* Mobile Search Trigger (<768px) */}
+          <IconButton
+            label="Open command palette"
+            size="sm"
+            className="md:hidden!"
+            onClick={(e) => {
+              blurOnPointerClick(e);
               foley.relay();
               setPalette(true);
             }}
-            className="btn mr-0.5 min-h-9! h-9 w-9 justify-center px-0 text-dim sm:mr-1 sm:min-h-8! sm:h-8 sm:w-auto sm:gap-2 sm:px-2.5"
-            aria-label="Open command palette"
-            title={`Command palette (${modKey()}K)`}
           >
-            <Search size={14} aria-hidden="true" />
-            <span className="hidden text-[12.5px] lg:inline">Search</span>
-            <span className="hidden items-center gap-1 sm:flex">
-              <Kbd>{modKey()}</Kbd>
-              <Kbd>K</Kbd>
-            </span>
-          </button>
+            <Search size={15} aria-hidden="true" />
+          </IconButton>
 
           <IconButton
-            label={isDaylight ? 'Switch to Anodized Obsidian theme' : 'Switch to Braun Daylight theme'}
+            label={isDaylight ? 'Switch to Obsidian dark theme' : 'Switch to Daylight ceramic theme'}
             aria-pressed={isDaylight}
             tone="active"
             size="sm"
-            className="sm:h-[34px] sm:w-[34px]"
+            className="sm:h-[34px]! sm:w-[34px]!"
             onClick={handleToggleTheme}
           >
             {isDaylight ? <Moon size={15} aria-hidden="true" /> : <Sun size={15} aria-hidden="true" />}
           </IconButton>
 
           <IconButton
-            label={foley.enabled ? 'Mute hardware audio foley' : 'Enable hardware audio foley'}
+            label={foley.enabled ? 'Mute studio audio foley' : 'Enable studio audio foley'}
             aria-pressed={foley.enabled}
             tone="online"
             size="sm"
-            className="sm:h-[34px] sm:w-[34px]"
-            onClick={() => foley.toggle()}
+            className="sm:h-[34px]! sm:w-[34px]!"
+            onClick={(e) => {
+              blurOnPointerClick(e);
+              foley.toggle();
+            }}
           >
             {foley.enabled ? <Volume2 size={15} aria-hidden="true" /> : <VolumeX size={15} aria-hidden="true" />}
           </IconButton>
 
-          <ForceSyncButton className="hidden! sm:inline-grid! sm:h-[34px] sm:w-[34px]" />
-
           <IconButton
             label="Settings"
             size="sm"
-            className="sm:h-[34px] sm:w-[34px]"
-            onClick={() => {
+            className="sm:h-[34px]! sm:w-[34px]!"
+            onClick={(e) => {
+              blurOnPointerClick(e);
               foley.click();
               setSettings(true);
             }}

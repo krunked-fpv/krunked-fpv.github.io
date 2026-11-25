@@ -43,10 +43,10 @@ export function ShipLogItem({
   return (
     <motion.li
       layout
-      initial={{ opacity: 0, x: 10 }}
+      initial={{ opacity: 0, x: 8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={SPRING}
-      className="relative pl-6"
+      className="relative min-w-0 pl-6"
     >
       <span className="absolute left-[5px] top-2 h-full w-px bg-hairline" aria-hidden="true" />
       <span
@@ -56,18 +56,22 @@ export function ShipLogItem({
         <span className="size-[5px] rounded-full" style={{ background: tok.dot }} />
       </span>
 
-      <div className="flex items-center justify-between gap-2">
-        <span className="mono flex items-center gap-1.5 text-[10px] font-medium tracking-[0.08em]" style={{ color: tok.ink }}>
-          <Icon size={11} /> {log.label}
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <span
+          className="mono flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium tracking-[0.08em]"
+          style={{ color: tok.ink }}
+        >
+          <Icon size={11} className="shrink-0" aria-hidden="true" />
+          <span className="truncate">{log.label}</span>
         </span>
         <time className="mono shrink-0 text-[10.5px] text-mute" dateTime={log.at}>
           {formatDelta(age)}
         </time>
       </div>
 
-      <div className="mt-1 flex items-center gap-2 pb-3.5">
-        <SwissEmblem slug={log.repo} size={18} className="shrink-0 opacity-85" />
-        <div className="flex min-w-0 flex-1 items-baseline gap-2">
+      <div className="mt-1 pb-3.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <SwissEmblem slug={log.repo} size={18} className="shrink-0 opacity-90" />
           {linkable ? (
             <button
               type="button"
@@ -75,15 +79,22 @@ export function ShipLogItem({
                 foley.latch();
                 setPeek(log.repo, null, isLive ? 'sandbox' : 'brief');
               }}
-              className="shrink-0 text-left text-[13px] font-medium text-ink transition-colors hover:text-hot-ink"
+              className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-ink transition-colors hover:text-hot-ink"
+              title={label}
             >
               {label}
             </button>
           ) : (
-            <span className="shrink-0 text-[13px] font-medium text-dim">{label}</span>
+            <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-dim" title={label}>
+              {label}
+            </span>
           )}
-          {log.detail && <span className="mono min-w-0 truncate text-[11px] text-mute">{log.detail}</span>}
         </div>
+        {log.detail && (
+          <p className="mono mt-0.5 truncate pl-[26px] text-[11px] text-mute" title={log.detail}>
+            {log.detail}
+          </p>
+        )}
       </div>
     </motion.li>
   );

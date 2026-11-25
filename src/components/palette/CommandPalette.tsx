@@ -7,7 +7,7 @@ import {
   GitCommitHorizontal,
   Grid3x3,
   History,
-  LayoutDashboard,
+  LayoutGrid,
   Moon,
   QrCode,
   RefreshCw,
@@ -183,10 +183,10 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
         : []),
       {
         id: 'v-bento',
-        label: 'Switch View: Showcase Bento',
+        label: 'Switch View: Gallery View',
         hint: 'View [1]',
-        keywords: ['view', 'bento', 'showcase', 'cards'],
-        Icon: LayoutDashboard,
+        keywords: ['view', 'bento', 'gallery', 'showcase', 'cards'],
+        Icon: LayoutGrid,
         run: () => {
           foley.click();
           st.setView('bento');
@@ -194,9 +194,9 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
       },
       {
         id: 'v-grid',
-        label: 'Switch View: Telemetry Grid',
+        label: 'Switch View: Telemetry Index',
         hint: 'View [2]',
-        keywords: ['view', 'grid', 'telemetry', 'compact', 'table'],
+        keywords: ['view', 'grid', 'telemetry', 'compact', 'table', 'index'],
         Icon: Grid3x3,
         run: () => {
           foley.click();
@@ -205,7 +205,7 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
       },
       {
         id: 'v-matrix',
-        label: 'Switch View: Ship Matrix',
+        label: 'Switch View: Ship Timeline',
         hint: 'View [3]',
         keywords: ['view', 'matrix', 'timeline', 'log', 'history'],
         Icon: History,
@@ -386,12 +386,14 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
     }
   };
 
+  const projectResultCount = items.filter((it) => it.type === 'project').length;
+
   return (
     <Modal open={open} onClose={close} label="Command palette" align="top" size="md" initialFocus={input}>
-      <div className="surface surface-elevated overflow-hidden rounded-[var(--radius-lg)]! bg-elevated">
-        {/* Clean inset focus input header — zero clashing corner outline */}
-        <div className="flex items-center gap-3 border-b border-hairline bg-inset/50 px-4 transition-colors focus-within:border-hot/60 focus-within:bg-inset">
-          <Search size={16} className="shrink-0 text-hot-ink" />
+      <div className="surface surface-elevated overflow-hidden rounded-[16px]! bg-elevated">
+        {/* Clean inset search header */}
+        <div className="flex items-center gap-3 border-b border-hairline bg-inset/60 px-4 transition-colors focus-within:border-hot/60 focus-within:bg-inset">
+          <Search size={16} className="shrink-0 text-hot-ink" aria-hidden="true" />
           <input
             ref={input}
             value={q}
@@ -411,6 +413,11 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
             style={{ outline: 'none', boxShadow: 'none' }}
             className="h-13 flex-1 bg-transparent text-[15px] text-ink outline-none! placeholder:text-mute focus:outline-none! focus-visible:outline-none!"
           />
+          {q.trim() && (
+            <span className="mono hidden text-[10px] tracking-[0.12em] text-mute sm:inline">
+              {items.length} {items.length === 1 ? 'HIT' : 'HITS'}
+            </span>
+          )}
           <Kbd>esc</Kbd>
         </div>
 
@@ -422,8 +429,17 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
 
             return (
               <li key={it.id} role="presentation">
-                {firstProject && <div className="eyebrow px-3 pb-1 pt-1">Builds</div>}
-                {firstAction && <div className="eyebrow px-3 pb-1 pt-3">System Commands</div>}
+                {firstProject && (
+                  <div className="flex items-center justify-between px-3 pb-1.5 pt-1">
+                    <span className="eyebrow">Studio Builds</span>
+                    <span className="mono text-[9.5px] tracking-[0.12em] text-mute">
+                      {projectResultCount} AVAILABLE
+                    </span>
+                  </div>
+                )}
+                {firstAction && (
+                  <div className="eyebrow px-3 pb-1.5 pt-3">Studio Commands</div>
+                )}
 
                 <div
                   id={`pal-${it.id}`}
@@ -432,10 +448,17 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                   aria-selected={on}
                   onPointerMove={() => !on && setActive(i)}
                   onClick={() => runItem(it)}
-                  className={`flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2 transition-colors ${
+                  className={`relative flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 transition-colors ${
                     on ? 'bg-hover text-ink' : 'text-dim'
                   }`}
                 >
+                  {on && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-2 bottom-2 w-[2.5px] rounded-full bg-hot"
+                    />
+                  )}
+
                   {it.type === 'project' ? (
                     <>
                       <Glyph name={it.project.glyph} hue={hueOf(it.project)} size={32} />
@@ -445,7 +468,11 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                             <Highlight text={it.project.displayName} idx={it.nameIdx} />
                           </span>
                           {it.project.pinned && <Star size={11} className="shrink-0 text-solar-ink" fill="currentColor" />}
-                          <span className="mono hidden text-[9.5px] uppercase tracking-wider text-mute sm:inline">
+                          <span
+                            className={`mono hidden text-[9.5px] uppercase tracking-[0.1em] sm:inline ${
+                              it.project.kind === 'live' ? 'text-phosphor-ink' : 'text-mute'
+                            }`}
+                          >
                             {it.project.kind === 'live' ? 'LIVE' : 'CODE'}
                           </span>
                         </div>
@@ -470,24 +497,26 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                                 e.stopPropagation();
                                 runItem(it, 'peek');
                               }}
-                              className="grid size-7 place-items-center rounded-[7px] border border-hairline bg-surface text-dim hover:text-ink"
+                              className="grid size-7 place-items-center rounded-[7px] border border-hairline bg-surface text-dim transition-colors hover:border-hairline-strong hover:text-ink"
                               aria-label={`Live Peek ${it.project.displayName}`}
                               title="Live Peek [I]"
                             >
                               <Eye size={13} />
                             </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                runItem(it, 'qr');
-                              }}
-                              className="grid size-7 place-items-center rounded-[7px] border border-hairline bg-surface text-dim hover:text-ink"
-                              aria-label={`QR handoff ${it.project.displayName}`}
-                              title="QR Handoff [Q]"
-                            >
-                              <QrCode size={13} />
-                            </button>
+                            {it.project.launchUrl && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  runItem(it, 'qr');
+                                }}
+                                className="grid size-7 place-items-center rounded-[7px] border border-hairline bg-surface text-dim transition-colors hover:border-hairline-strong hover:text-ink"
+                                aria-label={`QR handoff ${it.project.displayName}`}
+                                title="QR Handoff [Q]"
+                              >
+                                <QrCode size={13} />
+                              </button>
+                            )}
                           </>
                         )}
                         <span
@@ -507,17 +536,21 @@ export function CommandPalette({ projects }: { projects: Project[] }) {
                         <Highlight text={it.label} idx={it.labelIdx} />
                       </span>
                       <span className="mono shrink-0 text-[10px] tracking-wider text-mute">{it.hint}</span>
-                      {on && <CornerDownLeft size={13} className="shrink-0 text-mute" />}
+                      {on && <CornerDownLeft size={13} className="shrink-0 text-hot-ink" />}
                     </>
                   )}
                 </div>
               </li>
             );
           })}
-          {!items.length && <li className="px-3 py-8 text-center text-[13px] text-mute">Nothing matches &ldquo;{q}&rdquo;.</li>}
+          {!items.length && (
+            <li className="px-3 py-10 text-center text-[13px] text-mute">
+              Nothing matches &ldquo;{q}&rdquo;.
+            </li>
+          )}
         </ul>
 
-        <div className="mono flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-hairline bg-inset/60 px-4 py-2.5 text-[10.5px] text-mute">
+        <div className="mono flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-hairline bg-inset/70 px-4 py-2.5 text-[10.5px] text-mute">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> nav

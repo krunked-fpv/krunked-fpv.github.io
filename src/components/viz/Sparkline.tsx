@@ -94,7 +94,16 @@ export function Sparkline({
   const baselineY = height - padY;
 
   const { pts, linePath, areaPath, flat, lastActive } = useMemo(() => {
-    const safe = values.length > 0 ? values : [0, 0];
+    let safe = values.length > 0 ? values : [0, 0];
+    // Trim flat leading silence when all non-zero activity lands in the trailing half,
+    // keeping 2 lead-in samples and at least 12 points so the waveform spans the full width expressively.
+    if (safe.length > 14) {
+      const firstNonZero = safe.findIndex((v) => v > 0);
+      if (firstNonZero > 0 && firstNonZero >= Math.floor(safe.length * 0.5)) {
+        const start = Math.min(safe.length - 12, Math.max(0, firstNonZero - 2));
+        safe = safe.slice(start);
+      }
+    }
     const max = Math.max(1, ...safe);
     const isFlat = safe.every((v) => v <= 0);
     const spanX = Math.max(1, width - padX * 2);

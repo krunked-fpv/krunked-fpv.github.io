@@ -1,6 +1,7 @@
-import { X } from 'lucide-react';
+import { ArrowUpRight, X } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 import { useFoley } from '../../audio/useFoley';
+import { BRAND, GITHUB_USER } from '../../config/site';
 import { getRate, subscribeRate } from '../../data/rateLimit';
 import { statusLabel } from '../../data/syncReducer';
 import { formatDelta } from '../../domain/freshness';
@@ -8,13 +9,16 @@ import { useNow } from '../../hooks/useNow';
 import { useDeck } from '../../store/deckStore';
 import type { Project } from '../../types/project';
 import { getVaultStatus, subscribeVaultStatus } from '../../vault/cookieVault';
+import { BrandEmblem } from '../ui/BrandEmblem';
+import { Kbd, modKey } from '../ui/Kbd';
 import { ForceSyncButton } from './ForceSyncButton';
+import { LiveClock } from './LiveClock';
 import { phaseColor, phaseInk } from './TopBar';
 
+/** Grounded architectural studio footer (replaces fixed bottom bar for full above-the-fold clarity). */
 export function StatusBar({ projects }: { projects: Project[] }) {
   const sync = useDeck((s) => s.sync);
-  const theme = useDeck((s) => s.vault.prefs.theme);
-  const soundEnabled = useDeck((s) => s.vault.prefs.soundEnabled);
+  const user = useDeck((s) => s.user);
   const chronoWindow = useDeck((s) => s.chronoWindow);
   const setChronoWindow = useDeck((s) => s.setChronoWindow);
   const setSettings = useDeck((s) => s.setSettings);
@@ -59,92 +63,140 @@ export function StatusBar({ projects }: { projects: Project[] }) {
         ? 'var(--led-active)'
         : 'var(--led-alarm)';
 
+  const profileUrl = user?.html_url ?? `https://github.com/${GITHUB_USER}`;
+  const profileHandle = user?.login ?? GITHUB_USER;
+
   return (
     <footer
-      className="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-hairline bg-bar backdrop-blur-xl"
+      className="mt-16 w-full border-t border-hairline bg-inset/50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      role="status"
     >
-      <div className="mono mx-auto flex h-9 max-w-[1480px] items-center justify-between gap-2 px-3 text-[10.5px] tracking-[0.06em] text-mute sm:gap-3 sm:px-6 sm:tracking-[0.09em]">
-        {/* Left Telemetry Cluster */}
-        <div className="flex min-w-0 items-center gap-2.5 overflow-hidden whitespace-nowrap sm:gap-4">
-          <span>
-            <span className="hidden min-[380px]:inline">LIVE APPS </span>
-            <span className="min-[380px]:hidden">LIVE </span>
-            <b className="font-semibold text-ink">{live}</b>
-          </span>
-
-          <span className="hidden sm:inline">
-            LAST PUSH <b className="font-semibold text-ink">{last ? formatDelta(now - Date.parse(last)) : '--'}</b>
-          </span>
-
-          <span className="flex min-w-0 items-center gap-1.5 truncate" style={{ color: inkColor }}>
-            <span className="led-dot" style={{ ['--c' as string]: ledColor }} aria-hidden="true" />
-            <span className="truncate" aria-live="polite">
-              {statusLabel(sync, now)}
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-4 py-6 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left Zone: Brand Atelier Identity & Live Sync Telemetry */}
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <BrandEmblem size={20} />
+            <span className="text-[12.5px] font-semibold tracking-[0.13em] text-ink">{BRAND.primary}</span>
+            <span className="mono text-[11px] font-semibold text-hot-ink" aria-hidden="true">
+              {BRAND.separator}
             </span>
-          </span>
-
-          {chronoWindow && (
-            <button
-              type="button"
-              onClick={() => {
-                click();
-                setChronoWindow(null);
-              }}
-              className="hidden items-center gap-1 rounded-[var(--radius-xs)] bg-hot-soft px-1.5 py-0.5 text-[10px] font-medium text-hot-ink transition hover:opacity-90 md:inline-flex"
-              aria-label="Clear Chrono-Pulse date filter"
-              title="Click to clear active Chrono-Pulse date filter"
+            <span className="mono text-[11px] font-medium tracking-[0.14em] text-dim">{BRAND.secondary}</span>
+            <span className="text-mute" aria-hidden="true">
+              ·
+            </span>
+            <a
+              href={profileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mono inline-flex items-center gap-0.5 text-[11px] text-dim transition hover:text-ink"
             >
-              <span>
-                {chronoWindow.startDate === chronoWindow.endDate
-                  ? chronoWindow.startDate
-                  : `${chronoWindow.startDate}..${chronoWindow.endDate}`}
-              </span>
-              <X size={10} aria-hidden="true" />
-            </button>
-          )}
+              @{profileHandle}
+              <ArrowUpRight size={11} className="text-mute" aria-hidden="true" />
+            </a>
+          </div>
+
+          <div className="mono flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10.5px] tracking-[0.06em] text-mute">
+            <span>
+              <b className="font-semibold text-ink">{live}</b> live worlds
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>
+              Last ship <b className="font-semibold text-ink">{last ? `${formatDelta(now - Date.parse(last))} ago` : '--'}</b>
+            </span>
+            <span aria-hidden="true">·</span>
+            <span className="inline-flex items-center gap-1.5" style={{ color: inkColor }}>
+              <span className="led-dot" style={{ ['--c' as string]: ledColor }} aria-hidden="true" />
+              <span aria-live="polite">{statusLabel(sync, now)}</span>
+            </span>
+
+            {chronoWindow && (
+              <button
+                type="button"
+                onClick={() => {
+                  click();
+                  setChronoWindow(null);
+                }}
+                className="inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-hot-soft px-1.5 py-0.5 text-[10px] font-medium text-hot-ink transition hover:opacity-90"
+                aria-label="Clear Chrono-Pulse date filter"
+                title="Click to clear active Chrono-Pulse date filter"
+              >
+                <span>
+                  {chronoWindow.startDate === chronoWindow.endDate
+                    ? chronoWindow.startDate
+                    : `${chronoWindow.startDate}..${chronoWindow.endDate}`}
+                </span>
+                <X size={10} aria-hidden="true" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Right Diagnostics & Controls */}
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        {/* Center Zone: Keyboard Legend + Live Interactive Clock / Stopwatch */}
+        <div className="flex flex-wrap items-center gap-3 lg:justify-center">
+          <div className="hidden items-center gap-3 text-[11px] text-mute sm:flex">
+            <span className="inline-flex items-center gap-1">
+              <Kbd>{modKey()}</Kbd>
+              <Kbd>K</Kbd>
+              <span>Search</span>
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Kbd>T</Kbd>
+              <span>Theme</span>
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Kbd>M</Kbd>
+              <span>Audio</span>
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Kbd>1</Kbd>
+              <Kbd>2</Kbd>
+              <Kbd>3</Kbd>
+              <span>Views</span>
+            </span>
+          </div>
+          <span className="hidden h-3.5 w-px bg-hairline-strong sm:inline-block" aria-hidden="true" />
+          <LiveClock />
+        </div>
+
+        {/* Right Zone: Vault Health, Conditional API Quota & Force Sync */}
+        <div className="mono flex flex-wrap items-center gap-2.5 text-[10.5px] tracking-[0.06em] text-mute lg:justify-end">
           <button
             type="button"
             onClick={() => {
               click();
               setSettings(true, 'vault');
             }}
-            className="hidden items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-0.5 text-mute transition hover:bg-hover hover:text-ink lg:inline-flex"
+            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-hairline bg-surface px-2.5 text-dim transition hover:border-hairline-strong hover:text-ink"
             aria-label={`Vault storage mirrors: ${vaultStatus.healthyCount} of 3 healthy`}
             title={`Triple-store Vault rev ${vaultStatus.rev} · ${vaultStatus.healthyCount}/3 mirrors healthy · open Vault Diagnostics`}
           >
             <span className="led-dot" style={{ ['--c' as string]: vaultLed }} aria-hidden="true" />
-            <span>VAULT {vaultStatus.healthyCount}/3</span>
+            <span>Vault {vaultStatus.healthyCount}/3</span>
           </button>
 
-          <span className="hidden text-mute xl:inline">
-            {theme === 'daylight' ? 'DAYLIGHT' : 'OBSIDIAN'} · {soundEnabled ? 'SFX ON' : 'SFX MUTE'}
-          </span>
-
-          <span className="hidden items-center gap-2 min-[380px]:flex">
-            <span className="hidden sm:inline">QUOTA</span>
-            <b className="font-semibold" style={{ color: qInk }}>
-              {rate ? `${rate.remaining}/${rate.limit}` : '--'}
-            </b>
-            <span className="hidden h-1.5 w-14 overflow-hidden rounded-full bg-tint shadow-[inset_0_0_0_1px_var(--hairline)] sm:block">
-              <span
-                className="block h-full rounded-full transition-all duration-300"
-                style={{ width: `${q * 100}%`, background: qLed }}
-              />
-            </span>
-            {rate && resetSec > 0 && (
-              <span className="hidden md:inline">
-                RESET {mm}:{ss}
+          {rate && (
+            <span
+              className="inline-flex h-7 items-center gap-2 rounded-full border border-hairline bg-surface px-2.5"
+              title={resetSec > 0 ? `GitHub API quota resets in ${mm}:${ss}` : 'GitHub API quota'}
+            >
+              <span className="text-mute">API</span>
+              <b className="font-semibold" style={{ color: qInk }}>
+                {rate.remaining}/{rate.limit}
+              </b>
+              <span className="h-1.5 w-11 overflow-hidden rounded-full bg-tint shadow-[inset_0_0_0_1px_var(--hairline)]">
+                <span
+                  className="block h-full rounded-full transition-all duration-300"
+                  style={{ width: `${q * 100}%`, background: qLed }}
+                />
               </span>
-            )}
-          </span>
+              {resetSec > 0 && <span className="hidden xl:inline">{mm}:{ss}</span>}
+            </span>
+          )}
 
-          <ForceSyncButton variant="text" />
+          <ForceSyncButton
+            variant="text"
+            className="h-7! rounded-full! border border-hairline bg-surface px-2.5! hover:border-hairline-strong"
+          />
         </div>
       </div>
     </footer>

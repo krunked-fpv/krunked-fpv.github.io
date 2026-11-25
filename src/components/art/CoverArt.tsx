@@ -7,21 +7,58 @@ import { useReducedMotion } from '../../hooks/useMediaQuery';
 import { useDeck } from '../../store/deckStore';
 import type { ArtTheme, Project } from '../../types/project';
 
+export type CoverScrim = 'none' | 'subtle' | 'stage';
+
 export interface CoverArtProps {
   project: Project;
   className?: string;
   animated?: boolean;
   fill?: boolean;
   theme?: ArtTheme;
+  /**
+   * Contextual readability veil over the procedural print:
+   * - 'none': unobstructed museum print
+   * - 'subtle' (default): delicate bottom edge feather for gallery cards & glyphs
+   * - 'stage': sculpted dual-axis editorial veil for Hero Stage typography
+   */
+  scrim?: CoverScrim;
 }
 
 const quantize = (n: number) => Math.max(32, Math.ceil(n / 24) * 24);
+
+function scrimBackground(scrim: CoverScrim, theme: ArtTheme): string | null {
+  if (scrim === 'none') return null;
+
+  if (scrim === 'stage') {
+    return theme === 'daylight'
+      ? [
+          'radial-gradient(ellipse 96% 68% at 20% 96%, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.64) 48%, transparent 80%)',
+          'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.04) 22%, rgba(255,255,255,0.48) 44%, rgba(255,255,255,0.9) 68%, rgba(255,255,255,0.97) 90%, rgba(255,255,255,0.99) 100%)',
+        ].join(', ')
+      : [
+          'radial-gradient(ellipse 96% 68% at 20% 96%, rgba(6,7,9,0.9) 0%, rgba(6,7,9,0.56) 48%, transparent 80%)',
+          'linear-gradient(180deg, rgba(6,7,9,0.12) 0%, rgba(6,7,9,0.06) 22%, rgba(6,7,9,0.48) 44%, rgba(6,7,9,0.88) 68%, rgba(6,7,9,0.97) 90%, rgba(6,7,9,0.99) 100%)',
+        ].join(', ');
+  }
+
+  // 'subtle': preserves full artwork vibrancy across upper 70%, gentle feather at bottom edge
+  return theme === 'daylight'
+    ? 'linear-gradient(180deg, transparent 58%, rgba(255,255,255,0.22) 82%, rgba(255,255,255,0.52) 100%)'
+    : 'linear-gradient(180deg, transparent 56%, rgba(6,7,9,0.26) 80%, rgba(6,7,9,0.56) 100%)';
+}
 
 /**
  * Dual-theme procedural cover art renderer.
  * Image precedence: override screenshot > probed og:image > procedural canvas (always drawn underneath).
  */
-export function CoverArt({ project, className = '', animated = false, fill = false, theme: themeProp }: CoverArtProps) {
+export function CoverArt({
+  project,
+  className = '',
+  animated = false,
+  fill = false,
+  theme: themeProp,
+  scrim = 'subtle',
+}: CoverArtProps) {
   const wrap = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -33,6 +70,7 @@ export function CoverArt({ project, className = '', animated = false, fill = fal
 
   const img = project.screenshot ?? project.ogImage;
   const hue = hueOf(project);
+  const scrimBg = scrimBackground(scrim, theme);
 
   // Reset loaded flag when image URL changes
   useEffect(() => {
@@ -105,7 +143,7 @@ export function CoverArt({ project, className = '', animated = false, fill = fal
     };
   }, [inView, size, project.art.seed, project.art.style, hue, theme, animated, reduced]);
 
-  // Smooth rAF loop (spotlight lead tile): active only when in view + visible + motion allowed
+  // Smooth rAF loop (featured exhibition stage): active only when in view + visible + motion allowed
   useEffect(() => {
     if (!animated || reduced || !size.w || !size.h || !inView) return;
     const c = canvas.current;
@@ -158,15 +196,12 @@ export function CoverArt({ project, className = '', animated = false, fill = fal
           style={{ opacity: imgOk ? 1 : 0 }}
         />
       )}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            theme === 'daylight'
-              ? 'linear-gradient(180deg, transparent 26%, rgba(247,246,242,0.52) 60%, var(--cover-scrim-end, rgba(247,246,242,0.96)) 100%)'
-              : 'linear-gradient(180deg, transparent 34%, var(--cover-scrim-end, rgba(8,9,11,0.92)) 100%)',
-        }}
-      />
+      {scrimBg && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: scrimBg }}
+        />
+      )}
     </div>
   );
 }
