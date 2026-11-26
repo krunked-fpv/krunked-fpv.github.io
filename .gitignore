@@ -13,3 +13,5 @@ coverage
 
 # Generated at build time by scripts/build-snapshot.mjs
 public/snapshot.json
+*.md
+!README.md
