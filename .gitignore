@@ -16,3 +16,4 @@ public/snapshot.json
 *.md
 !README.md
 dna/
+export-dna.ts
