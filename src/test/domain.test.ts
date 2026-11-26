@@ -27,8 +27,10 @@ import { toShipLogs } from '../domain/shiplog';
 import { shouldHandle, swRouteStrategy } from '../domain/swScope';
 import {
   filterProjects,
+  rankOrbitWorlds,
   searchActions,
   searchProjects,
+  sortProjects,
   spotlightOf,
 } from '../store/selectors';
 import type { CommitLite, GhEvent, GhRepo, SnapshotProbe } from '../types/github';
@@ -447,5 +449,46 @@ describe('V2 swScope routing predicate', () => {
     expect(swRouteStrategy({ origin, pathname: '/forge-deck/' }, 'navigate', '/forge-deck', origin)).toBe('network-first');
     expect(swRouteStrategy({ origin, pathname: '/forge-deck/snapshot.json' }, 'cors', '/forge-deck/', origin)).toBe('network-first');
     expect(shouldHandle({ origin, pathname: '/other-app/' }, 'navigate', '/forge-deck/', origin)).toBe(false);
+  });
+});
+
+describe('Latest-commit ordering for orbit & archive', () => {
+  it('ranks latest-commit worlds (e.g. krunked-cells) first in orbit & archive, pushing older featured builds outward and to bottom', () => {
+    const now = Date.parse('2026-11-26T02:00:00Z');
+    const repos: GhRepo[] = [
+      mkRepo({ id: 1, name: 'discogs_sniper', has_pages: true, pushed_at: '2026-11-25T01:25:00Z' }),
+      mkRepo({ id: 2, name: 'chroma-cosmos', has_pages: true, pushed_at: '2026-11-24T20:52:00Z' }),
+      mkRepo({ id: 3, name: 'krunked-cells', has_pages: true, pushed_at: '2026-11-26T01:50:00Z' }),
+      mkRepo({ id: 4, name: 'starlight_v2', has_pages: true, pushed_at: '2026-11-26T01:25:00Z' }),
+      mkRepo({ id: 5, name: 'violets_homework', has_pages: true, pushed_at: '2026-11-20T18:21:00Z' }),
+    ];
+
+    const projects = buildProjects({
+      repos,
+      events: [],
+      pins: [],
+      now,
+      commitsFor: () => undefined,
+      languagesFor: () => ({ TypeScript: 1000 }),
+      probeFor: () => ({ liveVerified: true, isNotFound: false, httpStatus: 200 }),
+    });
+
+    const orbit = rankOrbitWorlds(projects);
+    expect(orbit.map((p) => p.name)).toEqual([
+      'krunked-cells',
+      'starlight_v2',
+      'discogs_sniper',
+      'chroma-cosmos',
+      'violets_homework',
+    ]);
+
+    const archive = sortProjects(projects, 'push');
+    expect(archive.map((p) => p.name)).toEqual([
+      'krunked-cells',
+      'starlight_v2',
+      'discogs_sniper',
+      'chroma-cosmos',
+      'violets_homework',
+    ]);
   });
 });

@@ -1,10 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Eye } from 'lucide-react';
+import { ArrowUpRight, Eye, GitBranch } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { nonPurpleRgb } from '../../art/color';
 import { useFoley } from '../../audio/useFoley';
 import { hueOf } from '../../domain/buildProjects';
+import { formatDelta } from '../../domain/freshness';
 import { useReducedMotion } from '../../hooks/useMediaQuery';
+import { useNow } from '../../hooks/useNow';
 import { useDeck } from '../../store/deckStore';
 import type { Project } from '../../types/project';
 import { CoverArt } from '../art/CoverArt';
@@ -172,6 +174,7 @@ export function SpotlightDeck({
   const theme = useDeck((s) => s.vault.prefs.theme);
   const foley = useFoley();
   const reduced = useReducedMotion();
+  const now = useNow(30_000);
   const isDaylight = theme === 'daylight';
 
   const arenaRef = useRef<HTMLDivElement | null>(null);
@@ -537,6 +540,11 @@ export function SpotlightDeck({
                 const fromX = i % 2 === 0 ? 48 : -48;
                 const fromY = i < 2 ? 64 : i >= 4 ? -64 : 0;
                 const accentSolid = accentCss(hue, isDaylight, 1);
+                const commit = project.latestCommit;
+                const commitTs = Date.parse(commit?.date || project.lastActivityAt) || now;
+                const ageLabel = formatDelta(now - commitTs).toUpperCase();
+                const commitSha = commit?.sha ? commit.sha.slice(0, 7) : null;
+                const commitMsg = commit?.message || 'latest push';
 
                 return (
                   <motion.div
@@ -565,14 +573,18 @@ export function SpotlightDeck({
                         }`}
                       />
                       <span
-                        className="mono absolute top-2 left-2 rounded-[2px] px-1.5 py-[1px] text-[9px] font-semibold tracking-[0.12em] backdrop-blur-md"
+                        className="mono absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-[2px] px-1.5 py-[1px] text-[9px] font-semibold tracking-[0.1em] backdrop-blur-md"
                         style={{
                           color: 'var(--led-hot-ink)',
                           background: 'var(--badge-bg)',
                           boxShadow: 'inset 0 0 0 1px var(--badge-border)',
                         }}
                       >
-                        {num}
+                        <span>{num}</span>
+                        <span className="opacity-45" aria-hidden="true">
+                          ·
+                        </span>
+                        <span style={{ color: tok.ink }}>{ageLabel}</span>
                       </span>
                       <span
                         className="led-dot absolute top-2.5 right-2.5 ring-2 ring-chassis/70"
@@ -581,7 +593,7 @@ export function SpotlightDeck({
                       />
                     </div>
 
-                    <div className="flex flex-1 flex-col justify-between gap-2.5 p-2.5">
+                    <div className="flex flex-1 flex-col justify-between gap-2 p-2.5">
                       <div className="flex items-start gap-2">
                         <Glyph name={project.glyph} hue={hue} size={24} className="shrink-0" />
                         <div className="min-w-0 flex-1">
@@ -592,6 +604,19 @@ export function SpotlightDeck({
                             {project.category}
                           </div>
                         </div>
+                      </div>
+
+                      <div
+                        className="flex min-w-0 items-center gap-1 rounded-[var(--radius-xs)] border border-hairline bg-inset/75 px-1.5 py-1 text-[10.5px]"
+                        title={commitMsg}
+                      >
+                        <GitBranch size={10} className="shrink-0 text-mute" aria-hidden="true" />
+                        {commitSha && (
+                          <span className="mono shrink-0 text-[9.5px] font-semibold text-hot-ink">
+                            {commitSha}
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-dim">{commitMsg}</span>
                       </div>
 
                       <div className="flex items-center gap-1.5">

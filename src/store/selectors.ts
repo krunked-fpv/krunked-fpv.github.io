@@ -159,6 +159,25 @@ export function spotlightOf(projects: Project[]): Project[] {
     .slice(0, SPOTLIGHT_COUNT);
 }
 
+/**
+ * Ranks orbital constellation worlds with latest commits/activity first:
+ * - First 6 occupy the inner ring (and mobile explode grid)
+ * - Older worlds sit further out in the outer ring
+ */
+export function rankOrbitWorlds(projects: Project[]): Project[] {
+  const visible = projects.filter((p) => !p.hidden);
+  const live = visible.filter((p) => p.kind === 'live');
+  const pool = live.length > 0 ? live : visible;
+  return [...pool].sort((a, b) => {
+    const aMs = Math.max(Date.parse(a.lastActivityAt) || 0, Date.parse(a.latestCommit?.date ?? '') || 0);
+    const bMs = Math.max(Date.parse(b.lastActivityAt) || 0, Date.parse(b.latestCommit?.date ?? '') || 0);
+    if (bMs !== aMs) return bMs - aMs;
+    const fDiff = Number(b.featured) - Number(a.featured);
+    if (fDiff !== 0) return fDiff;
+    return b.velocityScore - a.velocityScore;
+  });
+}
+
 export function filterProjects(
   projects: Project[],
   filter: string,
@@ -210,7 +229,11 @@ export function sortProjects(projects: Project[], sort: SortMode): Project[] {
   const a = [...projects];
   switch (sort) {
     case 'push':
-      return a.sort((x, y) => (Date.parse(y.lastActivityAt) || 0) - (Date.parse(x.lastActivityAt) || 0));
+      return a.sort((x, y) => {
+        const xMs = Math.max(Date.parse(x.lastActivityAt) || 0, Date.parse(x.latestCommit?.date ?? '') || 0);
+        const yMs = Math.max(Date.parse(y.lastActivityAt) || 0, Date.parse(y.latestCommit?.date ?? '') || 0);
+        return yMs - xMs;
+      });
     case 'created':
       return a.sort((x, y) => (Date.parse(y.createdAt) || 0) - (Date.parse(x.createdAt) || 0));
     case 'velocity':

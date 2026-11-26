@@ -7,7 +7,7 @@ import { BRAND, GITHUB_USER, SPRING } from '../../config/site';
 import { hueOf } from '../../domain/buildProjects';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useDeck } from '../../store/deckStore';
-import { useChronoPulse } from '../../store/selectors';
+import { rankOrbitWorlds, useChronoPulse } from '../../store/selectors';
 import type { Project } from '../../types/project';
 import {
   computeOrbitLayout,
@@ -26,19 +26,6 @@ export interface HeroBandProps {
   onActiveChange?: (project: Project | null) => void;
   /** Optional custom slot; when omitted, HeroBand renders the self-contained 17-world Singularity Arena. */
   children?: ReactNode;
-}
-
-function rankOrbitWorlds(projects: Project[]): Project[] {
-  const visible = projects.filter((p) => !p.hidden);
-  const live = visible.filter((p) => p.kind === 'live');
-  const pool = live.length > 0 ? live : visible;
-  return [...pool].sort((a, b) => {
-    const fDiff = Number(b.featured) - Number(a.featured);
-    if (fDiff !== 0) return fDiff;
-    const actDiff = (Date.parse(b.lastActivityAt) || 0) - (Date.parse(a.lastActivityAt) || 0);
-    if (actDiff !== 0) return actDiff;
-    return b.velocityScore - a.velocityScore;
-  });
 }
 
 /**
@@ -112,7 +99,7 @@ export function HeroBand({ projects, activeSpotlight, onActiveChange, children }
       const hit = orbitWorlds.find((p) => p.name === key);
       if (hit) return hit;
     }
-    return activeSpotlight ?? orbitWorlds[0] ?? projects[0] ?? null;
+    return orbitWorlds[0] ?? activeSpotlight ?? projects[0] ?? null;
   }, [hoveredSlug, selectedSlug, orbitWorlds, activeSpotlight, projects]);
 
   const activeHue = activeWorld ? hueOf(activeWorld) : 84;
