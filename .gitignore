@@ -15,3 +15,4 @@ coverage
 public/snapshot.json
 *.md
 !README.md
+dna/
