@@ -43,7 +43,7 @@ export interface Project {
   lastActivityAt: string;
   freshness: Freshness;
   accentHue: number | null;
-  art: { seed: number; style: ArtStyle };
+  art: { seed: number; style: ArtStyle; customStyle?: ArtStyle };
   glyph: string;
   isPwa: boolean;
   /** True when this repo is the host Forge Deck site (<owner>.github.io). */

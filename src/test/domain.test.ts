@@ -12,7 +12,8 @@ import { buildProjects } from '../domain/buildProjects';
 import { classify } from '../domain/classify';
 import { badgeLabel, formatDelta, freshnessOf } from '../domain/freshness';
 import { fuzzyFields, fuzzyMatch } from '../domain/fuzzy';
-import { humanizeName } from '../domain/humanize';
+import { pickGlyph } from '../domain/glyphs';
+import { fallbackTagline, humanizeName } from '../domain/humanize';
 import { isSelfHostedPeekTarget, pagesCandidateUrl, resolveLaunch } from '../domain/resolveLaunch';
 import {
   decodeHtmlEntities,
@@ -571,5 +572,121 @@ describe('Latest-commit ordering for orbit & archive', () => {
       'chroma-cosmos',
       'violets_homework',
     ]);
+  });
+});
+
+describe('auto-generation diversity for uncurated new & future repos', () => {
+  it('classifies uncurated games accurately via repo name, description, probe, and commit signals while keeping skymap Hardware/Sky', () => {
+    expect(
+      classify(
+        {
+          name: 'krunked-throne',
+          topics: [],
+          description: 'Krunked Throne - original 16-bit wasteland action roguelike',
+        },
+        'live',
+        1100,
+      ),
+    ).toBe('Game');
+
+    expect(
+      classify(
+        {
+          name: 'krunked-skybreaker',
+          topics: [],
+          description: null,
+          extraText: 'Clean-room WebGL2 arcade dogfighter with gamepad controls',
+        },
+        'live',
+        1106,
+      ),
+    ).toBe('Game');
+
+    expect(
+      classify(
+        {
+          name: 'krunked-n-fred',
+          topics: [],
+          description: null,
+          extraText: 'Boss Arena framing, 13-world deterministic reachability soak, Online Co-Op',
+        },
+        'live',
+        300,
+      ),
+    ).toBe('Game');
+
+    expect(classify({ name: 'krunked-kartz', topics: [], description: null }, 'live', 399)).toBe('Game');
+    expect(classify({ name: 'krunked-tower', topics: [], description: null }, 'live', 404)).toBe('Game');
+    expect(classify({ name: 'krunked_skymap', topics: [], description: 'krunked skymap' }, 'live', 1136)).toBe(
+      'Hardware/Sky',
+    );
+  });
+
+  it('assigns distinct thematic glyphs and spreads unknown repos across multiple glyphs instead of repeating one icon', () => {
+    expect(pickGlyph('krunked-n-fred', [], 'Game', undefined, 'alpine peaks mountain summit')).toBe('Mountain');
+    expect(pickGlyph('krunked-tower', [], 'Game')).toBe('Castle');
+    expect(pickGlyph('krunked-circuit', [], 'Game')).toBe('CircuitBoard');
+    expect(pickGlyph('krunked-kartz', [], 'Game')).toBe('Gauge');
+    expect(pickGlyph('krunked-throne', [], 'Game')).toBe('Crown');
+    expect(pickGlyph('krunked-cells', [], 'Game')).toBe('Dna');
+    expect(pickGlyph('krunked-lumia', [], 'Game', undefined, 'diamond puzzle')).toBe('Gem');
+    expect(pickGlyph('krunked-skybreaker', [], 'Game', undefined, 'arcade dogfighter')).toBe('Rocket');
+    expect(pickGlyph('krunked-cards', [], 'Game')).toBe('Spade');
+    expect(pickGlyph('krunked-quest', [], 'Game')).toBe('Compass');
+
+    const opaqueGlyphs = new Set<string>();
+    for (let i = 0; i < 24; i++) {
+      opaqueGlyphs.add(pickGlyph(`mystery-build-${i}`, [], 'Game'));
+    }
+    expect(opaqueGlyphs.size).toBeGreaterThanOrEqual(5);
+  });
+
+  it('synthesizes rich non-identical taglines and preserves customArtStyle curation in buildProjects', () => {
+    const now = Date.parse('2026-11-27T01:00:00Z');
+    const repos: GhRepo[] = [
+      mkRepo({ id: 10, name: 'krunked-well', has_pages: true, size: 251, language: 'TypeScript' }),
+      mkRepo({ id: 11, name: 'krunked-kartz', has_pages: true, size: 399, language: 'TypeScript' }),
+      mkRepo({ id: 12, name: 'krunked-n-fred', has_pages: true, size: 320, language: 'TypeScript' }),
+    ];
+    const commitsByRepo: Record<string, CommitLite[]> = {
+      'krunked-well': [
+        { sha: 'a1', message: 'Wave 1: Merge WebGL2 4-channel renderer, procedural atlas, universal input', date: '2026-11-26T22:30:00Z', author: 'k' },
+        { sha: 'a2', message: 'Wave 1: Merge weapons, upgrades, enemies, shops, boss, and progression', date: '2026-11-26T22:26:00Z', author: 'k' },
+      ],
+      'krunked-kartz': [
+        { sha: 'b1', message: 'fix(wave3): place 2P split-screen minimap cleanly clear of P2 item box', date: '2026-11-26T19:25:00Z', author: 'k' },
+        { sha: 'b2', message: 'feat(input): add universal controller, touchpad, mobile, and Tesla support', date: '2026-11-26T19:20:00Z', author: 'k' },
+      ],
+      'krunked-n-fred': [
+        { sha: 'c1', message: 'Wave 2: Integrate full Mountain, Solo Jeff, Lab DLC + Boss, Online Co-Op', date: '2026-11-26T23:51:00Z', author: 'k' },
+      ],
+    };
+
+    const projects = buildProjects({
+      repos,
+      events: [],
+      pins: [],
+      now,
+      overrides: {},
+      curation: { 'krunked-kartz': { artStyle: 'orbital' } },
+      commitsFor: (slug) => commitsByRepo[slug],
+      languagesFor: () => ({ TypeScript: 1000 }),
+      probeFor: (slug) => ({
+        candidateUrl: `https://krunked-fpv.github.io/${slug}/`,
+        resolvedUrl: `https://krunked-fpv.github.io/${slug}/`,
+        liveVerified: true,
+        isNotFound: false,
+      }),
+    });
+
+    const taglines = projects.map((p) => p.tagline);
+    expect(new Set(taglines).size).toBe(3);
+    for (const t of taglines) {
+      expect(t).not.toBe('App build · TypeScript');
+    }
+    expect(projects.every((p) => p.category === 'Game')).toBe(true);
+    expect(projects.find((p) => p.name === 'krunked-kartz')!.art.customStyle).toBe('orbital');
+    expect(projects.find((p) => p.name === 'krunked-well')!.art.customStyle).toBeUndefined();
+    expect(fallbackTagline('Utility', 'Rust')).toBe('Utility build · Rust');
   });
 });

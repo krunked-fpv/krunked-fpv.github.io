@@ -9,6 +9,7 @@ export const API_TIMEOUT_MS = 10_000;
 export const PROBE_TIMEOUT_MS = 4_500;
 export const MAX_HTML_BYTES = 512 * 1024;
 export const MAX_MANIFEST_BYTES = 128 * 1024;
+export const MAX_README_BYTES = 16 * 1024;
 export const RECENT_COMMITS_LIMIT = 15;
 
 const MS_PER_DAY = 86_400_000;
@@ -472,6 +473,98 @@ async function fetchValidManifest(candidateUrls, { fetchImpl, timeoutMs }) {
  * Probe a candidate live sub-app URL and its web app manifest within timeoutMs.
  * Returns a SnapshotProbe conforming to src/types/github.ts.
  */
+/**
+ * Extract a clean, plain-text one-sentence summary from a repository README.md.
+ * Skips headings, CI badges, Play Live links, code blocks, tables, and decorative quotes.
+ */
+export function extractReadmeSummary(markdown, maxLen = 175) {
+  if (typeof markdown !== 'string' || !markdown.trim()) return null;
+
+  // Strip fenced code blocks and HTML comments before splitting into paragraphs
+  const stripped = markdown
+    .slice(0, MAX_README_BYTES)
+    .replace(/```[\s\S]*?```/g, '\n\n')
+    .replace(/~~~[\s\S]*?~~~/g, '\n\n')
+    .replace(/<!--[\s\S]*?-->/g, ' ');
+
+  const blocks = stripped.split(/\r?\n\s*\r?\n/);
+
+  for (const rawBlock of blocks) {
+    const lines = rawBlock
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (!lines.length) continue;
+
+    // Skip headings, lists, blockquotes, horizontal rules, tables, and image/badge blocks
+    const first = lines[0];
+    if (
+      /^#{1,6}\s/.test(first) ||
+      /^[-*+]\s/.test(first) ||
+      /^\d+\.\s/.test(first) ||
+      /^>/.test(first) ||
+      /^\|/.test(first) ||
+      /^[-*_]{3,}$/.test(first)
+    ) {
+      continue;
+    }
+
+    const joined = lines.join(' ');
+    // Strip markdown images/badges first so badge-only lines become empty
+    const noBadges = joined
+      .replace(/\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)/g, ' ')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/(?:^|\s)_([^_]+)_(?=\s|[.,;:!?]|$)/g, ' $1');
+
+    const clean = sanitizeText(noBadges).replace(/\s+([.,;:!?])/g, '$1').trim();
+    if (!clean || clean.length < 18) continue;
+    // Skip bare URL / Play Live / Live Demo link lines
+    if (/^(?:play\s+live|live\s+demo|demo|url|website|homepage)\s*:/i.test(clean)) continue;
+    if (/^https?:\/\/\S+$/i.test(clean)) continue;
+
+    // Prefer first complete sentence when the paragraph is multi-sentence
+    const sentenceMatch = clean.match(/^(.{24,}?[.!?])(?:\s|$)/);
+    let summary = sentenceMatch ? sentenceMatch[1].trim() : clean;
+
+    if (summary.length > maxLen) {
+      const cut = summary.slice(0, maxLen - 1);
+      const lastSpace = cut.lastIndexOf(' ');
+      const trimmed = (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).replace(/[,;:\-\u2014\u2013]+$/, '').trim();
+      summary = `${trimmed}\u2026`;
+    }
+    return summary;
+  }
+
+  return null;
+}
+
+async function fetchReadmeSummary(owner, slug, branch, { fetchImpl = fetch, timeoutMs = PROBE_TIMEOUT_MS } = {}) {
+  const safeBranch = sanitizeText(branch) || 'main';
+  const url = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}/${encodeURIComponent(safeBranch)}/README.md`;
+  try {
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: 'GET',
+        redirect: 'follow',
+        headers: { Accept: 'text/plain,text/markdown;q=0.9,*/*;q=0.8', 'User-Agent': USER_AGENT },
+      },
+      fetchImpl,
+      Math.min(timeoutMs, 3_500),
+    );
+    if (!res || !res.ok) return null;
+    const text = await readBoundedText(res, MAX_README_BYTES);
+    return extractReadmeSummary(text);
+  } catch {
+    return null;
+  }
+}
+
 export async function probeLiveSubApp(
   slug,
   candidateUrl,
@@ -1427,6 +1520,22 @@ export async function buildSnapshot(options = {}) {
       }
     } else {
       probes[slug] = emptyProbe(null, generatedAt);
+    }
+
+    // 4. Enrich missing taglines from raw README.md (zero GitHub API quota, bounded & non-fatal)
+    if (
+      !repo.description &&
+      !probes[slug].description &&
+      !probes[slug].subtitle &&
+      (repo.size > 0 || probes[slug].liveVerified)
+    ) {
+      const readmeSummary = await fetchReadmeSummary(repoOwner, slug, repo.default_branch, {
+        fetchImpl,
+        timeoutMs: probeTimeoutMs,
+      });
+      if (readmeSummary) {
+        probes[slug].description = readmeSummary;
+      }
     }
   });
 

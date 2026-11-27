@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { renderWorldScene } from '../../art/worldScenes';
+import { selectAutoWorldArchetype, type AutoWorldArchetype } from '../../art/autoWorld';
+import { hasBespokeWorldScene, renderWorldScene } from '../../art/worldScenes';
 import { hueOf } from '../../domain/buildProjects';
 import { useInView } from '../../hooks/useInView';
 import { useReducedMotion } from '../../hooks/useMediaQuery';
 import { useDeck } from '../../store/deckStore';
-import type { ArtTheme, Project } from '../../types/project';
+import type { ArtStyle, ArtTheme, Category, Project } from '../../types/project';
 
 export type WorldScrim = 'none' | 'subtle' | 'stage' | 'blade';
 
@@ -30,8 +31,10 @@ function buildCacheKey(
   dpr: number,
   seed: number,
   hue: number,
+  archetype?: AutoWorldArchetype,
+  customArtStyle?: ArtStyle,
 ): string {
-  return `${slug}|${theme}|${w}x${h}@${dpr}|${seed}|${Math.round(hue)}`;
+  return `${slug}|${theme}|${w}x${h}@${dpr}|${seed}|${Math.round(hue)}|${archetype ?? 'bespoke'}|${customArtStyle ?? ''}`;
 }
 
 function getCachedStaticScene(opts: {
@@ -42,9 +45,25 @@ function getCachedStaticScene(opts: {
   h: number;
   dpr: number;
   theme: ArtTheme;
+  displayName?: string;
+  tagline?: string;
+  category?: Category;
+  topics?: readonly string[];
+  archetype?: AutoWorldArchetype;
+  customArtStyle?: ArtStyle;
 }): HTMLCanvasElement | null {
   if (typeof document === 'undefined') return null;
-  const key = buildCacheKey(opts.slug, opts.theme, opts.w, opts.h, opts.dpr, opts.seed, opts.hue);
+  const key = buildCacheKey(
+    opts.slug,
+    opts.theme,
+    opts.w,
+    opts.h,
+    opts.dpr,
+    opts.seed,
+    opts.hue,
+    opts.archetype,
+    opts.customArtStyle,
+  );
   const hit = staticCache.get(key);
   if (hit) {
     staticCache.delete(key);
@@ -124,7 +143,18 @@ export function WorldVisual({
 
   const slug = project.name;
   const hue = hueOf(project);
-  const screenshot = project.screenshot;
+  const screenshot = project.screenshot ?? project.ogImage;
+  const customArtStyle = project.art.customStyle;
+  const archetype = hasBespokeWorldScene(slug)
+    ? undefined
+    : selectAutoWorldArchetype({
+        slug,
+        displayName: project.displayName,
+        tagline: project.tagline,
+        category: project.category,
+        topics: project.topics,
+        seed: project.art.seed,
+      });
   const scrimBg = scrimBackground(scrim, theme);
 
   useEffect(() => {
@@ -173,6 +203,12 @@ export function WorldVisual({
         h: size.h,
         dpr,
         theme,
+        displayName: project.displayName,
+        tagline: project.tagline,
+        category: project.category,
+        topics: project.topics,
+        archetype,
+        customArtStyle,
       });
       if (!src) return;
       c.width = src.width;
@@ -197,7 +233,22 @@ export function WorldVisual({
       if (hasIdle && typeof cancelIdleCallback === 'function') cancelIdleCallback(id);
       else clearTimeout(id);
     };
-  }, [inView, size, slug, project.art.seed, hue, theme, animated, reduced]);
+  }, [
+    inView,
+    size,
+    slug,
+    project.art.seed,
+    project.displayName,
+    project.tagline,
+    project.category,
+    project.topics,
+    archetype,
+    customArtStyle,
+    hue,
+    theme,
+    animated,
+    reduced,
+  ]);
 
   // Smooth 30-60fps animation loop when active, in view, visible & motion allowed
   useEffect(() => {
@@ -222,6 +273,12 @@ export function WorldVisual({
       h: size.h,
       dpr,
       theme,
+      displayName: project.displayName,
+      tagline: project.tagline,
+      category: project.category,
+      topics: project.topics,
+      archetype,
+      customArtStyle,
       t: 0,
     });
 
@@ -238,13 +295,34 @@ export function WorldVisual({
         h: size.h,
         dpr,
         theme,
+        displayName: project.displayName,
+        tagline: project.tagline,
+        category: project.category,
+        topics: project.topics,
+        archetype,
+        customArtStyle,
         t: (now - t0) / 1000,
       });
     };
 
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [animated, reduced, size, inView, slug, project.art.seed, hue, theme]);
+  }, [
+    animated,
+    reduced,
+    size,
+    inView,
+    slug,
+    project.art.seed,
+    project.displayName,
+    project.tagline,
+    project.category,
+    project.topics,
+    archetype,
+    customArtStyle,
+    hue,
+    theme,
+  ]);
 
   return (
     <div

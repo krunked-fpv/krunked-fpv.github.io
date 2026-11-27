@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AUTO_WORLD_ARCHETYPES,
+  renderAutoWorldScene,
+  selectAutoWorldArchetype,
+  type AutoWorldArchetype,
+} from '../art/autoWorld';
+import {
   buildChronoWindow,
   buildMomentumPath,
   formatRepoSummary,
@@ -13,6 +19,7 @@ import { cyrb53 } from '../art/hash';
 import { mulberry32 } from '../art/prng';
 import { buildQrPath, encodeQrMatrix, renderQrSvgString, type QrEcLevel } from '../art/qr';
 import { buildEmblemSpec, fnv1a32, renderSwissEmblemSvg } from '../art/swissEmblem';
+import { renderWorldScene } from '../art/worldScenes';
 
 const isNonPurpleHue = (h: number) => h < 245 || h > 340;
 
@@ -221,5 +228,291 @@ describe('UTC Chrono-Pulse windowing & thermal tier helpers', () => {
     expect(thermalTier(6, 6)).toBe(3);
     expect(formatRepoSummary(['a', 'b', 'c', 'd'], 2)).toBe('a, b +2');
     expect(buildMomentumPath(days, 36, 28, 4).startsWith('M2.0,')).toBe(true);
+  });
+});
+
+function createRecordingCanvas() {
+  const ops: string[] = [];
+  const grad = { addColorStop: () => {} };
+  const ctx = new Proxy(
+    {
+      canvas: { width: 320, height: 200 },
+      createLinearGradient: () => {
+        ops.push('linearGrad');
+        return grad;
+      },
+      createRadialGradient: () => {
+        ops.push('radialGrad');
+        return grad;
+      },
+      createPattern: () => null,
+      setLineDash: () => {},
+      measureText: () => ({ width: 20 }),
+    } as Record<string, unknown>,
+    {
+      get(target, prop) {
+        if (prop in target) return target[prop as string];
+        return (..._args: unknown[]) => {
+          ops.push(String(prop));
+        };
+      },
+      set(target, prop, value) {
+        target[prop as string] = value;
+        return true;
+      },
+    },
+  );
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: () => ctx,
+  } as unknown as HTMLCanvasElement;
+  return { canvas, ops };
+}
+
+describe('multi-archetype procedural auto-world artwork generator', () => {
+  it('assigns distinct thematic archetypes to new uncurated repos and spreads arbitrary future slugs broadly', () => {
+    expect(AUTO_WORLD_ARCHETYPES.length).toBeGreaterThanOrEqual(12);
+
+    const thematicCases: Array<{
+      input: Parameters<typeof selectAutoWorldArchetype>[0];
+      expected: AutoWorldArchetype;
+    }> = [
+      {
+        input: {
+          slug: 'krunked-n-fred',
+          displayName: 'Krunked & Fred',
+          tagline: 'Rope-tethered co-op precision platformer across perilous alpine peaks',
+          category: 'Game',
+          seed: cyrb53('krunked-n-fred'),
+        },
+        expected: 'summit',
+      },
+      {
+        input: {
+          slug: 'krunked-well',
+          displayName: 'Krunked Well',
+          tagline: 'Vertical gunboot descent roguelite',
+          category: 'Game',
+          seed: cyrb53('krunked-well'),
+        },
+        expected: 'abyss',
+      },
+      {
+        input: {
+          slug: 'krunked-tower',
+          displayName: 'Krunked Tower',
+          tagline: 'Kinetic 2D speed-platformer',
+          category: 'Game',
+          seed: cyrb53('krunked-tower'),
+        },
+        expected: 'citadel',
+      },
+      {
+        input: {
+          slug: 'krunked-dweller',
+          displayName: 'Krunked Dweller',
+          tagline: 'Dark fairy-tale gothic 2D Metroidvania with dynamic matchstick lighting',
+          category: 'Game',
+          seed: cyrb53('krunked-dweller'),
+        },
+        expected: 'catacomb',
+      },
+      {
+        input: {
+          slug: 'krunked-lumia',
+          displayName: 'Krunked Lumia',
+          tagline: 'Synesthetic diamond falling-block puzzle game',
+          category: 'Game',
+          seed: cyrb53('krunked-lumia'),
+        },
+        expected: 'diamond',
+      },
+      {
+        input: {
+          slug: 'krunked-circuit',
+          displayName: 'Krunked Circuit',
+          tagline: 'Action-platformer with hookshot grappling and booster chips',
+          category: 'Game',
+          seed: cyrb53('krunked-circuit'),
+        },
+        expected: 'circuit',
+      },
+      {
+        input: {
+          slug: 'krunked-tato',
+          displayName: 'krunkedtato',
+          tagline: 'Top-down arena shooter roguelite',
+          category: 'Game',
+          seed: cyrb53('krunked-tato'),
+        },
+        expected: 'arena',
+      },
+      {
+        input: {
+          slug: 'krunked-kartz',
+          displayName: 'Krunked Kartz',
+          tagline: 'Retro 3D kart racing and battle arena',
+          category: 'Game',
+          seed: cyrb53('krunked-kartz'),
+        },
+        expected: 'velocity',
+      },
+      {
+        input: {
+          slug: 'krunked-throne',
+          displayName: 'KRUNKED THRONE',
+          tagline: '16-bit wasteland action roguelike',
+          category: 'Game',
+          seed: cyrb53('krunked-throne'),
+        },
+        expected: 'wasteland',
+      },
+      {
+        input: {
+          slug: 'krunked-fall',
+          displayName: 'KRUNKEDFALL',
+          tagline: 'Neon-lit post-apocalyptic Norse twin-stick pixel-art action roguelite',
+          category: 'Game',
+          seed: cyrb53('krunked-fall'),
+        },
+        expected: 'runic',
+      },
+      {
+        input: {
+          slug: 'krunked-cells',
+          displayName: 'Krunked Cells',
+          tagline: 'Roguelite action-platformer with Boss Stem Cells',
+          category: 'Game',
+          seed: cyrb53('krunked-cells'),
+        },
+        expected: 'biocell',
+      },
+      {
+        input: {
+          slug: 'krunked-skybreaker',
+          displayName: 'KRUNKED SKYBREAKER',
+          tagline: 'Clean-room WebGL2 arcade dogfighter',
+          category: 'Game',
+          seed: cyrb53('krunked-skybreaker'),
+        },
+        expected: 'aero',
+      },
+      {
+        input: {
+          slug: 'krunked-quest',
+          displayName: 'Krunked Quest',
+          tagline: '16-bit neo-retro Metroidvania across 11 biomes',
+          category: 'Game',
+          seed: cyrb53('krunked-quest'),
+        },
+        expected: 'cartograph',
+      },
+      {
+        input: {
+          slug: 'krunked-cards',
+          displayName: 'Krunked Cards',
+          tagline: 'Deckbuilder prototype',
+          category: 'Game',
+          seed: cyrb53('krunked-cards'),
+        },
+        expected: 'deck',
+      },
+    ];
+
+    const seenThematic = new Set<AutoWorldArchetype>();
+    for (const tc of thematicCases) {
+      const picked = selectAutoWorldArchetype(tc.input);
+      expect(picked).toBe(tc.expected);
+      seenThematic.add(picked);
+    }
+    expect(seenThematic.size).toBe(thematicCases.length);
+
+    // Arbitrary opaque future slugs (no semantic keywords) must still fan out broadly across archetypes
+    const opaqueSeen = new Set<AutoWorldArchetype>();
+    for (let i = 0; i < 64; i++) {
+      const slug = `project-zeta-${i}`;
+      opaqueSeen.add(
+        selectAutoWorldArchetype({
+          slug,
+          displayName: `Project Zeta ${i}`,
+          tagline: '',
+          category: 'App',
+          seed: cyrb53(`${slug}|TypeScript|`),
+        }),
+      );
+    }
+    expect(opaqueSeen.size).toBeGreaterThanOrEqual(10);
+  });
+
+  it('renders every auto-world archetype cleanly across both themes and honors customArtStyle overrides in renderWorldScene', () => {
+    for (const theme of ['obsidian', 'daylight'] as const) {
+      for (const archetype of AUTO_WORLD_ARCHETYPES) {
+        const { canvas, ops } = createRecordingCanvas();
+        renderAutoWorldScene(canvas, {
+          archetype,
+          slug: `test-${archetype}`,
+          seed: cyrb53(archetype),
+          hue: 280, // purple input must be safely remapped
+          w: 360,
+          h: 220,
+          dpr: 1,
+          t: 1.25,
+          theme,
+        });
+        expect(ops.length).toBeGreaterThan(25);
+      }
+    }
+
+    // Two uncurated repos rendered through renderWorldScene must produce structurally distinct draw commands
+    const recA = createRecordingCanvas();
+    const recB = createRecordingCanvas();
+    renderWorldScene(recA.canvas, {
+      slug: 'krunked-kartz',
+      seed: cyrb53('krunked-kartz'),
+      hue: 48,
+      w: 360,
+      h: 220,
+      theme: 'obsidian',
+      displayName: 'Krunked Kartz',
+      tagline: 'Retro 3D kart racing',
+      category: 'Game',
+    });
+    renderWorldScene(recB.canvas, {
+      slug: 'krunked-cells',
+      seed: cyrb53('krunked-cells'),
+      hue: 156,
+      w: 360,
+      h: 220,
+      theme: 'obsidian',
+      displayName: 'Krunked Cells',
+      tagline: 'Boss Stem Cells roguelite',
+      category: 'Game',
+    });
+    expect(recA.ops.join(',')).not.toBe(recB.ops.join(','));
+
+    // Explicit customArtStyle override must change the rendered output from the default world
+    const recDefault = createRecordingCanvas();
+    const recCustom = createRecordingCanvas();
+    renderWorldScene(recDefault.canvas, {
+      slug: 'krunked-kartz',
+      seed: cyrb53('krunked-kartz'),
+      hue: 48,
+      w: 360,
+      h: 220,
+      theme: 'obsidian',
+      displayName: 'Krunked Kartz',
+    });
+    renderWorldScene(recCustom.canvas, {
+      slug: 'krunked-kartz',
+      seed: cyrb53('krunked-kartz'),
+      hue: 48,
+      w: 360,
+      h: 220,
+      theme: 'obsidian',
+      displayName: 'Krunked Kartz',
+      customArtStyle: 'groove',
+    });
+    expect(recCustom.ops.join(',')).not.toBe(recDefault.ops.join(','));
   });
 });

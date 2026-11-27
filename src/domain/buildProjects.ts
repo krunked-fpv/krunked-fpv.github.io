@@ -56,6 +56,12 @@ function resolveScreenshot(raw: string | undefined): string | null {
   return sanitizeHttpUrl(s);
 }
 
+/** Maps a deterministic seed uniformly across the 265-degree non-purple OKLCH wheel ([0..244] U [341..359]). */
+function autoHueFromSeed(seed: number): number {
+  const spread = ((Math.imul(seed >>> 0, 2654435761) >>> 0) % 265);
+  return remapHue(spread < 245 ? spread : spread + 96);
+}
+
 export function buildProjects(input: BuildInput): Project[] {
   const { repos, events, pins, now, curation, includeHidden = false } = input;
   const overrides = input.overrides ?? PROJECT_OVERRIDES;
@@ -102,12 +108,6 @@ export function buildProjects(input: BuildInput): Project[] {
     const sizeKb = r.size;
     const cleanTopics = r.topics.map(stripHtmlAndEmojis).filter(Boolean);
     const cleanRepoDesc = r.description ? stripHtmlAndEmojis(r.description) : '';
-    const category = classify(
-      { name: r.name, topics: cleanTopics, description: cleanRepoDesc || null },
-      kind,
-      sizeKb,
-      userOv?.category ?? staticOv.category,
-    );
 
     const pushes = (pushesByRepo.get(r.name) ?? []).sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
     const lastPush = pushes[0]?.created_at;
@@ -118,6 +118,24 @@ export function buildProjects(input: BuildInput): Project[] {
     const head = pushes[0]?.payload.head;
     const latestCommit: CommitLite | null =
       commits[0] ?? (head ? { sha: head, message: '', date: pushes[0]?.created_at ?? r.pushed_at, author: '' } : null);
+
+    const probedTitle = probe?.title ? stripHtmlAndEmojis(probe.title) : '';
+    const probedSubtitle = probe?.subtitle ? stripHtmlAndEmojis(probe.subtitle) : '';
+    const probedDesc = probe?.description
+      ? stripHtmlAndEmojis(probe.description)
+      : rawProbe?.description
+        ? stripHtmlAndEmojis(rawProbe.description)
+        : '';
+
+    const commitMessages = commits.slice(0, 8).map((c) => c.message).filter(Boolean);
+    const extraSignalText = [probedTitle, probedSubtitle, probedDesc, ...commitMessages].filter(Boolean).join(' ');
+
+    const category = classify(
+      { name: r.name, topics: cleanTopics, description: cleanRepoDesc || null, extraText: extraSignalText || null },
+      kind,
+      sizeKb,
+      userOv?.category ?? staticOv.category,
+    );
 
     const pushDates = pushes.map((p) => p.created_at);
     const liveSpark = sparkline(commits, pushDates, now, 30);
@@ -151,12 +169,7 @@ export function buildProjects(input: BuildInput): Project[] {
       }
     }
     const style = userOv?.artStyle ?? staticOv.artStyle ?? STYLE_BY_CAT[category] ?? (STYLES[seed % STYLES.length] as ArtStyle);
-    const rawHue = accentHue ?? (seed % 360);
-    accentHue = remapHue(rawHue);
-
-    const probedTitle = probe?.title ? stripHtmlAndEmojis(probe.title) : '';
-    const probedSubtitle = probe?.subtitle ? stripHtmlAndEmojis(probe.subtitle) : '';
-    const probedDesc = probe?.description ? stripHtmlAndEmojis(probe.description) : '';
+    accentHue = accentHue !== null ? remapHue(accentHue) : autoHueFromSeed(seed);
 
     const displayName =
       stripHtmlAndEmojis(userOv?.displayName) ||
@@ -164,13 +177,20 @@ export function buildProjects(input: BuildInput): Project[] {
       probedTitle ||
       humanizeName(r.name);
 
+    const isPwa = Boolean(probe?.isPwa && kind === 'live');
+
     const tagline =
       stripHtmlAndEmojis(userOv?.tagline) ||
       stripHtmlAndEmojis(staticOv.tagline) ||
       cleanRepoDesc ||
       probedSubtitle ||
       probedDesc ||
-      fallbackTagline(category, r.language);
+      fallbackTagline(category, r.language, {
+        name: r.name,
+        commitMessages,
+        isPwa,
+        kind,
+      });
 
     const sourceUrl = sanitizeHttpUrl(r.html_url) ?? `https://github.com/${GITHUB_USER}/${encodeURIComponent(r.name)}`;
     const actionsUrl = `${sourceUrl}/actions`;
@@ -197,9 +217,9 @@ export function buildProjects(input: BuildInput): Project[] {
       lastActivityAt,
       freshness: freshnessOf(lastActivityAt, now),
       accentHue,
-      art: { seed, style },
-      glyph: pickGlyph(r.name, cleanTopics, category, staticOv.glyph),
-      isPwa: Boolean(probe?.isPwa && kind === 'live'),
+      art: userOv?.artStyle ? { seed, style, customStyle: userOv.artStyle } : { seed, style },
+      glyph: pickGlyph(r.name, cleanTopics, category, staticOv.glyph, `${displayName} ${tagline} ${extraSignalText}`),
+      isPwa,
       isSelfDeck,
       liveVerified,
       ogImage: sanitizeHttpUrl(probe?.ogImage ?? null),

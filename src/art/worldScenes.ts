@@ -1,7 +1,10 @@
+import { drawAutoWorldToContext, selectAutoWorldArchetype, type AutoWorldArchetype } from './autoWorld';
 import { nonPurpleRgb, remapHue, type ArtTheme } from './color';
 import { makeNoise } from './noise';
-import { mulberry32, range } from './prng';
+import { mulberry32 } from './prng';
+import { renderCover } from './renderCover';
 import type { Ctx2D } from './styles/types';
+import type { ArtStyle, Category } from '../types/project';
 
 export interface WorldSceneOpts {
   slug: string;
@@ -12,6 +15,15 @@ export interface WorldSceneOpts {
   dpr?: number;
   t?: number;
   theme?: ArtTheme;
+  /** Optional semantic hints used to auto-select a distinct procedural archetype for uncurated repos. */
+  displayName?: string;
+  tagline?: string;
+  category?: Category;
+  topics?: readonly string[];
+  /** Optional explicit archetype override. */
+  archetype?: AutoWorldArchetype;
+  /** Explicit user-curated procedural art style from CuratePanel (renders via renderCover when set). */
+  customArtStyle?: ArtStyle;
 }
 
 export const WORLD_SCENE_SLUGS = [
@@ -3259,49 +3271,6 @@ function drawStarlightV2({ ctx, w, h, t, isLight }: SceneCtx) {
   ctx.restore();
 }
 
-// ============================================================================
-// Deterministic Fallback — Swiss Kinetic Monolith & Orbital Prisms
-// ============================================================================
-function drawFallbackScene({ ctx, w, h, seed, hue, t, isLight }: SceneCtx) {
-  const safeHue = remapHue(hue);
-  const counterHue = remapHue(safeHue + 136);
-  fillBackdrop(ctx, w, h, isLight, safeHue, counterHue);
-  const rng = mulberry32(seed ^ 0xfa11ba);
-  const minD = Math.min(w, h);
-  const cx = w * 0.58;
-  const cy = h * 0.48;
-
-  ctx.save();
-  drawBloom(ctx, cx, cy, minD * 0.55, pigment(isLight, safeHue, isLight ? 0.2 : 0.34), pigment(isLight, counterHue, 0.12));
-
-  // Layered kinetic rings
-  for (let i = 0; i < 4; i++) {
-    const r = minD * (0.16 + i * 0.11);
-    ctx.strokeStyle = i % 2 === 0 ? pigment(isLight, safeHue, 0.72 - i * 0.12) : pigment(isLight, counterHue, 0.62 - i * 0.1);
-    ctx.lineWidth = i === 1 ? 1.8 : 1.1;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, t * (0.2 + i * 0.1) * (i % 2 === 0 ? 1 : -1), t * (0.2 + i * 0.1) + PI * 1.45);
-    ctx.stroke();
-  }
-
-  // Architectural prism facets
-  const facets = 5;
-  for (let i = 0; i < facets; i++) {
-    const ang = (i / facets) * TAU + t * 0.18 + rng() * 0.4;
-    const dist = minD * range(rng, 0.12, 0.34);
-    const fx = cx + Math.cos(ang) * dist;
-    const fy = cy + Math.sin(ang) * dist;
-    const sz = minD * range(rng, 0.04, 0.085);
-    ctx.save();
-    ctx.translate(fx, fy);
-    ctx.rotate(ang + PI * 0.25);
-    ctx.fillStyle = i === 0 ? lime(isLight, 0.9) : pigment(isLight, i % 2 === 0 ? safeHue : counterHue, 0.78);
-    ctx.fillRect(-sz * 0.5, -sz * 0.5, sz, sz);
-    ctx.restore();
-  }
-  ctx.restore();
-}
-
 const SCENE_DRAWERS: Record<string, (s: SceneCtx) => void> = {
   discogs_sniper: drawDiscogsSniper,
   krunked_skymap: drawKrunkedSkymap,
@@ -3338,6 +3307,24 @@ export function renderWorldScene(
   const dpr = opts.dpr ?? 1;
   const w = Math.max(1, opts.w);
   const h = Math.max(1, opts.h);
+  const theme: ArtTheme = opts.theme ?? 'obsidian';
+  const safeHue = remapHue(opts.hue);
+
+  // Explicit user-curated procedural style from CuratePanel takes precedence
+  if (opts.customArtStyle) {
+    renderCover(canvas, {
+      seed: opts.seed,
+      style: opts.customArtStyle,
+      hue: safeHue,
+      w,
+      h,
+      dpr,
+      t: opts.t ?? 0,
+      theme,
+    });
+    return;
+  }
+
   canvas.width = Math.max(1, Math.round(w * dpr));
   canvas.height = Math.max(1, Math.round(h * dpr));
 
@@ -3345,21 +3332,42 @@ export function renderWorldScene(
   if (!ctx) return;
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const theme: ArtTheme = opts.theme ?? 'obsidian';
   const isLight = theme === 'daylight';
-  const safeHue = remapHue(opts.hue);
-  const drawer = SCENE_DRAWERS[opts.slug] ?? drawFallbackScene;
+  const bespoke = SCENE_DRAWERS[opts.slug];
 
-  drawer({
-    ctx,
-    w,
-    h,
-    seed: opts.seed,
-    hue: safeHue,
-    t: opts.t ?? 0,
-    theme,
-    isLight,
-  });
+  if (bespoke) {
+    bespoke({
+      ctx,
+      w,
+      h,
+      seed: opts.seed,
+      hue: safeHue,
+      t: opts.t ?? 0,
+      theme,
+      isLight,
+    });
+  } else {
+    const archetype =
+      opts.archetype ??
+      selectAutoWorldArchetype({
+        slug: opts.slug,
+        displayName: opts.displayName,
+        tagline: opts.tagline,
+        category: opts.category,
+        topics: opts.topics,
+        seed: opts.seed,
+      });
+    drawAutoWorldToContext(ctx, {
+      archetype,
+      slug: opts.slug,
+      seed: opts.seed,
+      hue: safeHue,
+      w,
+      h,
+      t: opts.t ?? 0,
+      theme,
+    });
+  }
 
   finishPlate(ctx, w, h, theme, isLight);
 }

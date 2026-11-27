@@ -99,9 +99,26 @@ describe('SnapshotV2 integrity & Tier-1 baker audit', () => {
       sanitizeText: (s: unknown) => string;
       sanitizeHttpUrl: (u: unknown, base?: string) => string | null;
       parseSubAppHtml: (html: string, base: string) => { isNotFound: boolean; title: string | null; isPwa: boolean };
+      extractReadmeSummary: (markdown: string) => string | null;
       createOfflineBaselineSnapshot: (opts?: { owner?: string }) => SnapshotFile;
       buildSnapshot: (opts: { writeOutput: boolean; fetchImpl: () => Promise<never> }) => Promise<{ snapshot: SnapshotFile }>;
     };
+
+    expect(
+      baker.extractReadmeSummary(`# Krunked Well
+
+[![CI](https://example.com/badge.svg)](https://example.com)
+
+**Play Live:** https://krunked-fpv.github.io/krunked-well/
+
+A standalone, deterministic \`60 Hz\` **TypeScript + WebGL2** vertical gunboot descent roguelite with crisp 4-channel shaders 🚀.
+
+## Features
+- Fast`),
+    ).toBe(
+      'A standalone, deterministic 60 Hz TypeScript + WebGL2 vertical gunboot descent roguelite with crisp 4-channel shaders.',
+    );
+    expect(baker.extractReadmeSummary('# Empty\n\n[![badge](https://x.test/b.svg)](https://x.test)\n')).toBeNull();
 
     expect(
       baker.isAutomatedBakeCommit({
