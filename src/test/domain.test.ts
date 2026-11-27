@@ -188,6 +188,43 @@ describe('resolveLaunch, 404 Pages demotion & self-iframe guard', () => {
         { isNotFound: true, liveVerified: false },
       ),
     ).toBe('https://custom.example.dev/app');
+
+    // Stale empty snapshot placeholder probe (candidateUrl: null) must NOT demote a newly published Pages repo
+    expect(
+      resolveLaunch(
+        {
+          name: 'krunked-n-fred',
+          homepage: 'https://krunked-fpv.github.io/krunked-n-fred/',
+          has_pages: true,
+        },
+        undefined,
+        'krunked-fpv',
+        'https://krunked-fpv.github.io',
+        { candidateUrl: null, resolvedUrl: null, isNotFound: false, liveVerified: false },
+      ),
+    ).toBe('https://krunked-fpv.github.io/krunked-n-fred/');
+
+    // Stale probe for a different previous URL must NOT demote a new homepage URL
+    expect(
+      resolveLaunch(
+        { name: 'moved-app', homepage: 'https://new.example.dev/app/', has_pages: true },
+        undefined,
+        'krunked-fpv',
+        'https://krunked-fpv.github.io',
+        { candidateUrl: 'https://old.example.dev/app/', resolvedUrl: null, isNotFound: true, liveVerified: false },
+      ),
+    ).toBe('https://new.example.dev/app/');
+
+    // Matching candidateUrl (even differing only by trailing slash) still demotes confirmed 404
+    expect(
+      resolveLaunch(
+        { name: 'dead-pages', homepage: 'https://krunked-fpv.github.io/dead-pages', has_pages: true },
+        undefined,
+        'krunked-fpv',
+        'https://krunked-fpv.github.io',
+        { candidateUrl: 'https://krunked-fpv.github.io/dead-pages/', resolvedUrl: null, isNotFound: true, liveVerified: false },
+      ),
+    ).toBeNull();
   });
 
   it('blocks recursive self-iframe targets across http/https root, index.html, and current origin+pathname', () => {
@@ -259,6 +296,50 @@ describe('resolveLaunch, 404 Pages demotion & self-iframe guard', () => {
     expect(spot[1]!.name).toBe('dojo');
     expect(spot[2]!.name).toBe('dead-pages');
     expect(spot[3]!.name).toBe('chroma-cosmos');
+  });
+
+  it('keeps newly published Pages repos live in buildProjects when snapshot has a stale null-URL placeholder probe', () => {
+    const now = Date.parse('2026-11-27T01:00:00Z');
+    const repos: GhRepo[] = [
+      mkRepo({
+        id: 99,
+        name: 'krunked-n-fred',
+        has_pages: true,
+        homepage: 'https://krunked-fpv.github.io/krunked-n-fred/',
+        pushed_at: '2026-11-27T00:44:33Z',
+      }),
+    ];
+
+    const projects = buildProjects({
+      repos,
+      events: [],
+      pins: [],
+      now,
+      overrides: {},
+      commitsFor: () => undefined,
+      languagesFor: () => ({}),
+      probeFor: () => ({
+        candidateUrl: null,
+        resolvedUrl: null,
+        liveVerified: false,
+        httpStatus: null,
+        isNotFound: false,
+        isPwa: false,
+        title: null,
+        subtitle: null,
+        description: null,
+        themeColor: null,
+        ogImage: null,
+        iconUrl: null,
+        manifest: null,
+        probedAt: '2026-11-26T23:52:47.964Z',
+      }),
+    });
+
+    expect(projects).toHaveLength(1);
+    expect(projects[0]!.kind).toBe('live');
+    expect(projects[0]!.launchUrl).toBe('https://krunked-fpv.github.io/krunked-n-fred/');
+    expect(projects[0]!.liveVerified).toBeNull();
   });
 });
 

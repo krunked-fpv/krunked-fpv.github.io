@@ -12,7 +12,7 @@ import { classify } from './classify';
 import { freshnessOf } from './freshness';
 import { pickGlyph } from './glyphs';
 import { fallbackTagline, humanizeName } from './humanize';
-import { resolveLaunch } from './resolveLaunch';
+import { probeAppliesToCandidate, resolveLaunch } from './resolveLaunch';
 import { isBotCommit, isSelfDeckRepo, sanitizeHttpUrl, stripHtmlAndEmojis } from './sanitize';
 
 const STYLE_BY_CAT: Partial<Record<Category, ArtStyle>> = {
@@ -88,7 +88,8 @@ export function buildProjects(input: BuildInput): Project[] {
     const isSelfDeck = isSelfDeckRepo(r.name, GITHUB_USER);
     const explicitUrl = userOv?.launchUrl ?? staticOv.launchUrl;
     const candidateUrl = resolveLaunch(r, explicitUrl, GITHUB_USER, PAGES_ORIGIN);
-    const probe = probeFor(r.name, candidateUrl);
+    const rawProbe = probeFor(r.name, candidateUrl);
+    const probe = rawProbe && candidateUrl && probeAppliesToCandidate(rawProbe, candidateUrl) ? rawProbe : undefined;
     const launchUrl = resolveLaunch(r, explicitUrl, GITHUB_USER, PAGES_ORIGIN, probe);
     const kind = launchUrl ? 'live' : 'code';
 

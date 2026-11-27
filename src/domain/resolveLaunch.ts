@@ -14,9 +14,41 @@ export function pagesCandidateUrl(
   return `${cleanOrigin}/${repo.name}/`;
 }
 
+function normalizeComparableUrl(raw: string | null | undefined): string | null {
+  const safe = sanitizeHttpUrl(raw, undefined, { allowBareDomain: true });
+  if (!safe) return null;
+  try {
+    const u = new URL(safe);
+    const path = u.pathname.replace(/\/+$/, '') || '/';
+    return `${u.origin.toLowerCase()}${path}${u.search}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns true when a probe actually evaluated candidateUrl (or is a minimal partial probe
+ * without a candidateUrl property). Empty snapshot placeholders (candidateUrl: null) and probes
+ * recorded for a different previous URL return false so newly published Pages or updated
+ * homepages are never demoted by stale probe state.
+ */
+export function probeAppliesToCandidate(
+  probe: Partial<Pick<SnapshotProbe, 'candidateUrl' | 'resolvedUrl'>> | null | undefined,
+  candidateUrl: string | null | undefined,
+): boolean {
+  if (!probe) return false;
+  const target = normalizeComparableUrl(candidateUrl);
+  if (!target) return false;
+  if (!('candidateUrl' in probe) || probe.candidateUrl === undefined) return true;
+  const probedCandidate = normalizeComparableUrl(probe.candidateUrl);
+  const probedResolved = normalizeComparableUrl(probe.resolvedUrl);
+  if (!probedCandidate && !probedResolved) return false;
+  return probedCandidate === target || probedResolved === target;
+}
+
 /**
  * Precedence: Override/Curation URL -> homepage -> verified GitHub Pages -> null (code-only).
- * Dead Pages Demotion: if no explicit overrideUrl was set and probe reports
+ * Dead Pages Demotion: if no explicit overrideUrl was set and a matching probe reports
  * isNotFound === true or liveVerified === false, demote to null (code).
  */
 export function resolveLaunch(
@@ -24,22 +56,20 @@ export function resolveLaunch(
   overrideUrl?: string,
   user: string = GITHUB_USER,
   origin: string = PAGES_ORIGIN,
-  probe?: Partial<Pick<SnapshotProbe, 'liveVerified' | 'isNotFound' | 'resolvedUrl'>> | null,
+  probe?: Partial<Pick<SnapshotProbe, 'candidateUrl' | 'liveVerified' | 'isNotFound' | 'resolvedUrl'>> | null,
 ): string | null {
   const override = sanitizeHttpUrl(overrideUrl, undefined, { allowBareDomain: true });
   if (override) return override;
 
-  if (probe && (probe.isNotFound === true || probe.liveVerified === false)) {
+  const home = sanitizeHttpUrl(repo.homepage, undefined, { allowBareDomain: true });
+  const candidate = home ?? pagesCandidateUrl(repo, user, origin);
+  if (!candidate) return null;
+
+  if (probe && probeAppliesToCandidate(probe, candidate) && (probe.isNotFound === true || probe.liveVerified === false)) {
     return null;
   }
 
-  const home = sanitizeHttpUrl(repo.homepage, undefined, { allowBareDomain: true });
-  if (home) return home;
-
-  const pages = pagesCandidateUrl(repo, user, origin);
-  if (pages) return pages;
-
-  return null;
+  return candidate;
 }
 
 function normalizeRoutePath(pathname: string): string {

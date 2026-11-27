@@ -10,8 +10,9 @@ import {
   SyncDisabledError,
 } from '../data/ghClient';
 import { _resetForTests, clearAll } from '../data/httpCache';
-import { _resetProbesForTests, canClientProbe } from '../data/probe';
+import { _resetProbesForTests, canClientProbe, getProbeBySlug, isFreshProbe, seedProbes } from '../data/probe';
 import { _resetRateForTests, parseRetryAfterMs, setRate } from '../data/rateLimit';
+import { collectProbeTargets } from '../data/syncEngine';
 import type { GhRepo } from '../types/github';
 import { clearPat, setPat } from '../vault/patStore';
 
@@ -250,5 +251,99 @@ describe('ghClient V2: ETag, 304 recovery, PAT firewall, backoff & ?sync=off sil
     expect(clean).not.toContain('javascript:');
     expect(clean).toContain('https://github.com/krunked-fpv/dojo/blob/main/docs/guide.md');
     expect(clean).toContain('https://raw.githubusercontent.com/krunked-fpv/dojo/main/shot.png');
+  });
+
+  it('ignores empty snapshot placeholder probes and mismatched URL probes in seedProbes / getProbeBySlug', () => {
+    seedProbes({
+      'krunked-n-fred': {
+        candidateUrl: null,
+        resolvedUrl: null,
+        liveVerified: false,
+        httpStatus: null,
+        isNotFound: false,
+        isPwa: false,
+        title: null,
+        subtitle: null,
+        description: null,
+        themeColor: null,
+        ogImage: null,
+        iconUrl: null,
+        manifest: null,
+        probedAt: '2026-11-26T23:52:47.964Z',
+      },
+      'moved-app': {
+        candidateUrl: 'https://old.example.dev/app/',
+        resolvedUrl: null,
+        liveVerified: false,
+        httpStatus: 404,
+        isNotFound: true,
+        isPwa: false,
+        title: null,
+        subtitle: null,
+        description: null,
+        themeColor: null,
+        ogImage: null,
+        iconUrl: null,
+        manifest: null,
+        probedAt: '2026-11-26T23:52:47.964Z',
+      },
+    });
+
+    expect(getProbeBySlug('krunked-n-fred', 'https://krunked-fpv.github.io/krunked-n-fred/')).toBeUndefined();
+    expect(getProbeBySlug('moved-app', 'https://new.example.dev/app/')).toBeUndefined();
+    expect(getProbeBySlug('moved-app', 'https://old.example.dev/app/')?.isNotFound).toBe(true);
+  });
+
+  it('invalidates 404 probes on newer pushes, after 30m negative TTL, or on force sync, and collects raw candidate targets', () => {
+    const probedAt = '2026-11-26T23:52:47.000Z';
+    const baseMs = Date.parse(probedAt);
+    const deadProbe = {
+      candidateUrl: 'https://krunked-fpv.github.io/new-world/',
+      resolvedUrl: null,
+      liveVerified: false,
+      httpStatus: 404,
+      isNotFound: true,
+      isPwa: false,
+      title: null,
+      subtitle: null,
+      description: null,
+      themeColor: null,
+      ogImage: null,
+      iconUrl: null,
+      manifest: null,
+      probedAt,
+    };
+    const liveProbe = {
+      ...deadProbe,
+      resolvedUrl: deadProbe.candidateUrl,
+      liveVerified: true,
+      httpStatus: 200,
+      isNotFound: false,
+    };
+
+    // Negative 404 probe stays fresh for <30m when untouched, expires after 30m (not 12h),
+    // and immediately invalidates on a newer push or force sync.
+    expect(isFreshProbe(deadProbe, baseMs + 10 * 60_000, deadProbe.candidateUrl, '2026-11-26T23:50:00Z')).toBe(true);
+    expect(isFreshProbe(deadProbe, baseMs + 31 * 60_000, deadProbe.candidateUrl, '2026-11-26T23:50:00Z')).toBe(false);
+    expect(isFreshProbe(deadProbe, baseMs + 5 * 60_000, deadProbe.candidateUrl, '2026-11-26T23:55:00Z')).toBe(false);
+    expect(isFreshProbe(deadProbe, baseMs + 5 * 60_000, deadProbe.candidateUrl, '2026-11-26T23:50:00Z', true)).toBe(false);
+
+    // Verified live probe stays fresh even on newer push and force sync within 12h TTL.
+    expect(isFreshProbe(liveProbe, baseMs + 60 * 60_000, liveProbe.candidateUrl, '2026-11-27T00:30:00Z', true)).toBe(true);
+
+    // collectProbeTargets keeps previously-404 Pages repos eligible for re-probing while skipping self-deck/hidden/code-only repos
+    seedProbes({ 'new-world': deadProbe });
+    const targets = collectProbeTargets([
+      { ...mkRepo(), name: 'new-world', has_pages: true, pushed_at: '2026-11-26T23:55:00Z' },
+      { ...mkRepo(), name: 'code-only', has_pages: false, homepage: null },
+      { ...mkRepo(), name: 'krunked-fpv.github.io', has_pages: true },
+    ]);
+    expect(targets).toEqual([
+      {
+        slug: 'new-world',
+        url: 'https://krunked-fpv.github.io/new-world/',
+        pushedAt: '2026-11-26T23:55:00Z',
+      },
+    ]);
   });
 });

@@ -1,8 +1,12 @@
 import { foley } from '../audio/microFoley';
-import { GITHUB_USER, POLL_MS, STALE_USER_MS } from '../config/site';
+import { PROJECT_OVERRIDES, type ProjectOverride } from '../config/projectOverrides';
+import { GITHUB_USER, PAGES_ORIGIN, POLL_MS, STALE_USER_MS } from '../config/site';
 import { buildProjects } from '../domain/buildProjects';
+import { resolveLaunch } from '../domain/resolveLaunch';
+import { isSelfDeckRepo } from '../domain/sanitize';
 import { cacheWasEmpty, useDeck } from '../store/deckStore';
 import type { GhEvent, GhRepo, GhUser, SnapshotFile } from '../types/github';
+import type { CurationOverride } from '../types/vault';
 import { reconcileVault } from '../vault/cookieVault';
 import { getPat } from '../vault/patStore';
 import { commitsPath, enrichDeepHistory, enrichSpotlight, languagesPath } from './enrich';
@@ -18,7 +22,7 @@ import {
 } from './ghClient';
 import { getEntry, hydrateFromIdb, putEntry } from './httpCache';
 import { readIdbSnapshot, withTimeout, writeIdbSnapshot } from './idbCache';
-import { hydrateProbesFromIdb, probeAll, seedProbes } from './probe';
+import { hydrateProbesFromIdb, probeAll, seedProbes, type ProbeTarget } from './probe';
 import { projectEvents, projectRepos, projectUser } from './projections';
 import { getRate } from './rateLimit';
 import { getLastSnapshotAt, loadSnapshot, setLastSnapshotAt } from './snapshot';
@@ -127,6 +131,31 @@ function ingestSnapshot(snap: SnapshotFile, hydrateCoreData: boolean) {
   void writeIdbSnapshot(snap);
 }
 
+/**
+ * Collect candidate URLs directly from repos (before probe demotion) so previously
+ * 404/unverified repos can self-heal when Pages finishes deploying or receives a new push.
+ */
+export function collectProbeTargets(
+  repos: readonly GhRepo[],
+  curation?: Record<string, CurationOverride>,
+  overrides: Record<string, Partial<ProjectOverride>> = PROJECT_OVERRIDES,
+): ProbeTarget[] {
+  const targets: ProbeTarget[] = [];
+  for (const r of repos) {
+    if (r.fork || r.archived) continue;
+    if (isSelfDeckRepo(r.name, GITHUB_USER)) continue;
+    const staticOv = overrides[r.name];
+    const userOv = curation?.[r.name];
+    const hidden = userOv?.hidden !== undefined ? Boolean(userOv.hidden) : Boolean(staticOv?.hidden);
+    if (hidden) continue;
+    const explicitUrl = userOv?.launchUrl ?? staticOv?.launchUrl;
+    const candidateUrl = resolveLaunch(r, explicitUrl, GITHUB_USER, PAGES_ORIGIN);
+    if (!candidateUrl) continue;
+    targets.push({ slug: r.name, url: candidateUrl, pushedAt: r.pushed_at });
+  }
+  return targets;
+}
+
 function runEnrichment(force: boolean, isColdBoot = false) {
   if (syncDisabled()) return;
   const s = useDeck.getState();
@@ -158,10 +187,8 @@ function runEnrichment(force: boolean, isColdBoot = false) {
     });
   }
 
-  const targets = projects
-    .filter((p) => p.launchUrl && !p.isSelfDeck)
-    .map((p) => ({ slug: p.name, url: p.launchUrl as string }));
-  probeAll(targets, () => useDeck.getState().bump());
+  const targets = collectProbeTargets(s.repos, s.vault.curation);
+  probeAll(targets, () => useDeck.getState().bump(), { force });
 }
 
 /** One revalidation pass over the core endpoints (cold boot <= 3 unauthenticated calls). */

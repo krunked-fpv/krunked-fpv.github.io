@@ -1,4 +1,5 @@
 import { PAGES_ORIGIN, STORAGE_NS } from '../config/site';
+import { probeAppliesToCandidate } from '../domain/resolveLaunch';
 import {
   decodeHtmlEntities,
   sanitizeHttpUrl,
@@ -271,6 +272,7 @@ export function seedProbes(probes: Record<string, SnapshotProbe> | undefined) {
   for (const [slug, raw] of Object.entries(probes)) {
     if (!raw || typeof raw !== 'object') continue;
     const clean = sanitizeProbe(raw);
+    if (!clean.candidateUrl && !clean.resolvedUrl) continue;
     const key = slug.toLowerCase();
     const prev = bySlug.get(key);
     const prevMs = prev ? Date.parse(prev.probedAt) || 0 : 0;
@@ -291,6 +293,7 @@ export async function hydrateProbesFromIdb(timeoutMs = 25): Promise<number> {
   for (const [key, probe] of entries) {
     if (!probe || typeof probe !== 'object') continue;
     const clean = sanitizeProbe(probe);
+    if (!clean.candidateUrl && !clean.resolvedUrl) continue;
     if (key.startsWith('http://') || key.startsWith('https://')) {
       const prev = s[key];
       if (!prev || (Date.parse(clean.probedAt) || 0) > (Date.parse(prev.probedAt) || 0)) {
@@ -315,8 +318,13 @@ export function getProbe(url: string): SnapshotProbe | undefined {
 
 export function getProbeBySlug(slug: string, url?: string | null): SnapshotProbe | undefined {
   const byName = bySlug.get(slug.toLowerCase());
-  if (byName) return byName;
-  if (url) return loadStore()[url];
+  if (byName && (!url || probeAppliesToCandidate(byName, url))) {
+    return byName;
+  }
+  if (url) {
+    const exact = loadStore()[url];
+    if (exact && probeAppliesToCandidate(exact, url)) return exact;
+  }
   return undefined;
 }
 
@@ -442,23 +450,42 @@ async function probeOne(url: string): Promise<SnapshotProbe | null> {
   }
 }
 
-function isFreshProbe(probe: SnapshotProbe | undefined, now: number): boolean {
+export interface ProbeTarget {
+  slug: string;
+  url: string;
+  pushedAt?: string;
+}
+
+export function isFreshProbe(
+  probe: SnapshotProbe | undefined,
+  now: number,
+  candidateUrl?: string,
+  pushedAt?: string,
+  force = false,
+): boolean {
   if (!probe) return false;
+  if (candidateUrl && !probeAppliesToCandidate(probe, candidateUrl)) return false;
+  if (force && !probe.liveVerified) return false;
   const ms = Date.parse(probe.probedAt);
   if (!Number.isFinite(ms)) return false;
-  const maxAge = probe.liveVerified || probe.isNotFound ? TTL : NEGATIVE_TTL;
+  if (!probe.liveVerified && pushedAt) {
+    const pushedMs = Date.parse(pushedAt);
+    if (Number.isFinite(pushedMs) && pushedMs > ms) return false;
+  }
+  const maxAge = probe.liveVerified ? TTL : NEGATIVE_TTL;
   return now - ms < maxAge;
 }
 
 /** Probe same-origin live app pages when not already freshly verified by SnapshotV2. Zero API quota. */
-export function probeAll(targets: Array<{ slug: string; url: string }>, onResult: () => void) {
+export function probeAll(targets: ProbeTarget[], onResult: () => void, opts: { force?: boolean } = {}) {
   if (syncDisabled()) return;
   const s = loadStore();
   const now = Date.now();
-  const pending = targets.filter(({ slug, url }) => {
+  const force = Boolean(opts.force);
+  const pending = targets.filter(({ slug, url, pushedAt }) => {
     if (!canClientProbe(url)) return false;
-    const existing = bySlug.get(slug.toLowerCase()) ?? s[url];
-    return !isFreshProbe(existing, now);
+    const existing = getProbeBySlug(slug, url);
+    return !isFreshProbe(existing, now, url, pushedAt, force);
   });
   if (!pending.length) return;
 
@@ -469,7 +496,7 @@ export function probeAll(targets: Array<{ slug: string; url: string }>, onResult
     let i = 0;
     const worker = async () => {
       while (i < pending.length) {
-        const target = pending[i++] as { slug: string; url: string };
+        const target = pending[i++] as ProbeTarget;
         const result = await probeOne(target.url);
         if (!result) continue;
         s[target.url] = result;
