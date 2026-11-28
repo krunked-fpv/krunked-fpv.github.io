@@ -329,19 +329,24 @@ export function BurstFxCanvas({
 
     let cssW = 1;
     let cssH = 1;
-    let dpr = Math.min(2, window.devicePixelRatio || 1);
+    let dpr = 1;
+    let needsFullClear = true;
+    const MAX_2D_PIXELS = 2_073_600;
 
     const syncSize = () => {
       const rect = wrap.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
       cssW = Math.round(rect.width);
       cssH = Math.round(rect.height);
-      dpr = Math.min(2, window.devicePixelRatio || 1);
+      const baseDpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const budgetDpr = Math.sqrt(MAX_2D_PIXELS / Math.max(1, cssW * cssH));
+      dpr = Math.max(0.75, Math.min(baseDpr, budgetDpr));
       const pw = Math.max(1, Math.round(cssW * dpr));
       const ph = Math.max(1, Math.round(cssH * dpr));
       if (canvas.width !== pw || canvas.height !== ph) {
         canvas.width = pw;
         canvas.height = ph;
+        needsFullClear = true;
       }
     };
     syncSize();
@@ -778,17 +783,33 @@ export function BurstFxCanvas({
       st.guidesVel = (st.guidesVel + force * dt) * Math.exp(-dt * 13);
       st.guidesScale = Math.max(0, st.guidesScale + st.guidesVel * dt);
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, cssW, cssH);
-
       const cx = cssW * 0.5;
       const cy = cssH * st.centerYRatio;
       const minD = Math.min(cssW, cssH);
       const isLight = st.isLight;
+      const coreR = minD * (st.exploded ? 0.116 : 0.149);
 
-      // 1. Delicate accretion micro-motes tightly kissing the horizon (neon-purple + warm gold glints!)
-      const coreR = minD * (st.exploded ? 0.116 : 0.156);
-      const moteCount = st.exploded ? 16 : ambient.length;
+      const isIdleOnly =
+        !st.exploded &&
+        st.guidesScale <= 0.005 &&
+        st.flashAlpha <= 0.01 &&
+        waves.length === 0 &&
+        spikes.length === 0 &&
+        sparks.length === 0 &&
+        vortex.length === 0;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (isIdleOnly && !needsFullClear) {
+        // Only clear the tight orbital mote region around the center instead of full ultrawide viewport
+        const dirtyR = Math.ceil(coreR * 2.5 + 12);
+        ctx.clearRect(Math.max(0, cx - dirtyR), Math.max(0, cy - dirtyR), dirtyR * 2, dirtyR * 2);
+      } else {
+        ctx.clearRect(0, 0, cssW, cssH);
+        needsFullClear = !isIdleOnly;
+      }
+
+      // 1. Delicate accretion micro-motes tightly kissing the horizon (warm Gargantua gold + subtle violet glints)
+      const moteCount = st.exploded ? 14 : ambient.length;
       for (let i = 0; i < moteCount; i++) {
         const m = ambient[i]!;
         const pull = 0.24 + 0.35 / Math.max(0.8, m.rMult);
@@ -805,19 +826,21 @@ export function BurstFxCanvas({
 
         ctx.fillStyle = isLight
           ? i % 3 === 0
-            ? `rgba(122,30,214,${(fade * 0.65).toFixed(3)})`
+            ? `rgba(122,30,214,${(fade * 0.58).toFixed(3)})`
             : i % 3 === 1
               ? `rgba(217,78,0,${(fade * 0.6).toFixed(3)})`
               : `rgba(10,10,11,${(fade * 0.42).toFixed(3)})`
           : i % 3 === 0
-            ? `rgba(184,41,255,${(fade * 0.85).toFixed(3)})`
+            ? `rgba(255,214,132,${(fade * 0.78).toFixed(3)})`
             : i % 3 === 1
-              ? `rgba(214,91,255,${(fade * 0.72).toFixed(3)})`
-              : `rgba(255,224,160,${(fade * 0.62).toFixed(3)})`;
+              ? `rgba(255,246,220,${(fade * 0.72).toFixed(3)})`
+              : `rgba(214,116,255,${(fade * 0.48).toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(px, py, m.size, 0, TAU);
         ctx.fill();
       }
+
+      if (isIdleOnly) return;
 
       // 2. Refined orbital track hairlines & curved Bezier world tethers
       drawGuidesAndTethers(elapsed, st.guidesScale);
@@ -1046,6 +1069,7 @@ export function BurstFxCanvas({
         inViewRef.current = el;
       }}
       className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
+      style={{ contain: 'strict' }}
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="absolute inset-0 block size-full" />
